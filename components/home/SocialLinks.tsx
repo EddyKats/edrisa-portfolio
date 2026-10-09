@@ -7,9 +7,15 @@ const icons = {
   whatsapp: FaWhatsapp,
 } as const;
 
-export function SocialLinks({ className = "home-social" }: { className?: string }) {
+export function SocialLinks({
+  className = "home-social",
+  label = "Social",
+}: {
+  className?: string;
+  label?: string;
+}) {
   return (
-    <nav aria-label="Social" className={className}>
+    <nav aria-label={label} className={className}>
       {socialProfiles.map((item) => {
         const Icon = icons[item.id];
         const label = "iconLabel" in item ? item.iconLabel : item.label;

@@ -16,7 +16,6 @@ export const aboutCopy = {
   ctaHeading: "Got something worth obsessing over?",
   ctaBody: "Bring the idea. I'll bring the unreasonable attention to detail.",
   ctaLabel: "Let's Make Something",
-  footerNote: "Built with pixels, patience, and unnecessary attention to spacing.",
 } as const;
 
 /**

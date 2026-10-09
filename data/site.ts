@@ -10,16 +10,16 @@ export const site = {
   logoSrc: "/images/edrisa-logo.png",
   logoWidth: 1490,
   logoHeight: 369,
+  footerNote: "Built with pixels, patience, and unnecessary attention to spacing.",
 } as const;
 
 /**
- * Replace these placeholders with the live profiles.
- * WhatsApp: https://wa.me/<country code><number> — digits only, no plus sign or spaces.
+ * WhatsApp uses https://wa.me/<digits> — country code and number only, no plus sign or spaces.
  */
 export const socialLinks = {
-  behance: "https://www.behance.net/REPLACE_ME",
-  linkedin: "https://www.linkedin.com/in/REPLACE_ME",
-  whatsapp: "https://wa.me/000000000000",
+  behance: "https://www.behance.net/kasibanteedrisa1",
+  linkedin: "https://www.linkedin.com/in/kasibante-edrisa-81aa91281/",
+  whatsapp: "https://wa.me/256759395908",
 } as const;
 
 export const socialProfiles = [

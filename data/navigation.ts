@@ -56,3 +56,17 @@ export function getNavItem(id: NavId): NavItem {
   }
   return item;
 }
+
+export function getSectionNeighbors(id: NavId) {
+  const index = navigation.findIndex((item) => item.id === id);
+  const count = navigation.length;
+  const current = navigation[index];
+  const previous = navigation[(index - 1 + count) % count];
+  const next = navigation[(index + 1) % count];
+
+  if (!current || !previous || !next) {
+    throw new Error(`Unknown navigation item: ${id}`);
+  }
+
+  return { current, previous, next };
+}

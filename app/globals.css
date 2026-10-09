@@ -137,18 +137,95 @@ body {
   --mark: 236 214 255;
 }
 
-.nav-mark.about-cta-mark {
+.nav-mark.internal-cta-mark {
   width: 46%;
   top: -34%;
   right: -8%;
 }
 
-.nav-mark.about-cta-mark-end {
+.nav-mark.internal-cta-mark-end {
   width: 38%;
   top: auto;
   right: auto;
   bottom: -40%;
   left: -10%;
+}
+
+.section-side {
+  width: clamp(17.5rem, 4rem + 14vw, 22rem);
+}
+
+.section-vertical-title {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: clamp(1.85rem, 2vw, 2.35rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.58);
+}
+
+.section-vertical-title.is-ink {
+  color: rgb(42 22 12 / 0.66);
+}
+
+.contact-social {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.contact-social a {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  color: #1c120e;
+  opacity: 0.72;
+  border-radius: 999px;
+  transition:
+    opacity 240ms ease,
+    transform 240ms ease,
+    color 240ms ease;
+}
+
+.contact-social a svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.contact-social a:hover,
+.contact-social a:focus-visible {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.contact-social a:focus-visible {
+  outline: 2px solid #1c120e;
+  outline-offset: 2px;
+}
+
+.contact-social a[data-brand="behance"]:hover,
+.contact-social a[data-brand="behance"]:focus-visible {
+  color: #1769ff;
+}
+
+.contact-social a[data-brand="linkedin"]:hover,
+.contact-social a[data-brand="linkedin"]:focus-visible {
+  color: #0a66c2;
+}
+
+.contact-social a[data-brand="whatsapp"]:hover,
+.contact-social a[data-brand="whatsapp"]:focus-visible {
+  color: #128c7e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-social a:hover,
+  .contact-social a:focus-visible {
+    transform: none;
+  }
 }
 
 .group:hover .nav-mark {

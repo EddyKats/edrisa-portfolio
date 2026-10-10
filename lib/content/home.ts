@@ -7,6 +7,7 @@ import { removeStoredFile } from "@/lib/content/media";
 
 export async function getHomeLabels() {
   const row = await getDb().homeContent.findUnique({ where: { id: "home" } });
+  // Navigation labels fill in only when the home singleton row or a tile label is missing.
   return {
     about: row?.aboutTileLabel ?? label("about"),
     services: row?.servicesTileLabel ?? label("services"),

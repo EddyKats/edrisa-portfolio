@@ -13,10 +13,17 @@ export const allowedImageTypes = {
 
 export type AllowedImageType = keyof typeof allowedImageTypes;
 
+const mediaNamespaces = ["development", "preview", "production"] as const;
+
+export type MediaNamespace = (typeof mediaNamespaces)[number];
+
+const namespaceName = mediaNamespaces.join("|");
 const imageName = String.raw`[0-9a-f-]{36}\.(?:jpg|png|webp|avif)`;
-const keyPattern = new RegExp(String.raw`^projects\/[A-Za-z0-9]+\/(?:cover|hero|gallery)\/${imageName}$`);
+const keyPattern = new RegExp(
+  String.raw`^(?:${namespaceName})\/projects\/[A-Za-z0-9]+\/(?:cover|hero|gallery)\/${imageName}$`,
+);
 const contentKeyPattern = new RegExp(
-  String.raw`^content\/(?:about-feature|experience|client|home-portrait|home-logo)\/[A-Za-z0-9-]+\/${imageName}$`,
+  String.raw`^(?:${namespaceName})\/content\/(?:about-feature|experience|client|home-portrait|home-logo)\/[A-Za-z0-9-]+\/${imageName}$`,
 );
 
 export const contentAssetScopes = ["about-feature", "experience", "client", "home-portrait", "home-logo"] as const;
@@ -44,8 +51,26 @@ export function validateImageUpload(input: { type: string; size: number }) {
   return null;
 }
 
+export function activeMediaNamespace(): MediaNamespace | null {
+  const value = process.env.MEDIA_NAMESPACE;
+  return mediaNamespaces.includes(value as MediaNamespace) ? (value as MediaNamespace) : null;
+}
+
+export function namespacedAssetKey(relativeKey: string) {
+  const namespace = activeMediaNamespace();
+  if (!namespace) throw new Error("MEDIA_NAMESPACE must be development, preview, or production.");
+  return `${namespace}/${relativeKey}`;
+}
+
+export function isDeletableAssetKey(key: string) {
+  const namespace = activeMediaNamespace();
+  if (!namespace || !key.startsWith(`${namespace}/`)) return false;
+  return keyPattern.test(key) || contentKeyPattern.test(key);
+}
+
 export function isPortfolioAssetKey(projectId: string, key: string) {
-  return key.startsWith(`projects/${projectId}/`) && keyPattern.test(key);
+  const namespace = activeMediaNamespace();
+  return Boolean(namespace) && key.startsWith(`${namespace}/projects/${projectId}/`) && keyPattern.test(key);
 }
 
 export function isContentAssetScope(value: string): value is ContentAssetScope {
@@ -53,7 +78,8 @@ export function isContentAssetScope(value: string): value is ContentAssetScope {
 }
 
 export function isContentAssetKey(scope: ContentAssetScope, ownerId: string, key: string) {
-  return key.startsWith(`content/${scope}/${ownerId}/`) && contentKeyPattern.test(key);
+  const namespace = activeMediaNamespace();
+  return Boolean(namespace) && key.startsWith(`${namespace}/content/${scope}/${ownerId}/`) && contentKeyPattern.test(key);
 }
 
 export function matchesImageSignature(type: AllowedImageType, bytes: Uint8Array) {

@@ -12,8 +12,10 @@ import {
   isContentAssetKey,
   isContentAssetScope,
   isPortfolioAssetKey,
+  isDeletableAssetKey,
   matchesImageSignature,
   mediaBucket,
+  namespacedAssetKey,
   readImageSize,
   validateImageUpload,
   type AllowedImageType,
@@ -64,7 +66,9 @@ export async function createPortfolioUpload(input: {
   if (error) return { error };
   assertProjectId(input.projectId);
   const type = input.type as AllowedImageType;
-  const key = `projects/${input.projectId}/${input.role}/${crypto.randomUUID()}.${extensionFor(type)}`;
+  const key = namespacedAssetKey(
+    `projects/${input.projectId}/${input.role}/${crypto.randomUUID()}.${extensionFor(type)}`,
+  );
   const command = new PutObjectCommand({
     Bucket: mediaBucket,
     Key: key,
@@ -89,7 +93,9 @@ export async function createContentUpload(input: {
   if (error || !isContentAssetScope(input.scope)) return { error: error ?? "That upload could not be started." };
   assertOwnerId(input.ownerId);
   const type = input.type as AllowedImageType;
-  const key = `content/${input.scope}/${input.ownerId}/${crypto.randomUUID()}.${extensionFor(type)}`;
+  const key = namespacedAssetKey(
+    `content/${input.scope}/${input.ownerId}/${crypto.randomUUID()}.${extensionFor(type)}`,
+  );
   const command = new PutObjectCommand({
     Bucket: mediaBucket,
     Key: key,
@@ -120,7 +126,9 @@ export async function uploadPortfolioAsset(input: {
   if (error) throw new Error(error);
   if (!matchesImageSignature(input.type, input.body)) throw new Error("That file is not an allowed image.");
   assertProjectId(input.projectId);
-  const key = `projects/${input.projectId}/${input.role}/${crypto.randomUUID()}.${extensionFor(input.type)}`;
+  const key = namespacedAssetKey(
+    `projects/${input.projectId}/${input.role}/${crypto.randomUUID()}.${extensionFor(input.type)}`,
+  );
   await client().send(
     new PutObjectCommand({
       Bucket: mediaBucket,
@@ -167,6 +175,9 @@ async function inspectStoredImage(key: string): Promise<PortfolioAsset | { error
 
 export async function deletePortfolioAsset(key: string) {
   if (!storageConfigured()) return;
+  if (!isDeletableAssetKey(key)) {
+    throw new Error("Refusing to delete an object outside the active media namespace.");
+  }
   await client().send(new DeleteObjectCommand({ Bucket: mediaBucket, Key: key }));
 }
 

@@ -14,6 +14,7 @@ export async function getPublicSite(): Promise<PublicSite> {
     db.homeContent.findUnique({ where: { id: "home" } }),
   ]);
 
+  // Static copy is used only when the site singleton row is missing. Database errors are not caught here.
   if (!settings) {
     return {
       name: site.name,

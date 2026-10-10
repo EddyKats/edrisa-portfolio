@@ -9,9 +9,11 @@ import { portfolioCopy, type PortfolioProject } from "@/data/portfolio";
 export function PortfolioScreen({
   projects,
   categories,
+  cta,
 }: {
   projects: PortfolioProject[];
   categories: string[];
+  cta?: { heading: string; body: string; buttonLabel: string; href: string };
 }) {
   return (
     <InternalPageLayout section="portfolio">
@@ -22,10 +24,10 @@ export function PortfolioScreen({
         </Suspense>
         <InternalCTA
           section="portfolio"
-          heading={portfolioCopy.ctaHeading}
-          body={portfolioCopy.ctaBody}
-          label={portfolioCopy.ctaLabel}
-          href="/contact"
+          heading={cta?.heading ?? portfolioCopy.ctaHeading}
+          body={cta?.body ?? portfolioCopy.ctaBody}
+          label={cta?.buttonLabel ?? portfolioCopy.ctaLabel}
+          href={cta?.href ?? "/contact"}
         />
         <InternalFooter />
       </div>

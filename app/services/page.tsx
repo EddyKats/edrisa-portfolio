@@ -6,30 +6,42 @@ import { InternalTitle } from "@/components/internal/InternalTitle";
 import { CapabilityPackages } from "@/components/services/CapabilityPackages";
 import { ClientStrip } from "@/components/services/ClientStrip";
 import { ServiceOffers } from "@/components/services/ServiceOffers";
-import { servicesCopy, servicesMeta } from "@/data/services";
+import { servicesCopy } from "@/data/services";
+import { getPublicServices } from "@/lib/content/catalog";
+import { getPublicCta } from "@/lib/content/cta";
+import { getPublicSite } from "@/lib/content/site";
 
-export const metadata: Metadata = {
-  title: { absolute: servicesMeta.title },
-  description: servicesMeta.description,
-  alternates: {
-    canonical: "/services",
-  },
-};
+export const dynamic = "force-dynamic";
 
-export default function ServicesRoute() {
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getPublicSite();
+  return {
+    title: { absolute: site.title },
+    description: site.description,
+    alternates: { canonical: "/services" },
+  };
+}
+
+export default async function ServicesRoute() {
+  const [catalog, cta] = await Promise.all([getPublicServices(), getPublicCta("services")]);
+
   return (
     <InternalPageLayout section="services">
       <div className="mx-auto w-full max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
         <InternalTitle>{servicesCopy.title}</InternalTitle>
-        <ServiceOffers />
-        <CapabilityPackages />
-        <ClientStrip />
+        <ServiceOffers offers={catalog.services} />
+        <CapabilityPackages
+          heading={servicesCopy.capabilitiesHeading}
+          note={servicesCopy.capabilitiesNote}
+          packages={catalog.packages}
+        />
+        <ClientStrip heading={servicesCopy.clientsHeading} note={servicesCopy.clientsNote} clients={catalog.clients} />
         <InternalCTA
           section="services"
-          heading={servicesCopy.ctaHeading}
-          body={servicesCopy.ctaBody}
-          label={servicesCopy.ctaLabel}
-          href="/contact"
+          heading={cta?.heading ?? servicesCopy.ctaHeading}
+          body={cta?.body ?? servicesCopy.ctaBody}
+          label={cta?.buttonLabel ?? servicesCopy.ctaLabel}
+          href={cta?.buttonHref ?? "/contact"}
         />
         <InternalFooter />
       </div>

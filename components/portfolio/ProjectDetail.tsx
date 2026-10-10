@@ -8,7 +8,7 @@ import { X } from "lucide-react";
 import { FaBehance, FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
 import { projectTones } from "@/components/portfolio/projectTones";
 import { type PortfolioCategory, type PortfolioGalleryImage, type PortfolioProject } from "@/data/portfolio";
-import { site, socialLinks, socialProfiles } from "@/data/site";
+import type { PublicSocial } from "@/lib/content/site-shape";
 import { softwareRegistry, type SoftwareId } from "@/data/software";
 
 const returnKey = "edrisa-portfolio-return";
@@ -28,11 +28,19 @@ export function ProjectDetail({
   previous,
   next,
   categories,
+  contact,
 }: {
   project: PortfolioProject;
   previous: { slug: string; title: string };
   next: { slug: string; title: string };
   categories: string[];
+  contact: {
+    portraitSrc: string;
+    portraitWidth: number;
+    portraitHeight: number;
+    whatsapp: string;
+    profiles: PublicSocial[];
+  };
 }) {
   const router = useRouter();
   const routerRef = useRef(router);
@@ -149,7 +157,7 @@ export function ProjectDetail({
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <article className={`px-5 pt-2 sm:px-10 ${hireVisible ? "pb-8 split:pb-36" : "pb-12 split:pb-14"}`}>
-                <Creator />
+                <Creator contact={contact} />
                 <h1 id={titleId} className="mt-8 text-[clamp(2.1rem,4vw,3.4rem)] font-medium tracking-tight">
                   {project.title}
                 </h1>
@@ -193,7 +201,7 @@ export function ProjectDetail({
                     Find me
                   </h2>
                   <ul className="mt-4 flex flex-wrap gap-4">
-                    {contactLinks().map((item) => (
+                    {orderedContacts(contact.profiles).map((item) => (
                       <ContactItem key={item.id} item={item} />
                     ))}
                   </ul>
@@ -248,32 +256,32 @@ export function ProjectDetail({
             </div>
             {hireVisible ? (
               <div className="shrink-0 border-t border-ink/10 bg-[#fffdfb] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] split:hidden">
-                <HireCard compact onDismiss={() => setHireVisible(false)} />
+                <HireCard contact={contact} compact onDismiss={() => setHireVisible(false)} />
               </div>
             ) : null}
             {hireVisible ? (
               <div className="pointer-events-none absolute inset-x-0 bottom-4 z-30 hidden justify-center px-8 split:flex">
                 <div className="pointer-events-auto">
-                  <HireCard onDismiss={() => setHireVisible(false)} />
+                  <HireCard contact={contact} onDismiss={() => setHireVisible(false)} />
                 </div>
               </div>
             ) : null}
           </div>
-          <ActionRail tools={tools} />
+          <ActionRail tools={tools} profiles={contact.profiles} />
         </div>
       </div>
     </div>
   );
 }
 
-function Creator() {
+function Creator({ contact }: { contact: { portraitSrc: string; portraitWidth: number; portraitHeight: number } }) {
   return (
     <div className="flex items-center gap-3 pr-12">
       <Image
-        src={site.portraitSrc}
+        src={contact.portraitSrc}
         alt=""
-        width={site.portraitWidth}
-        height={site.portraitHeight}
+        width={contact.portraitWidth}
+        height={contact.portraitHeight}
         className="size-10 rounded-full object-cover"
       />
       <div>
@@ -333,8 +341,8 @@ function toneFor(category: string) {
   return "bg-[#2e211c]";
 }
 
-function ActionRail({ tools }: { tools: SoftwareId[] }) {
-  const contacts = contactLinks();
+function ActionRail({ tools, profiles }: { tools: SoftwareId[]; profiles: PublicSocial[] }) {
+  const contacts = orderedContacts(profiles);
 
   return (
     <aside className="hidden shrink-0 flex-col items-center justify-center gap-2.5 self-center split:flex" aria-label="Project actions">
@@ -407,21 +415,29 @@ function ContactItem({ item }: { item: ContactProfile }) {
   );
 }
 
-function HireCard({ compact = false, onDismiss }: { compact?: boolean; onDismiss: () => void }) {
+function HireCard({
+  contact,
+  compact = false,
+  onDismiss,
+}: {
+  contact: { portraitSrc: string; portraitWidth: number; portraitHeight: number; whatsapp: string };
+  compact?: boolean;
+  onDismiss: () => void;
+}) {
   return (
     <div className="relative flex items-center gap-3 rounded-2xl bg-mocha-deep py-3 pr-10 pl-3 text-[#f7f1ea] shadow-[0_12px_36px_rgba(28,18,14,0.22)]">
       <Image
-        src={site.portraitSrc}
+        src={contact.portraitSrc}
         alt=""
-        width={site.portraitWidth}
-        height={site.portraitHeight}
+        width={contact.portraitWidth}
+        height={contact.portraitHeight}
         className="size-10 shrink-0 rounded-full object-cover"
       />
       <p className={`min-w-0 flex-1 text-sm leading-snug ${compact ? "max-w-[11rem]" : "max-w-[14rem]"}`}>
         {compact ? "Available for the right project." : "Edrisa is available for the right project."}
       </p>
       <a
-        href={socialLinks.whatsapp}
+        href={contact.whatsapp}
         target="_blank"
         rel="noopener noreferrer"
         className="shrink-0 rounded-full bg-[#f7f1ea] px-3.5 py-2 text-sm font-semibold text-mocha-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
@@ -451,11 +467,11 @@ function Tooltip({ label }: { label: string }) {
   );
 }
 
-type ContactProfile = (typeof socialProfiles)[number];
+type ContactProfile = PublicSocial;
 
-function contactLinks() {
+function orderedContacts(profiles: PublicSocial[]) {
   return contactOrder.flatMap((id) => {
-    const item = socialProfiles.find((profile) => profile.id === id);
+    const item = profiles.find((profile) => profile.id === id);
     return item ? [item] : [];
   });
 }

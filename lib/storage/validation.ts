@@ -13,8 +13,15 @@ export const allowedImageTypes = {
 
 export type AllowedImageType = keyof typeof allowedImageTypes;
 
-const keyPattern =
-  /^projects\/[A-Za-z0-9]+\/(?:cover|hero|gallery)\/[0-9a-f-]{36}\.(?:jpg|png|webp|avif)$/;
+const imageName = String.raw`[0-9a-f-]{36}\.(?:jpg|png|webp|avif)`;
+const keyPattern = new RegExp(String.raw`^projects\/[A-Za-z0-9]+\/(?:cover|hero|gallery)\/${imageName}$`);
+const contentKeyPattern = new RegExp(
+  String.raw`^content\/(?:about-feature|experience|client|home-portrait|home-logo)\/[A-Za-z0-9-]+\/${imageName}$`,
+);
+
+export const contentAssetScopes = ["about-feature", "experience", "client", "home-portrait", "home-logo"] as const;
+
+export type ContentAssetScope = (typeof contentAssetScopes)[number];
 
 export function isAllowedImageType(value: string): value is AllowedImageType {
   return value in allowedImageTypes;
@@ -39,6 +46,14 @@ export function validateImageUpload(input: { type: string; size: number }) {
 
 export function isPortfolioAssetKey(projectId: string, key: string) {
   return key.startsWith(`projects/${projectId}/`) && keyPattern.test(key);
+}
+
+export function isContentAssetScope(value: string): value is ContentAssetScope {
+  return contentAssetScopes.includes(value as ContentAssetScope);
+}
+
+export function isContentAssetKey(scope: ContentAssetScope, ownerId: string, key: string) {
+  return key.startsWith(`content/${scope}/${ownerId}/`) && contentKeyPattern.test(key);
 }
 
 export function matchesImageSignature(type: AllowedImageType, bytes: Uint8Array) {

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
-import { site } from "@/data/site";
+import { getPublicSite } from "@/lib/content/site";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -10,57 +10,57 @@ const manrope = Manrope({
   variable: "--font-manrope",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(site.url),
-  title: {
-    default: site.title,
-    template: `%s — ${site.name}`,
-  },
-  description: site.description,
-  applicationName: site.name,
-  authors: [{ name: site.name, url: site.url }],
-  creator: site.name,
-  keywords: [
-    "edrisa",
-    "creative director",
-    "brand designer",
-    "portfolio",
-    "branding",
-  ],
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: site.url,
-    siteName: site.name,
-    title: site.title,
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getPublicSite();
+  return {
+    metadataBase: new URL(site.url),
+    title: {
+      default: site.title,
+      template: `%s — ${site.name}`,
+    },
     description: site.description,
-  },
-  twitter: {
-    card: "summary",
-    title: site.title,
-    description: site.description,
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+    applicationName: site.name,
+    authors: [{ name: site.name, url: site.url }],
+    creator: site.name,
+    keywords: ["edrisa", "creative director", "brand designer", "portfolio", "branding"],
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: site.url,
+      siteName: site.name,
+      title: site.title,
+      description: site.description,
+    },
+    twitter: {
+      card: "summary",
+      title: site.title,
+      description: site.description,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#3a291f",
   colorScheme: "dark",
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: site.name,
-  url: site.url,
-  jobTitle: "Creative Director and Brand Designer",
-  description: site.description,
-};
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const site = await getPublicSite();
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: site.name,
+    url: site.url,
+    jobTitle: "Creative Director and Brand Designer",
+    description: site.description,
+  };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${manrope.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">

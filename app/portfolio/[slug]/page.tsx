@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PortfolioScreen } from "@/components/portfolio/PortfolioScreen";
 import { ProjectDetail } from "@/components/portfolio/ProjectDetail";
+import { getPublicCta } from "@/lib/content/cta";
 import { getPublishedCategories, getPublishedProjects } from "@/lib/content/portfolio";
+import { getPublicSite } from "@/lib/content/site";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,12 @@ export async function generateMetadata({ params }: ProjectRouteProps): Promise<M
 
 export default async function ProjectRoute({ params }: ProjectRouteProps) {
   const { slug } = await params;
-  const [projects, categories] = await Promise.all([getPublishedProjects(), getPublishedCategories()]);
+  const [projects, categories, cta, site] = await Promise.all([
+    getPublishedProjects(),
+    getPublishedCategories(),
+    getPublicCta("portfolio"),
+    getPublicSite(),
+  ]);
   const index = projects.findIndex((item) => item.slug === slug);
   const project = index >= 0 ? projects[index] : null;
 
@@ -39,12 +46,27 @@ export default async function ProjectRoute({ params }: ProjectRouteProps) {
 
   return (
     <>
-      <PortfolioScreen projects={projects} categories={["All", ...categories]} />
+      <PortfolioScreen
+        projects={projects}
+        categories={["All", ...categories]}
+        cta={
+          cta
+            ? { heading: cta.heading, body: cta.body, buttonLabel: cta.buttonLabel, href: cta.buttonHref }
+            : undefined
+        }
+      />
       <ProjectDetail
         project={project}
         previous={{ slug: previous.slug, title: previous.title }}
         next={{ slug: next.slug, title: next.title }}
         categories={categories}
+        contact={{
+          portraitSrc: site.portraitSrc,
+          portraitWidth: site.portraitWidth,
+          portraitHeight: site.portraitHeight,
+          whatsapp: site.socials.find((item) => item.id === "whatsapp")?.href ?? "",
+          profiles: site.socials,
+        }}
       />
     </>
   );

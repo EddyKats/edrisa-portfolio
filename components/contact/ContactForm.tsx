@@ -11,7 +11,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const fieldClass =
   "mt-2 w-full rounded-xl border border-ink/15 bg-white px-4 py-3 text-base text-ink outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
-export function ContactForm() {
+export function ContactForm({ heading }: { heading: string }) {
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<string | null>(null);
 
@@ -43,7 +43,7 @@ export function ContactForm() {
 
   return (
     <form className="rounded-2xl bg-white px-6 py-8 shadow-[0_12px_40px_rgb(28_18_14/0.05)] sm:px-8" noValidate onSubmit={onSubmit}>
-      <h2 className="text-xl font-semibold tracking-tight">{contactCopy.formHeading}</h2>
+      <h2 className="text-xl font-semibold tracking-tight">{heading}</h2>
       <div className="mt-8 space-y-6">
         <Field
           id="contact-name"

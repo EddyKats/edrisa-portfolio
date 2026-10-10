@@ -9,12 +9,15 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   extensionFor,
+  isContentAssetKey,
+  isContentAssetScope,
   isPortfolioAssetKey,
   matchesImageSignature,
   mediaBucket,
   readImageSize,
   validateImageUpload,
   type AllowedImageType,
+  type ContentAssetScope,
 } from "./validation";
 
 export type PortfolioAssetRole = "cover" | "hero" | "gallery";
@@ -76,6 +79,37 @@ export async function createPortfolioUpload(input: {
   };
 }
 
+export async function createContentUpload(input: {
+  scope: string;
+  ownerId: string;
+  type: string;
+  size: number;
+}) {
+  const error = validateImageUpload(input);
+  if (error || !isContentAssetScope(input.scope)) return { error: error ?? "That upload could not be started." };
+  assertOwnerId(input.ownerId);
+  const type = input.type as AllowedImageType;
+  const key = `content/${input.scope}/${input.ownerId}/${crypto.randomUUID()}.${extensionFor(type)}`;
+  const command = new PutObjectCommand({
+    Bucket: mediaBucket,
+    Key: key,
+    ContentType: type,
+    ContentLength: input.size,
+  });
+  const uploadUrl = await getSignedUrl(client(), command, { expiresIn: 300 });
+  return { uploadUrl, key, headers: { "Content-Type": type } };
+}
+
+export async function inspectContentAsset(
+  scope: ContentAssetScope,
+  ownerId: string,
+  key: string,
+): Promise<PortfolioAsset | { error: string }> {
+  if (!storageConfigured()) return { error: "Image storage is not configured." };
+  if (!isContentAssetKey(scope, ownerId, key)) return { error: "That upload could not be verified." };
+  return inspectStoredImage(key);
+}
+
 export async function uploadPortfolioAsset(input: {
   projectId: string;
   role: PortfolioAssetRole;
@@ -107,6 +141,10 @@ export async function inspectPortfolioAsset(projectId: string, key: string): Pro
   if (!storageConfigured()) return { error: "Image storage is not configured." };
   if (!isPortfolioAssetKey(projectId, key)) return { error: "That upload could not be verified." };
 
+  return inspectStoredImage(key);
+}
+
+async function inspectStoredImage(key: string): Promise<PortfolioAsset | { error: string }> {
   const stored = await client().send(new HeadObjectCommand({ Bucket: mediaBucket, Key: key }));
   const type = stored.ContentType ?? "";
   const size = stored.ContentLength ?? 0;
@@ -172,6 +210,10 @@ function storageEndpoint() {
 
 function assertProjectId(projectId: string) {
   if (!/^[A-Za-z0-9]+$/.test(projectId)) throw new Error("That project could not be found.");
+}
+
+function assertOwnerId(ownerId: string) {
+  if (!/^[A-Za-z0-9-]+$/.test(ownerId)) throw new Error("That record could not be found.");
 }
 
 async function readObjectStart(key: string) {

@@ -1,5 +1,5 @@
 import { FaBehance, FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
-import { socialProfiles } from "@/data/site";
+import type { PublicSocial } from "@/lib/content/site-shape";
 
 const icons = {
   behance: FaBehance,
@@ -8,15 +8,17 @@ const icons = {
 } as const;
 
 export function SocialLinks({
+  profiles,
   className = "home-social",
   label = "Social",
 }: {
+  profiles: PublicSocial[];
   className?: string;
   label?: string;
 }) {
   return (
     <nav aria-label={label} className={className}>
-      {socialProfiles.map((item) => {
+      {profiles.map((item) => {
         const Icon = icons[item.id];
         const label = "iconLabel" in item ? item.iconLabel : item.label;
 

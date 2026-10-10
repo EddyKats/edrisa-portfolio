@@ -1,0 +1,264 @@
+// Portfolio content studio. Design stays in code. This schema stores content only.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProjectSize {
+  STANDARD
+  LARGE
+  WIDE
+  TALL
+}
+
+model SiteSettings {
+  id                    String   @id @default("site")
+  siteName              String
+  siteUrl               String
+  homepagePortraitUrl   String?
+  logoUrl               String?
+  behanceUrl            String
+  linkedinUrl           String
+  whatsappUrl           String
+  contactEmail          String?
+  contactPhone          String?
+  location              String?
+  footerText            String?
+  footerSecondaryText   String?
+  defaultSeoTitle       String?
+  defaultSeoDescription String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model HomeContent {
+  id                 String   @id @default("home")
+  portraitUrl        String?
+  logoUrl            String?
+  aboutTileLabel     String
+  servicesTileLabel  String
+  contactTileLabel   String
+  portfolioTileLabel String
+  updatedAt          DateTime @updatedAt
+}
+
+model AboutContent {
+  id               String   @id @default("about")
+  pageTitle        String
+  introHeading     String
+  introParagraph   String   @db.Text
+  storyHeading     String
+  storyBody        String   @db.Text
+  featureMediaUrl  String?
+  featureMediaType String?
+  ctaHeading       String?
+  ctaText          String?  @db.Text
+  ctaButtonLabel   String?
+  ctaButtonHref    String?
+  seoTitle         String?
+  seoDescription   String?  @db.Text
+  updatedAt        DateTime @updatedAt
+}
+
+model AboutStat {
+  id        String  @id @default(cuid())
+  value     String
+  label     String
+  icon      String
+  sortOrder Int     @default(0)
+  published Boolean @default(false)
+
+  @@index([published, sortOrder])
+}
+
+model Experience {
+  id        String    @id @default(cuid())
+  company   String
+  role      String
+  microcopy String?
+  imageUrl  String?
+  startDate DateTime?
+  endDate   DateTime?
+  sortOrder Int       @default(0)
+  published Boolean   @default(false)
+
+  @@index([published, sortOrder])
+}
+
+model Service {
+  id          String           @id @default(cuid())
+  title       String
+  slug        String           @unique
+  description String           @db.Text
+  icon        String
+  sortOrder   Int              @default(0)
+  published   Boolean          @default(false)
+  projects    ProjectService[]
+
+  @@index([published, sortOrder])
+}
+
+model CapabilityPackage {
+  id          String           @id @default(cuid())
+  title       String
+  description String?          @db.Text
+  buttonLabel String
+  sortOrder   Int              @default(0)
+  published   Boolean          @default(false)
+  items       CapabilityItem[]
+
+  @@index([published, sortOrder])
+}
+
+model CapabilityItem {
+  id        String            @id @default(cuid())
+  packageId String
+  package   CapabilityPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  label     String
+  sortOrder Int               @default(0)
+
+  @@index([packageId, sortOrder])
+}
+
+model Client {
+  id        String  @id @default(cuid())
+  name      String
+  logoUrl   String?
+  website   String?
+  sortOrder Int     @default(0)
+  published Boolean @default(false)
+
+  @@index([published, sortOrder])
+}
+
+model PortfolioCategory {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  sortOrder Int       @default(0)
+  published Boolean   @default(false)
+  projects  Project[]
+
+  @@index([published, sortOrder])
+}
+
+model Project {
+  id               String             @id @default(cuid())
+  slug             String             @unique
+  title            String
+  categoryId       String
+  category         PortfolioCategory  @relation(fields: [categoryId], references: [id])
+  client           String
+  year             Int?
+  role             String?
+  shortDescription String?            @db.Text
+  fullDescription  String?            @db.Text
+  coverImageUrl    String?
+  coverImageWidth  Int?
+  coverImageHeight Int?
+  heroImageUrl     String?
+  heroImageWidth   Int?
+  heroImageHeight  Int?
+  size             ProjectSize        @default(STANDARD)
+  sortOrder        Int                @default(0)
+  featured         Boolean            @default(false)
+  published        Boolean            @default(false)
+  seoTitle         String?
+  seoDescription   String?            @db.Text
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  images           ProjectImage[]
+  services         ProjectService[]
+  software         ProjectSoftware[]
+  credits          ProjectCredit[]
+
+  @@index([published, sortOrder])
+  @@index([categoryId])
+}
+
+model ProjectImage {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String  @default("")
+  caption   String?
+  width     Int?
+  height    Int?
+  sortOrder Int     @default(0)
+
+  @@index([projectId, sortOrder])
+}
+
+model ProjectService {
+  projectId String
+  serviceId String
+  sortOrder Int     @default(0)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, serviceId])
+  @@index([projectId, sortOrder])
+}
+
+model Software {
+  id        String            @id @default(cuid())
+  key       String            @unique
+  name      String
+  iconKey   String
+  sortOrder Int               @default(0)
+  published Boolean           @default(false)
+  projects  ProjectSoftware[]
+
+  @@index([published, sortOrder])
+}
+
+model ProjectSoftware {
+  projectId  String
+  softwareId String
+  sortOrder  Int      @default(0)
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  software   Software @relation(fields: [softwareId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, softwareId])
+  @@index([projectId, sortOrder])
+}
+
+model ProjectCredit {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label     String
+  value     String
+  sortOrder Int     @default(0)
+
+  @@index([projectId, sortOrder])
+}
+
+model ContactContent {
+  id             String   @id @default("contact")
+  pageTitle      String
+  subtitle       String?
+  location       String?
+  email          String?
+  phone          String?
+  formHeading    String?
+  socialHeading  String?
+  seoTitle       String?
+  seoDescription String?  @db.Text
+  updatedAt      DateTime @updatedAt
+}
+
+model CTA {
+  id          String @id @default(cuid())
+  key         String @unique
+  heading     String
+  body        String @db.Text
+  buttonLabel String
+  buttonHref  String
+}

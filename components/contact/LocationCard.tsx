@@ -1,7 +1,7 @@
 import { MapPin } from "lucide-react";
-import { contactCopy, contactDetails } from "@/data/contact";
+import { contactCopy } from "@/data/contact";
 
-export function LocationCard() {
+export function LocationCard({ location }: { location: string }) {
   return (
     <section
       aria-labelledby="contact-location"
@@ -10,7 +10,7 @@ export function LocationCard() {
       <MapPin className="mt-0.5 size-5 shrink-0 text-ink/70" strokeWidth={1.5} aria-hidden="true" />
       <div>
         <h2 id="contact-location" className="text-lg font-semibold tracking-tight">
-          {contactDetails.location}
+          {location}
         </h2>
         <p className="mt-1 text-sm leading-relaxed text-ink/60">{contactCopy.locationNote}</p>
       </div>

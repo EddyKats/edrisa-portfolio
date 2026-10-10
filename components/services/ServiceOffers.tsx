@@ -1,6 +1,8 @@
 import { Gem, Layers, Zap, type LucideIcon } from "lucide-react";
-import { serviceOffers, type ServiceIconName } from "@/data/services";
 import { getNavItem } from "@/data/navigation";
+import type { NavId } from "@/data/navigation";
+
+type ServiceIconName = "gem" | "zap" | "layers";
 
 const icons: Record<ServiceIconName, LucideIcon> = {
   gem: Gem,
@@ -8,11 +10,15 @@ const icons: Record<ServiceIconName, LucideIcon> = {
   layers: Layers,
 };
 
-export function ServiceOffers() {
+export function ServiceOffers({
+  offers,
+}: {
+  offers: { title: string; summary: string; icon: ServiceIconName; surface: NavId }[];
+}) {
   return (
     <section aria-label="Main services" className="mt-14 sm:mt-16">
       <ul className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
-        {serviceOffers.map((offer) => {
+        {offers.map((offer) => {
           const Icon = icons[offer.icon];
           const surface = getNavItem(offer.surface).surfaceClass;
 

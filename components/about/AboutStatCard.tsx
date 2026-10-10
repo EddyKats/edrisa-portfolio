@@ -1,7 +1,11 @@
 import { Clock, Layers, Sparkles, type LucideIcon } from "lucide-react";
-import type { aboutStats } from "@/data/about";
 
-type Stat = (typeof aboutStats)[number];
+type Stat = {
+  value: string;
+  label: string;
+  icon: "layers" | "sparkles" | "clock";
+  tone: "cyan" | "violet" | "magenta";
+};
 
 const icons: Record<Stat["icon"], LucideIcon> = {
   layers: Layers,

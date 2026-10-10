@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { FaBehance, FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
 import { projectTones } from "@/components/portfolio/projectTones";
-import { getProjectNeighbors, portfolioCategories, type PortfolioCategory, type PortfolioProject } from "@/data/portfolio";
-import { site, socialLinks, socialProfiles } from "@/data/site";
+import { type PortfolioCategory, type PortfolioGalleryImage, type PortfolioProject } from "@/data/portfolio";
+import type { PublicSocial } from "@/lib/content/site-shape";
 import { softwareRegistry, type SoftwareId } from "@/data/software";
 
 const returnKey = "edrisa-portfolio-return";
@@ -23,13 +23,30 @@ const contactIcons = {
 const circleClass =
   "grid size-12 shrink-0 place-items-center rounded-full bg-[#f7f1ea] text-mocha-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink split:focus-visible:outline-white";
 
-export function ProjectDetail({ project }: { project: PortfolioProject }) {
+export function ProjectDetail({
+  project,
+  previous,
+  next,
+  categories,
+  contact,
+}: {
+  project: PortfolioProject;
+  previous: { slug: string; title: string };
+  next: { slug: string; title: string };
+  categories: string[];
+  contact: {
+    portraitSrc: string;
+    portraitWidth: number;
+    portraitHeight: number;
+    whatsapp: string;
+    profiles: PublicSocial[];
+  };
+}) {
   const router = useRouter();
   const routerRef = useRef(router);
   const shellRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [hireVisible, setHireVisible] = useState(true);
-  const { previous, next } = getProjectNeighbors(project.slug);
   const hero = project.heroImage ?? project.coverImage;
   const titleId = `project-${project.slug}-title`;
   const tools = project.software;
@@ -41,13 +58,13 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
   }, [router]);
 
   function close() {
-    router.push(portfolioReturnHref());
+    router.push(portfolioReturnHref(categories));
   }
 
   function openProject(event: MouseEvent<HTMLAnchorElement>, slug: string) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault();
-    router.push(projectPath(slug), { scroll: false });
+    router.push(projectPath(slug, categories), { scroll: false });
   }
 
   useEffect(() => {
@@ -63,7 +80,7 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        routerRef.current.push(portfolioReturnHref());
+        routerRef.current.push(portfolioReturnHref(categories));
         return;
       }
 
@@ -102,7 +119,7 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
       document.body.style.right = "";
       window.scrollTo(0, scrollY);
     };
-  }, []);
+  }, [categories]);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -140,12 +157,12 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <article className={`px-5 pt-2 sm:px-10 ${hireVisible ? "pb-8 split:pb-36" : "pb-12 split:pb-14"}`}>
-                <Creator />
+                <Creator contact={contact} />
                 <h1 id={titleId} className="mt-8 text-[clamp(2.1rem,4vw,3.4rem)] font-medium tracking-tight">
                   {project.title}
                 </h1>
                 <p className="mt-3 text-base text-ink/60">{subtitle}</p>
-                <Hero src={hero} category={project.category} />
+                <Hero src={hero} category={project.category} width={project.heroWidth} height={project.heroHeight} />
                 {project.shortDescription ? (
                   <p className="mt-8 max-w-2xl text-[1.05rem] leading-relaxed text-ink/75">{project.shortDescription}</p>
                 ) : null}
@@ -184,16 +201,16 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
                     Find me
                   </h2>
                   <ul className="mt-4 flex flex-wrap gap-4">
-                    {contactLinks().map((item) => (
+                    {orderedContacts(contact.profiles).map((item) => (
                       <ContactItem key={item.id} item={item} />
                     ))}
                   </ul>
                 </section>
                 {project.galleryImages.length > 0 ? (
                   <ul className="mt-12 grid gap-4">
-                    {project.galleryImages.map((src) => (
-                      <li key={src}>
-                        <Artwork src={src} />
+                    {project.galleryImages.map((image) => (
+                      <li key={image.src}>
+                        <Artwork image={image} />
                       </li>
                     ))}
                   </ul>
@@ -239,32 +256,32 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
             </div>
             {hireVisible ? (
               <div className="shrink-0 border-t border-ink/10 bg-[#fffdfb] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] split:hidden">
-                <HireCard compact onDismiss={() => setHireVisible(false)} />
+                <HireCard contact={contact} compact onDismiss={() => setHireVisible(false)} />
               </div>
             ) : null}
             {hireVisible ? (
               <div className="pointer-events-none absolute inset-x-0 bottom-4 z-30 hidden justify-center px-8 split:flex">
                 <div className="pointer-events-auto">
-                  <HireCard onDismiss={() => setHireVisible(false)} />
+                  <HireCard contact={contact} onDismiss={() => setHireVisible(false)} />
                 </div>
               </div>
             ) : null}
           </div>
-          <ActionRail tools={tools} />
+          <ActionRail tools={tools} profiles={contact.profiles} />
         </div>
       </div>
     </div>
   );
 }
 
-function Creator() {
+function Creator({ contact }: { contact: { portraitSrc: string; portraitWidth: number; portraitHeight: number } }) {
   return (
     <div className="flex items-center gap-3 pr-12">
       <Image
-        src={site.portraitSrc}
+        src={contact.portraitSrc}
         alt=""
-        width={site.portraitWidth}
-        height={site.portraitHeight}
+        width={contact.portraitWidth}
+        height={contact.portraitHeight}
         className="size-10 rounded-full object-cover"
       />
       <div>
@@ -275,28 +292,57 @@ function Creator() {
   );
 }
 
-function Hero({ src, category }: { src: string | null; category: PortfolioProject["category"] }) {
+function Hero({
+  src,
+  category,
+  width,
+  height,
+}: {
+  src: string | null;
+  category: string;
+  width?: number | null;
+  height?: number | null;
+}) {
   if (!src) {
-    return <div className={`mt-8 aspect-[16/10] rounded-2xl ${projectTones[category]}`} aria-hidden="true" />;
+    return <div className={`mt-8 aspect-[16/10] rounded-2xl ${toneFor(category)}`} aria-hidden="true" />;
   }
 
   return (
     <figure className="mt-8 overflow-hidden rounded-2xl">
-      <Artwork src={src} priority />
+      <Artwork image={{ src, alt: "", caption: null, width: width ?? null, height: height ?? null }} priority />
     </figure>
   );
 }
 
-function Artwork({ src, priority = false }: { src: string; priority?: boolean }) {
+function Artwork({ image, priority = false }: { image: PortfolioGalleryImage; priority?: boolean }) {
+  if (image.width && image.height) {
+    return (
+      <Image
+        src={image.src}
+        alt={image.alt}
+        width={image.width}
+        height={image.height}
+        priority={priority}
+        sizes="(min-width: 960px) 70vw, 100vw"
+        className="h-auto w-full"
+      />
+    );
+  }
+
   return (
     // Dimensions are unknown until the file is supplied, so the image keeps its own ratio.
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" className="block h-auto w-full" fetchPriority={priority ? "high" : "auto"} />
+    <img src={image.src} alt={image.alt} className="block h-auto w-full" fetchPriority={priority ? "high" : "auto"} />
   );
 }
 
-function ActionRail({ tools }: { tools: SoftwareId[] }) {
-  const contacts = contactLinks();
+function toneFor(category: string) {
+  if (category in projectTones) return projectTones[category as PortfolioCategory];
+  return "bg-[#2e211c]";
+}
+
+function ActionRail({ tools, profiles }: { tools: SoftwareId[]; profiles: PublicSocial[] }) {
+  const contacts = orderedContacts(profiles);
 
   return (
     <aside className="hidden shrink-0 flex-col items-center justify-center gap-2.5 self-center split:flex" aria-label="Project actions">
@@ -369,21 +415,29 @@ function ContactItem({ item }: { item: ContactProfile }) {
   );
 }
 
-function HireCard({ compact = false, onDismiss }: { compact?: boolean; onDismiss: () => void }) {
+function HireCard({
+  contact,
+  compact = false,
+  onDismiss,
+}: {
+  contact: { portraitSrc: string; portraitWidth: number; portraitHeight: number; whatsapp: string };
+  compact?: boolean;
+  onDismiss: () => void;
+}) {
   return (
     <div className="relative flex items-center gap-3 rounded-2xl bg-mocha-deep py-3 pr-10 pl-3 text-[#f7f1ea] shadow-[0_12px_36px_rgba(28,18,14,0.22)]">
       <Image
-        src={site.portraitSrc}
+        src={contact.portraitSrc}
         alt=""
-        width={site.portraitWidth}
-        height={site.portraitHeight}
+        width={contact.portraitWidth}
+        height={contact.portraitHeight}
         className="size-10 shrink-0 rounded-full object-cover"
       />
       <p className={`min-w-0 flex-1 text-sm leading-snug ${compact ? "max-w-[11rem]" : "max-w-[14rem]"}`}>
         {compact ? "Available for the right project." : "Edrisa is available for the right project."}
       </p>
       <a
-        href={socialLinks.whatsapp}
+        href={contact.whatsapp}
         target="_blank"
         rel="noopener noreferrer"
         className="shrink-0 rounded-full bg-[#f7f1ea] px-3.5 py-2 text-sm font-semibold text-mocha-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
@@ -413,11 +467,11 @@ function Tooltip({ label }: { label: string }) {
   );
 }
 
-type ContactProfile = (typeof socialProfiles)[number];
+type ContactProfile = PublicSocial;
 
-function contactLinks() {
+function orderedContacts(profiles: PublicSocial[]) {
   return contactOrder.flatMap((id) => {
-    const item = socialProfiles.find((profile) => profile.id === id);
+    const item = profiles.find((profile) => profile.id === id);
     return item ? [item] : [];
   });
 }
@@ -435,22 +489,18 @@ function projectFacts(project: PortfolioProject) {
   ].filter((fact): fact is { label: string; value: string } => fact !== null);
 }
 
-function portfolioReturnHref() {
+function portfolioReturnHref(categories: string[]) {
   const category = new URLSearchParams(window.location.search).get("category");
-  if (isCategory(category)) return `/portfolio?category=${encodeURIComponent(category)}`;
+  if (category && categories.includes(category)) return `/portfolio?category=${encodeURIComponent(category)}`;
   const stored = sessionStorage.getItem(returnKey);
   if (stored === "/portfolio" || stored?.startsWith("/portfolio?")) return stored;
   return "/portfolio";
 }
 
-function projectPath(slug: string) {
-  const back = portfolioReturnHref();
+function projectPath(slug: string, categories: string[]) {
+  const back = portfolioReturnHref(categories);
   const query = back.startsWith("/portfolio?") ? back.slice("/portfolio".length) : "";
   return `/portfolio/${slug}${query}`;
-}
-
-function isCategory(value: string | null): value is PortfolioCategory {
-  return portfolioCategories.some((category) => category === value && category !== "All");
 }
 
 function focusable(root: HTMLElement) {

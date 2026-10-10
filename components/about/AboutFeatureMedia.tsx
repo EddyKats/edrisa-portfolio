@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { Play } from "lucide-react";
 import { Watermark } from "@/components/site/Watermark";
-import { aboutFeature } from "@/data/about";
 import { getNavItem } from "@/data/navigation";
 
 const aboutSurface = getNavItem("about").surfaceClass;
@@ -10,14 +9,14 @@ const aboutSurface = getNavItem("about").surfaceClass;
  * The centered play mark is visual only.
  * Connect playback here when a showreel file exists.
  */
-export function AboutFeatureMedia() {
+export function AboutFeatureMedia({ src }: { src: string | null }) {
   return (
     <figure className="mt-14 sm:mt-16">
       <div className="relative aspect-video overflow-hidden rounded-[12px]">
-        {aboutFeature.src ? (
+        {src ? (
           <Image
-            src={aboutFeature.src}
-            alt={aboutFeature.alt}
+            src={src}
+            alt=""
             fill
             priority
             sizes="(min-width: 960px) 720px, 100vw"

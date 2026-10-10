@@ -2,49 +2,72 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PortfolioScreen } from "@/components/portfolio/PortfolioScreen";
 import { ProjectDetail } from "@/components/portfolio/ProjectDetail";
-import { getPortfolioProject, getProjectMeta, portfolioProjects } from "@/data/portfolio";
+import { getPublicCta } from "@/lib/content/cta";
+import { getPublishedCategories, getPublishedProjects } from "@/lib/content/portfolio";
+import { getPublicSite } from "@/lib/content/site";
+
+export const dynamic = "force-dynamic";
 
 type ProjectRouteProps = {
   params: Promise<{ slug: string }>;
 };
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return portfolioProjects.map((project) => ({ slug: project.slug }));
-}
-
 export async function generateMetadata({ params }: ProjectRouteProps): Promise<Metadata> {
   const { slug } = await params;
-  const project = getPortfolioProject(slug);
+  const projects = await getPublishedProjects();
+  const project = projects.find((item) => item.slug === slug);
 
-  if (!project) {
-    return {};
-  }
-
-  const meta = getProjectMeta(project);
+  if (!project) return {};
 
   return {
-    title: { absolute: meta.title },
-    description: meta.description,
+    title: { absolute: project.seoTitle || `${project.title} | Edrisa` },
+    description: project.seoDescription || project.shortDescription || `${project.title}. ${project.category}.`,
     alternates: {
-      canonical: meta.canonical,
+      canonical: `/portfolio/${project.slug}`,
     },
   };
 }
 
 export default async function ProjectRoute({ params }: ProjectRouteProps) {
   const { slug } = await params;
-  const project = getPortfolioProject(slug);
+  const [projects, categories, cta, site] = await Promise.all([
+    getPublishedProjects(),
+    getPublishedCategories(),
+    getPublicCta("portfolio"),
+    getPublicSite(),
+  ]);
+  const index = projects.findIndex((item) => item.slug === slug);
+  const project = index >= 0 ? projects[index] : null;
 
-  if (!project) {
-    notFound();
-  }
+  if (!project) notFound();
+
+  const previous = projects[(index - 1 + projects.length) % projects.length] ?? project;
+  const next = projects[(index + 1) % projects.length] ?? project;
 
   return (
     <>
-      <PortfolioScreen />
-      <ProjectDetail project={project} />
+      <PortfolioScreen
+        projects={projects}
+        categories={["All", ...categories]}
+        cta={
+          cta
+            ? { heading: cta.heading, body: cta.body, buttonLabel: cta.buttonLabel, href: cta.buttonHref }
+            : undefined
+        }
+      />
+      <ProjectDetail
+        project={project}
+        previous={{ slug: previous.slug, title: previous.title }}
+        next={{ slug: next.slug, title: next.title }}
+        categories={categories}
+        contact={{
+          portraitSrc: site.portraitSrc,
+          portraitWidth: site.portraitWidth,
+          portraitHeight: site.portraitHeight,
+          whatsapp: site.socials.find((item) => item.id === "whatsapp")?.href ?? "",
+          profiles: site.socials,
+        }}
+      />
     </>
   );
 }

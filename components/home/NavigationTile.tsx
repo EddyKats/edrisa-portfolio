@@ -11,10 +11,11 @@ const ease = [0.22, 1, 0.36, 1] as const;
 
 type NavigationTileProps = {
   item: NavItem;
+  label: string;
   index: number;
 };
 
-export function NavigationTile({ item, index }: NavigationTileProps) {
+export function NavigationTile({ item, label, index }: NavigationTileProps) {
   const reduce = useReducedMotion();
 
   return (
@@ -48,7 +49,7 @@ export function NavigationTile({ item, index }: NavigationTileProps) {
               <NavIcon name={item.icon} className="nav-tile-icon" />
             </span>
             <span className="nav-tile-title transition-transform duration-500 ease-out group-hover:-translate-y-[3px] motion-reduce:transition-none motion-reduce:group-hover:transform-none">
-              {item.title}
+              {label}
             </span>
           </span>
         </MotionLink>

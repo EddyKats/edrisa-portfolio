@@ -1,7 +1,8 @@
 import { EdrisaLogo } from "@/components/site/EdrisaLogo";
-import { site, socialProfiles } from "@/data/site";
+import { getPublicSite } from "@/lib/content/site";
 
-export function InternalFooter() {
+export async function InternalFooter() {
+  const site = await getPublicSite();
   const year = new Date().getFullYear();
 
   return (
@@ -9,10 +10,11 @@ export function InternalFooter() {
       <div className="relative z-10 flex flex-col gap-6 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-8 sm:pt-10">
         <div>
           <p className="max-w-[18rem] text-sm leading-relaxed text-white/72">{site.footerNote}</p>
+          {site.footerSecondary ? <p className="mt-3 text-sm text-white/72">{site.footerSecondary}</p> : null}
           <p className="mt-4 text-sm text-white/88">© {year} Edrisa.</p>
         </div>
         <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm sm:flex-col sm:items-end">
-          {socialProfiles.map((item) => (
+          {site.socials.map((item) => (
             <li key={item.id}>
               <a
                 href={item.href}

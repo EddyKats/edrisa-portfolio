@@ -1,8 +1,15 @@
 import { HeroPanel } from "@/components/home/HeroPanel";
 import { HomeScrollLock } from "@/components/home/HomeScrollLock";
 import { NavigationGrid } from "@/components/home/NavigationGrid";
+import type { PublicSite } from "@/lib/content/site-shape";
 
-export function HomeStage() {
+export function HomeStage({
+  site,
+  labels,
+}: {
+  site: PublicSite;
+  labels: { about: string; services: string; contact: string; portfolio: string };
+}) {
   return (
     <>
       <HomeScrollLock />
@@ -13,8 +20,8 @@ export function HomeStage() {
         Skip to navigation
       </a>
       <main className="home-screen">
-        <HeroPanel />
-        <NavigationGrid />
+        <HeroPanel site={site} />
+        <NavigationGrid labels={labels} />
       </main>
     </>
   );

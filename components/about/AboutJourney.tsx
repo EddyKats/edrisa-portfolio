@@ -1,5 +1,13 @@
 import Image from "next/image";
-import { aboutCopy, aboutJourney } from "@/data/about";
+
+type JourneyEntry = {
+  id: string;
+  company: string;
+  role: string;
+  note: string;
+  imageUrl: string | null;
+  initials: string;
+};
 
 const markTones = [
   "bg-[linear-gradient(145deg,#d9fff8,#8ee7f2)] text-[#145f73]",
@@ -7,24 +15,26 @@ const markTones = [
   "bg-[linear-gradient(145deg,#ffe3f0,#ffb3d1)] text-[#8a2458]",
 ];
 
-export function AboutJourney() {
+export function AboutJourney({ title, entries }: { title: string; entries: JourneyEntry[] }) {
+  if (entries.length === 0) return null;
+
   return (
     <section aria-labelledby="about-journey-title" className="mt-24 sm:mt-28">
       <h2
         id="about-journey-title"
         className="text-center text-[clamp(1.7rem,2.2vw,2.15rem)] font-semibold tracking-tight"
       >
-        {aboutCopy.journeyTitle}
+        {title}
       </h2>
       <ol className="mt-12 grid gap-12 sm:grid-cols-2 split:grid-cols-3 split:gap-8">
-        {aboutJourney.map((entry, index) => (
-          <li key={entry.company} className="text-center">
+        {entries.map((entry, index) => (
+          <li key={entry.id} className="text-center">
             <div
-              className={`mx-auto grid place-items-center overflow-hidden rounded-full font-semibold ${markTones[index]} ${index === 0 ? "size-28 text-2xl sm:size-32" : "size-24 text-xl sm:size-28"}`}
+              className={`mx-auto grid place-items-center overflow-hidden rounded-full font-semibold ${markTones[index % markTones.length]} ${index === 0 ? "size-28 text-2xl sm:size-32" : "size-24 text-xl sm:size-28"}`}
             >
-              {entry.markSrc ? (
+              {entry.imageUrl ? (
                 <Image
-                  src={entry.markSrc}
+                  src={entry.imageUrl}
                   alt=""
                   width={160}
                   height={160}

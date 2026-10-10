@@ -3,11 +3,11 @@
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { SocialLinks } from "@/components/home/SocialLinks";
-import { site } from "@/data/site";
+import type { PublicSite } from "@/lib/content/site-shape";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-export function HeroPanel() {
+export function HeroPanel({ site }: { site: PublicSite }) {
   const reduce = useReducedMotion();
 
   return (
@@ -32,7 +32,7 @@ export function HeroPanel() {
         />
       </motion.div>
 
-      <SocialLinks />
+        <SocialLinks profiles={site.socials} />
 
       <div
         aria-hidden="true"

@@ -7,21 +7,19 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { projectTones } from "@/components/portfolio/projectTones";
-import {
-  portfolioCategories,
-  portfolioCopy,
-  portfolioProjects,
-  type PortfolioFilter,
-  type PortfolioProject,
-  type ProjectSize,
-} from "@/data/portfolio";
+import { portfolioCopy, type PortfolioCategory, type PortfolioProject, type ProjectSize } from "@/data/portfolio";
 
 const scrollKey = "edrisa-portfolio-scroll";
 const returnKey = "edrisa-portfolio-return";
 const focusKey = "edrisa-portfolio-focus";
 
-function isFilter(value: string | null): value is PortfolioFilter {
-  return portfolioCategories.some((category) => category === value);
+function toneFor(category: string) {
+  if (category in projectTones) return projectTones[category as PortfolioCategory];
+  return "bg-[#2e211c]";
+}
+
+function isFilter(value: string | null, categories: string[]): value is string {
+  return Boolean(value && categories.includes(value));
 }
 
 const sizeClass: Record<ProjectSize, string> = {
@@ -31,15 +29,20 @@ const sizeClass: Record<ProjectSize, string> = {
   standard: "h-[17rem] sm:h-[18rem] xl:h-auto",
 };
 
-export function PortfolioBrowser() {
+export function PortfolioBrowser({
+  projects,
+  categories,
+}: {
+  projects: PortfolioProject[];
+  categories: string[];
+}) {
   const reduce = useReducedMotion();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const requested = searchParams.get("category");
-  const filter: PortfolioFilter = isFilter(requested) ? requested : "All";
-  const visible =
-    filter === "All" ? portfolioProjects : portfolioProjects.filter((project) => project.category === filter);
+  const filter = isFilter(requested, categories) ? requested : "All";
+  const visible = filter === "All" ? projects : projects.filter((project) => project.category === filter);
 
   useEffect(() => {
     if (pathname !== "/portfolio") return;
@@ -53,7 +56,7 @@ export function PortfolioBrowser() {
     });
   }, [pathname]);
 
-  function choose(category: PortfolioFilter) {
+  function choose(category: string) {
     const params = new URLSearchParams(searchParams.toString());
     if (category === "All") params.delete("category");
     else params.set("category", category);
@@ -71,7 +74,7 @@ export function PortfolioBrowser() {
   return (
     <div className="mt-14 sm:mt-16">
       <div role="group" aria-label="Filter projects" className="flex flex-wrap gap-2">
-        {portfolioCategories.map((category) => {
+        {categories.map((category) => {
           const selected = filter === category;
 
           return (
@@ -122,7 +125,7 @@ function ProjectCard({
   onOpen,
 }: {
   project: PortfolioProject;
-  filter: PortfolioFilter;
+  filter: string;
   onOpen: () => void;
 }) {
   const image = project.coverImage;
@@ -149,7 +152,7 @@ function ProjectCard({
             className="object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover:scale-[1.03]"
           />
         ) : (
-          <div className={`absolute inset-0 ${projectTones[project.category]}`} aria-hidden="true" />
+          <div className={`absolute inset-0 ${toneFor(project.category)}`} aria-hidden="true" />
         )}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[46%] bg-gradient-to-t from-[#1c120e]/62 via-[#1c120e]/18 to-transparent motion-safe:transition-all motion-safe:duration-500 motion-safe:group-hover:from-[#1c120e]/72" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-4 sm:p-5">

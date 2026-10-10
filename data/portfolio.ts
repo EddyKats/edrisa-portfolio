@@ -34,10 +34,18 @@ export type PortfolioCredit = {
   name: string;
 };
 
+export type PortfolioGalleryImage = {
+  src: string;
+  alt: string;
+  caption: string | null;
+  width: number | null;
+  height: number | null;
+};
+
 export type PortfolioProject = {
   slug: string;
   title: string;
-  category: PortfolioCategory;
+  category: string;
   client: string;
   year: number | null;
   role: string | null;
@@ -46,10 +54,14 @@ export type PortfolioProject = {
   fullDescription: string | null;
   coverImage: string | null;
   heroImage: string | null;
-  galleryImages: string[];
+  heroWidth?: number | null;
+  heroHeight?: number | null;
+  galleryImages: PortfolioGalleryImage[];
   credits: PortfolioCredit[];
   software: SoftwareId[];
   size: ProjectSize;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
 };
 
 /**

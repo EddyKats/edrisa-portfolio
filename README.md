@@ -52,4 +52,4 @@ Code changes still travel local → GitHub → Vercel. Content changes do not. S
 
 Portfolio images go to the Neon Object Storage bucket `edrisa-media`. Studio uploads allow JPEG, PNG, WebP, and AVIF up to 12 MB. The file is sent directly to storage with a short-lived upload URL so it can be larger than a Vercel request body. Postgres stores the public URL and image metadata only.
 
-Preview deployments are generated from `feature/content-studio` during development. Preview deployments should not share a production database once content editing goes live. A Neon branch per preview is the later step. This branch does not switch production over to the database.
+Preview deployments are generated from `feature/content-studio` during development. Preview sign-in uses that branch's stable alias as the GitHub callback, so a new preview hostname does not need another OAuth redirect URL. Local sign-in stays on `http://localhost:3000/api/auth/callback/github`. Preview deployments should not share a production database once content editing goes live. A Neon branch per preview is the later step. This branch does not switch production over to the database.

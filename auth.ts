@@ -7,9 +7,13 @@ const githubSecret = process.env.AUTH_GITHUB_SECRET;
 
 export const studioAuthConfigured = Boolean(process.env.AUTH_SECRET && githubId && githubSecret);
 
+const previewRedirectProxy =
+  process.env.VERCEL_ENV === "preview" ? process.env.AUTH_REDIRECT_PROXY_URL : undefined;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.AUTH_SECRET,
   trustHost: true,
+  ...(previewRedirectProxy ? { redirectProxyUrl: previewRedirectProxy } : {}),
   providers:
     githubId && githubSecret
       ? [

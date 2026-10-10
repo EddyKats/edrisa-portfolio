@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   images: {
     qualities: [75, 90],
     minimumCacheTTL: isDev ? 0 : 14400,
+    remotePatterns: storageRemotePatterns(),
   },
   async headers() {
     if (!isDev) {
@@ -27,3 +28,20 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+function storageRemotePatterns() {
+  const endpoint = process.env.AWS_ENDPOINT_URL_S3;
+  if (!endpoint) return [];
+
+  try {
+    return [
+      {
+        protocol: "https" as const,
+        hostname: new URL(endpoint).hostname,
+        pathname: "/edrisa-media/**",
+      },
+    ];
+  } catch {
+    return [];
+  }
+}

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { FaBehance, FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
 import { projectTones } from "@/components/portfolio/projectTones";
-import { getProjectNeighbors, portfolioCategories, type PortfolioCategory, type PortfolioProject } from "@/data/portfolio";
+import { type PortfolioCategory, type PortfolioGalleryImage, type PortfolioProject } from "@/data/portfolio";
 import { site, socialLinks, socialProfiles } from "@/data/site";
 import { softwareRegistry, type SoftwareId } from "@/data/software";
 
@@ -23,13 +23,22 @@ const contactIcons = {
 const circleClass =
   "grid size-12 shrink-0 place-items-center rounded-full bg-[#f7f1ea] text-mocha-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink split:focus-visible:outline-white";
 
-export function ProjectDetail({ project }: { project: PortfolioProject }) {
+export function ProjectDetail({
+  project,
+  previous,
+  next,
+  categories,
+}: {
+  project: PortfolioProject;
+  previous: { slug: string; title: string };
+  next: { slug: string; title: string };
+  categories: string[];
+}) {
   const router = useRouter();
   const routerRef = useRef(router);
   const shellRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const [hireVisible, setHireVisible] = useState(true);
-  const { previous, next } = getProjectNeighbors(project.slug);
   const hero = project.heroImage ?? project.coverImage;
   const titleId = `project-${project.slug}-title`;
   const tools = project.software;
@@ -41,13 +50,13 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
   }, [router]);
 
   function close() {
-    router.push(portfolioReturnHref());
+    router.push(portfolioReturnHref(categories));
   }
 
   function openProject(event: MouseEvent<HTMLAnchorElement>, slug: string) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault();
-    router.push(projectPath(slug), { scroll: false });
+    router.push(projectPath(slug, categories), { scroll: false });
   }
 
   useEffect(() => {
@@ -63,7 +72,7 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        routerRef.current.push(portfolioReturnHref());
+        routerRef.current.push(portfolioReturnHref(categories));
         return;
       }
 
@@ -102,7 +111,7 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
       document.body.style.right = "";
       window.scrollTo(0, scrollY);
     };
-  }, []);
+  }, [categories]);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -145,7 +154,7 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
                   {project.title}
                 </h1>
                 <p className="mt-3 text-base text-ink/60">{subtitle}</p>
-                <Hero src={hero} category={project.category} />
+                <Hero src={hero} category={project.category} width={project.heroWidth} height={project.heroHeight} />
                 {project.shortDescription ? (
                   <p className="mt-8 max-w-2xl text-[1.05rem] leading-relaxed text-ink/75">{project.shortDescription}</p>
                 ) : null}
@@ -191,9 +200,9 @@ export function ProjectDetail({ project }: { project: PortfolioProject }) {
                 </section>
                 {project.galleryImages.length > 0 ? (
                   <ul className="mt-12 grid gap-4">
-                    {project.galleryImages.map((src) => (
-                      <li key={src}>
-                        <Artwork src={src} />
+                    {project.galleryImages.map((image) => (
+                      <li key={image.src}>
+                        <Artwork image={image} />
                       </li>
                     ))}
                   </ul>
@@ -275,24 +284,53 @@ function Creator() {
   );
 }
 
-function Hero({ src, category }: { src: string | null; category: PortfolioProject["category"] }) {
+function Hero({
+  src,
+  category,
+  width,
+  height,
+}: {
+  src: string | null;
+  category: string;
+  width?: number | null;
+  height?: number | null;
+}) {
   if (!src) {
-    return <div className={`mt-8 aspect-[16/10] rounded-2xl ${projectTones[category]}`} aria-hidden="true" />;
+    return <div className={`mt-8 aspect-[16/10] rounded-2xl ${toneFor(category)}`} aria-hidden="true" />;
   }
 
   return (
     <figure className="mt-8 overflow-hidden rounded-2xl">
-      <Artwork src={src} priority />
+      <Artwork image={{ src, alt: "", caption: null, width: width ?? null, height: height ?? null }} priority />
     </figure>
   );
 }
 
-function Artwork({ src, priority = false }: { src: string; priority?: boolean }) {
+function Artwork({ image, priority = false }: { image: PortfolioGalleryImage; priority?: boolean }) {
+  if (image.width && image.height) {
+    return (
+      <Image
+        src={image.src}
+        alt={image.alt}
+        width={image.width}
+        height={image.height}
+        priority={priority}
+        sizes="(min-width: 960px) 70vw, 100vw"
+        className="h-auto w-full"
+      />
+    );
+  }
+
   return (
     // Dimensions are unknown until the file is supplied, so the image keeps its own ratio.
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" className="block h-auto w-full" fetchPriority={priority ? "high" : "auto"} />
+    <img src={image.src} alt={image.alt} className="block h-auto w-full" fetchPriority={priority ? "high" : "auto"} />
   );
+}
+
+function toneFor(category: string) {
+  if (category in projectTones) return projectTones[category as PortfolioCategory];
+  return "bg-[#2e211c]";
 }
 
 function ActionRail({ tools }: { tools: SoftwareId[] }) {
@@ -435,22 +473,18 @@ function projectFacts(project: PortfolioProject) {
   ].filter((fact): fact is { label: string; value: string } => fact !== null);
 }
 
-function portfolioReturnHref() {
+function portfolioReturnHref(categories: string[]) {
   const category = new URLSearchParams(window.location.search).get("category");
-  if (isCategory(category)) return `/portfolio?category=${encodeURIComponent(category)}`;
+  if (category && categories.includes(category)) return `/portfolio?category=${encodeURIComponent(category)}`;
   const stored = sessionStorage.getItem(returnKey);
   if (stored === "/portfolio" || stored?.startsWith("/portfolio?")) return stored;
   return "/portfolio";
 }
 
-function projectPath(slug: string) {
-  const back = portfolioReturnHref();
+function projectPath(slug: string, categories: string[]) {
+  const back = portfolioReturnHref(categories);
   const query = back.startsWith("/portfolio?") ? back.slice("/portfolio".length) : "";
   return `/portfolio/${slug}${query}`;
-}
-
-function isCategory(value: string | null): value is PortfolioCategory {
-  return portfolioCategories.some((category) => category === value && category !== "All");
 }
 
 function focusable(root: HTMLElement) {

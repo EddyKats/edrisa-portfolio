@@ -29,7 +29,7 @@ async function main() {
 
   const db = getDb();
   const tile = (id: "about" | "services" | "contact" | "portfolio") =>
-    navigation.find((item) => item.id === id)?.title ?? id;
+    navigation.find((item) => item.id === id)?.homeLabel ?? id;
 
   await db.siteSettings.upsert({
     where: { id: "site" },

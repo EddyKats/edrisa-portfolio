@@ -36,7 +36,7 @@ export function HeroPanel({ site }: { site: PublicSite }) {
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[34%] bg-gradient-to-t from-[#2e211c]/70 via-[#2e211c]/25 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[42%] bg-[linear-gradient(to_top,#000_0%,rgb(0_0_0/0.82)_22%,rgb(0_0_0/0.42)_58%,transparent_100%)]"
       />
 
       <motion.div

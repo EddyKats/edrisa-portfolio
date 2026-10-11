@@ -31,16 +31,24 @@ body {
   }
 }
 
+.home-frame {
+  position: fixed;
+  inset: 0;
+  background: #000;
+}
+
 .home-screen {
   position: fixed;
-  top: 0;
-  left: 0;
+  z-index: 1;
+  top: 0.65rem;
+  left: 0.65rem;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: 100svh;
-  height: 100dvh;
+  width: calc(100% - 1.3rem);
+  height: calc(100svh - 1.3rem);
+  height: calc(100dvh - 1.3rem);
   overflow: hidden;
+  border-radius: 1.25rem;
 }
 
 .home-hero,
@@ -59,27 +67,85 @@ body {
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }
 
+.nav-tile-kicker {
+  display: none;
+}
+
 .nav-tile-copy {
   position: absolute;
   z-index: 10;
-  bottom: 16%;
-  left: 8%;
+  right: 0.7rem;
+  bottom: 1rem;
+  left: 0.85rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.375rem;
+  gap: 0.4rem;
 }
 
 .nav-tile-icon {
-  width: clamp(1.5rem, 7.2vw, 1.875rem);
-  height: clamp(1.5rem, 7.2vw, 1.875rem);
+  width: clamp(1.3rem, 5.4vw, 1.65rem);
+  height: clamp(1.3rem, 5.4vw, 1.65rem);
 }
 
 .nav-tile-title {
-  font-size: clamp(1.0625rem, 4.8vw, 1.3125rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  font-family: var(--font-nevera), sans-serif;
+  font-size: clamp(1.28rem, 6.1vw, 1.7rem);
   line-height: 1;
-  font-weight: 600;
-  letter-spacing: 0.025em;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.nav-tile-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.home-nav .nav-tile[data-tile="services"] .nav-tile-title,
+.home-nav .nav-tile[data-tile="contact"] .nav-tile-title {
+  font-size: clamp(1.37rem, 6.5vw, 1.82rem);
+}
+
+.nav-tile-line + .nav-tile-line {
+  margin-top: -0.1em;
+  opacity: 0.78;
+  transition: opacity 500ms ease;
+}
+
+.group:hover .nav-tile-line + .nav-tile-line {
+  opacity: 0.94;
+}
+
+.home-nav .nav-mark[data-tile="portfolio"] {
+  --mark: 214 255 250;
+}
+
+.home-nav .nav-mark[data-tile="about"] {
+  --mark: 236 214 255;
+}
+
+.home-nav .nav-mark-core {
+  background: radial-gradient(
+    circle,
+    rgb(var(--mark) / 0.32) 0%,
+    rgb(var(--mark) / 0.18) 46%,
+    rgb(var(--mark) / 0.05) 70%,
+    rgb(var(--mark) / 0) 82%
+  );
+}
+
+.home-nav .nav-mark-ring {
+  background: radial-gradient(
+    circle,
+    rgb(var(--mark) / 0) 40%,
+    rgb(var(--mark) / 0.16) 56%,
+    rgb(var(--mark) / 0.1) 74%,
+    rgb(var(--mark) / 0) 88%
+  );
 }
 
 .nav-mark {
@@ -253,8 +319,8 @@ body {
 
 .home-social a {
   display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   place-items: center;
   color: #fff;
   opacity: 0.7;
@@ -265,8 +331,8 @@ body {
 }
 
 .home-social a svg {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .home-social a:hover,
@@ -304,7 +370,13 @@ body {
 
 @media (min-width: 60rem) {
   .home-screen {
+    top: 1rem;
+    left: 1rem;
     flex-direction: row;
+    width: calc(100% - 2rem);
+    height: calc(100svh - 2rem);
+    height: calc(100dvh - 2rem);
+    border-radius: 1.75rem;
   }
 
   .home-hero,
@@ -314,18 +386,40 @@ body {
     flex: 0 0 50%;
   }
 
+  .nav-tile-kicker {
+    position: absolute;
+    z-index: 10;
+    top: 1.75rem;
+    left: 2rem;
+    display: block;
+    font-family: var(--font-sans);
+    font-size: clamp(0.78rem, 0.82vw, 0.95rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    color: #fff;
+  }
+
   .nav-tile-copy {
-    bottom: 8%;
-    gap: 0.875rem;
+    right: 1.35rem;
+    bottom: 2rem;
+    left: 2rem;
+    gap: 0.8rem;
   }
 
   .nav-tile-icon {
-    width: 3.25rem;
-    height: 3.25rem;
+    width: clamp(2.2rem, 2.7vw, 3rem);
+    height: clamp(2.2rem, 2.7vw, 3rem);
   }
 
   .nav-tile-title {
-    font-size: clamp(1.5rem, 1.55vw, 1.875rem);
+    font-size: clamp(2.35rem, 3.05vw, 4.35rem);
+    line-height: 1;
+  }
+
+  .home-nav .nav-tile[data-tile="services"] .nav-tile-title,
+  .home-nav .nav-tile[data-tile="contact"] .nav-tile-title {
+    font-size: clamp(2.52rem, 3.26vw, 4.65rem);
   }
 
   .home-social {
@@ -334,7 +428,7 @@ body {
   }
 
   .home-social a svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.875rem;
+    height: 1.875rem;
   }
 }

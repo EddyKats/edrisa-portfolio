@@ -50,3 +50,9 @@ next-env.d.ts
 
 # local Neon project link
 /.neon
+
+# Licensed display font supplied locally. Do not commit the binary.
+/fonts/*.otf
+/fonts/*.ttf
+/fonts/*.woff
+/fonts/*.woff2

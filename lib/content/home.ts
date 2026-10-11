@@ -52,7 +52,7 @@ export async function saveHomePortrait(url: string) {
 }
 
 function label(id: "about" | "services" | "contact" | "portfolio") {
-  return navigation.find((item) => item.id === id)?.title ?? id;
+  return navigation.find((item) => item.id === id)?.homeLabel ?? id;
 }
 
 function required(value: string, name: string) {

@@ -2,6 +2,7 @@ export const navigation = [
   {
     id: "about",
     title: "About",
+    homeLabel: "About Edrisa",
     href: "/about",
     icon: "gem",
     transitionName: "section-about",
@@ -12,6 +13,7 @@ export const navigation = [
   {
     id: "services",
     title: "Services",
+    homeLabel: "What I Do",
     href: "/services",
     icon: "zap",
     transitionName: "section-services",
@@ -22,6 +24,7 @@ export const navigation = [
   {
     id: "contact",
     title: "Contact",
+    homeLabel: "Talk To Me",
     href: "/contact",
     icon: "pin",
     transitionName: "section-contact",
@@ -32,6 +35,7 @@ export const navigation = [
   {
     id: "portfolio",
     title: "Portfolio",
+    homeLabel: "Selected Works",
     href: "/portfolio",
     icon: "trophy",
     transitionName: "section-portfolio",

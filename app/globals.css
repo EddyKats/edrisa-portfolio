@@ -88,36 +88,35 @@ body {
   height: clamp(1.3rem, 5.4vw, 1.65rem);
 }
 
-.nav-tile-title {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
-  font-family: var(--font-nevera), sans-serif;
-  font-size: clamp(1.28rem, 6.1vw, 1.7rem);
-  line-height: 1;
-  font-weight: 400;
-  letter-spacing: 0;
+.nav-tile-art {
+  display: block;
+  max-width: 100%;
 }
 
-.nav-tile-line {
+.nav-tile-title {
   display: block;
-  white-space: nowrap;
+  width: auto;
+  max-width: 100%;
+  height: clamp(2.55rem, 11.6vw, 3.05rem);
+}
+
+.nav-title-second {
+  transition: opacity 500ms ease;
+}
+
+.group:hover .nav-title-second {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-title-second {
+    transition: none;
+  }
 }
 
 .home-nav .nav-tile[data-tile="services"] .nav-tile-title,
 .home-nav .nav-tile[data-tile="contact"] .nav-tile-title {
-  font-size: clamp(1.37rem, 6.5vw, 1.82rem);
-}
-
-.nav-tile-line + .nav-tile-line {
-  margin-top: -0.1em;
-  opacity: 0.78;
-  transition: opacity 500ms ease;
-}
-
-.group:hover .nav-tile-line + .nav-tile-line {
-  opacity: 0.94;
+  height: clamp(2.75rem, 12.4vw, 3.25rem);
 }
 
 .home-nav .nav-mark[data-tile="portfolio"] {
@@ -413,13 +412,12 @@ body {
   }
 
   .nav-tile-title {
-    font-size: clamp(2.35rem, 3.05vw, 4.35rem);
-    line-height: 1;
+    height: clamp(4.35rem, 5.5vw, 7.5rem);
   }
 
   .home-nav .nav-tile[data-tile="services"] .nav-tile-title,
   .home-nav .nav-tile[data-tile="contact"] .nav-tile-title {
-    font-size: clamp(2.52rem, 3.26vw, 4.65rem);
+    height: clamp(4.65rem, 5.9vw, 8rem);
   }
 
   .home-social {

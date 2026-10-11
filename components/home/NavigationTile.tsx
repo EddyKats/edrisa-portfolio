@@ -16,14 +16,8 @@ type NavigationTileProps = {
   index: number;
   surfaceClass?: string;
   eyebrow?: string;
+  artwork: string;
 };
-
-function titleLines(label: string) {
-  const words = label.trim().split(/\s+/);
-  const first = words[0] ?? label;
-  const rest = words.slice(1).join(" ");
-  return rest ? [first, rest] : [first];
-}
 
 export function NavigationTile({
   item,
@@ -31,9 +25,9 @@ export function NavigationTile({
   index,
   surfaceClass = item.surfaceClass,
   eyebrow,
+  artwork,
 }: NavigationTileProps) {
   const reduce = useReducedMotion();
-  const lines = titleLines(label);
 
   return (
     <motion.div
@@ -72,13 +66,11 @@ export function NavigationTile({
                 <NavIcon name={item.icon} className="nav-tile-icon" />
               )}
             </span>
-            <span className="nav-tile-title transition-transform duration-500 ease-out group-hover:-translate-y-1.5 motion-reduce:transition-none motion-reduce:group-hover:transform-none">
-              {lines.map((line, lineIndex) => (
-                <span key={`${item.id}-${lineIndex}`} className="nav-tile-line">
-                  {line.toLocaleUpperCase("en-US")}
-                </span>
-              ))}
-            </span>
+            <span
+              aria-hidden="true"
+              className="nav-tile-art transition-transform duration-500 ease-out group-hover:-translate-y-1.5 motion-reduce:transition-none motion-reduce:group-hover:transform-none"
+              dangerouslySetInnerHTML={{ __html: artwork }}
+            />
           </span>
         </MotionLink>
       </ViewTransition>

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { getNavItem, type NavId } from "@/data/navigation";
 import { NavigationTile } from "@/components/home/NavigationTile";
 
@@ -7,6 +9,21 @@ const homeEyebrow: Partial<Record<NavId, string>> = {
   portfolio: "PORTFOLIO",
   about: "ABOUT ME",
 };
+
+const titleFiles: Record<NavId, string> = {
+  portfolio: "selected-works.svg",
+  about: "about-edrisa.svg",
+  services: "what-i-do.svg",
+  contact: "talk-to-me.svg",
+};
+
+function titleArtwork(id: NavId) {
+  const file = path.join(process.cwd(), "public/images/homepage-titles", titleFiles[id]);
+  return readFileSync(file, "utf8")
+    .replace(/<\?xml[\s\S]*?\?>/, "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace("<svg ", '<svg class="nav-tile-title" focusable="false" ');
+}
 
 function homeSurface(id: NavId) {
   if (id === "portfolio") {
@@ -35,6 +52,7 @@ export function NavigationGrid({
           index={index}
           surfaceClass={homeSurface(id)}
           eyebrow={homeEyebrow[id]}
+          artwork={titleArtwork(id)}
         />
       ))}
     </nav>

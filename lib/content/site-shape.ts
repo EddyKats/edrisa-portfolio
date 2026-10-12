@@ -19,4 +19,5 @@ export type PublicSite = {
   footerNote: string;
   footerSecondary: string | null;
   socials: PublicSocial[];
+  callHref: string | null;
 };

@@ -32,7 +32,7 @@ export function HeroPanel({ site }: { site: PublicSite }) {
         />
       </motion.div>
 
-        <SocialLinks profiles={site.socials} />
+      <SocialLinks profiles={site.socials} callHref={site.callHref} />
 
       <div
         aria-hidden="true"
@@ -40,7 +40,7 @@ export function HeroPanel({ site }: { site: PublicSite }) {
       />
 
       <motion.div
-        className="absolute bottom-[3.2%] left-[4%] z-10 w-[88%]"
+        className="home-logo absolute bottom-[3.2%] z-10 w-[88%]"
         initial={reduce ? false : { opacity: 0, y: 22 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, delay: reduce ? 0 : 0.12, ease }}

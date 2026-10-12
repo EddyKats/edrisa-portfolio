@@ -1,4 +1,4 @@
-import { FaBehance, FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
+import { FaBehance, FaLinkedinIn, FaPhone, FaWhatsapp } from "react-icons/fa";
 import type { PublicSocial } from "@/lib/content/site-shape";
 
 const icons = {
@@ -11,10 +11,12 @@ export function SocialLinks({
   profiles,
   className = "home-social",
   label = "Social",
+  callHref = null,
 }: {
   profiles: PublicSocial[];
   className?: string;
   label?: string;
+  callHref?: string | null;
 }) {
   return (
     <nav aria-label={label} className={className}>
@@ -35,6 +37,11 @@ export function SocialLinks({
           </a>
         );
       })}
+      {callHref ? (
+        <a href={callHref} aria-label="Call Edrisa" data-brand="call">
+          <FaPhone aria-hidden="true" />
+        </a>
+      ) : null}
     </nav>
   );
 }

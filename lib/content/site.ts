@@ -1,17 +1,19 @@
 import "server-only";
 
-import { site, socialProfiles } from "@/data/site";
+import { site, socialLinks, socialProfiles } from "@/data/site";
 import { getDb } from "@/lib/db";
 import { ContentWriteError } from "@/lib/content/errors";
 import { removeStoredFile } from "@/lib/content/media";
+import { resolveCallHref } from "@/lib/content/phone";
 import type { PublicSite } from "@/lib/content/site-shape";
 import { httpsUrlSchema, optionalText, whatsappUrlSchema } from "@/lib/studio/urls";
 
 export async function getPublicSite(): Promise<PublicSite> {
   const db = getDb();
-  const [settings, home] = await Promise.all([
+  const [settings, home, contact] = await Promise.all([
     db.siteSettings.findUnique({ where: { id: "site" } }),
     db.homeContent.findUnique({ where: { id: "home" } }),
+    db.contactContent.findUnique({ where: { id: "contact" }, select: { phone: true } }),
   ]);
 
   // Static copy is used only when the site singleton row is missing. Database errors are not caught here.
@@ -30,6 +32,7 @@ export async function getPublicSite(): Promise<PublicSite> {
       footerNote: site.footerNote,
       footerSecondary: null,
       socials: socialProfiles.map((item) => ({ ...item })),
+      callHref: resolveCallHref([contact?.phone], socialLinks.whatsapp),
     };
   }
 
@@ -59,6 +62,7 @@ export async function getPublicSite(): Promise<PublicSite> {
         iconLabel: "Chat with Edrisa on WhatsApp",
       },
     ],
+    callHref: resolveCallHref([contact?.phone, settings.contactPhone], settings.whatsappUrl),
   };
 }
 

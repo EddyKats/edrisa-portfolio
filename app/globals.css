@@ -360,6 +360,19 @@ body {
   color: #c8ead8;
 }
 
+.home-social a[data-brand="call"]:hover,
+.home-social a[data-brand="call"]:focus-visible {
+  color: #f4efe8;
+}
+
+.home-social a[data-brand="call"] svg {
+  transform: scale(0.88);
+}
+
+.home-logo {
+  left: 6.5%;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-social a:hover,
   .home-social a:focus-visible {
@@ -378,13 +391,13 @@ body {
   }
 
   .home-social a {
-    width: 2.65rem;
-    height: 2.65rem;
+    width: 2.5rem;
+    height: 2.5rem;
   }
 
   .home-social a svg {
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 1.3rem;
+    height: 1.3rem;
   }
 
   .home-nav {

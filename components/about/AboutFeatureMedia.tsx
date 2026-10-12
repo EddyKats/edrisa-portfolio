@@ -11,7 +11,7 @@ const aboutSurface = getNavItem("about").surfaceClass;
  */
 export function AboutFeatureMedia({ src }: { src: string | null }) {
   return (
-    <figure className="mt-14 sm:mt-16">
+    <figure className="mt-6 sm:mt-7">
       <div className="relative aspect-video overflow-hidden rounded-[12px]">
         {src ? (
           <Image

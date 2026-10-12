@@ -1,7 +1,8 @@
 import "server-only";
 
+import { canonicalPortfolioCategories } from "@/data/portfolio";
 import { getDb } from "@/lib/db";
-import type { ProjectInput } from "@/lib/studio/project-schema";
+import type { CreateProjectInput, UpdateProjectInput } from "@/lib/studio/project-schema";
 
 export class ProjectWriteError extends Error {
   constructor(message: string) {
@@ -14,9 +15,19 @@ function isUniqueConflict(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }
 
-async function assertCategory(categoryId: string) {
-  const category = await getDb().portfolioCategory.findUnique({ where: { id: categoryId }, select: { id: true } });
-  if (!category) throw new ProjectWriteError("Choose a category.");
+async function canonicalCategoryIds(ids: string[]) {
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return [];
+  const rows = await getDb().portfolioCategory.findMany({
+    where: { id: { in: unique }, name: { in: [...canonicalPortfolioCategories] } },
+    select: { id: true, name: true },
+  });
+  if (rows.length !== unique.length) throw new ProjectWriteError("Choose a valid category.");
+  const byName = new Map(rows.map((row) => [row.name, row.id]));
+  return canonicalPortfolioCategories.flatMap((name) => {
+    const id = byName.get(name);
+    return id ? [id] : [];
+  });
 }
 
 export async function listStudioProjects() {
@@ -29,7 +40,13 @@ export async function listStudioProjects() {
       size: true,
       published: true,
       updatedAt: true,
+      coverImageUrl: true,
       category: { select: { name: true } },
+      categories: {
+        orderBy: { sortOrder: "asc" },
+        select: { category: { select: { name: true } } },
+      },
+      _count: { select: { images: true } },
     },
   });
 }
@@ -39,6 +56,7 @@ export async function getStudioProject(id: string) {
     where: { id },
     include: {
       category: { select: { id: true, name: true } },
+      categories: { orderBy: { sortOrder: "asc" }, select: { categoryId: true, category: { select: { name: true } } } },
       images: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }] },
       services: { orderBy: { sortOrder: "asc" }, select: { serviceId: true } },
       software: { orderBy: { sortOrder: "asc" }, select: { softwareId: true } },
@@ -47,11 +65,21 @@ export async function getStudioProject(id: string) {
   });
 }
 
-export async function createProjectRecord(input: ProjectInput) {
-  await assertCategory(input.categoryId);
+export async function createProjectRecord(input: CreateProjectInput) {
+  const categoryIds = await canonicalCategoryIds(input.categoryIds);
   try {
     return await getDb().project.create({
-      data: input,
+      data: {
+        title: input.title,
+        slug: input.slug,
+        role: input.role,
+        published: input.published,
+        client: "",
+        categoryId: categoryIds[0] ?? null,
+        categories: {
+          create: categoryIds.map((categoryId, sortOrder) => ({ categoryId, sortOrder })),
+        },
+      },
       select: { id: true, slug: true },
     });
   } catch (error) {
@@ -60,14 +88,14 @@ export async function createProjectRecord(input: ProjectInput) {
   }
 }
 
-export async function updateProjectRecord(id: string, input: ProjectInput) {
+export async function updateProjectRecord(id: string, input: UpdateProjectInput) {
   const existing = await getDb().project.findUnique({
     where: { id },
-    select: { id: true, slug: true },
+    select: { id: true, slug: true, categoryId: true },
   });
   if (!existing) throw new ProjectWriteError("That project was not found.");
 
-  await assertCategory(input.categoryId);
+  const categoryIds = await canonicalCategoryIds(input.categoryIds);
   const conflict = await getDb().project.findFirst({
     where: { slug: input.slug, NOT: { id } },
     select: { id: true },
@@ -75,10 +103,32 @@ export async function updateProjectRecord(id: string, input: ProjectInput) {
   if (conflict) throw new ProjectWriteError("That slug is already used.");
 
   try {
-    const project = await getDb().project.update({
-      where: { id },
-      data: input,
-      select: { id: true, slug: true },
+    const project = await getDb().$transaction(async (tx) => {
+      await tx.projectCategory.deleteMany({ where: { projectId: id } });
+      if (categoryIds.length > 0) {
+        await tx.projectCategory.createMany({
+          data: categoryIds.map((categoryId, sortOrder) => ({ projectId: id, categoryId, sortOrder })),
+        });
+      }
+      return tx.project.update({
+        where: { id },
+        data: {
+          title: input.title,
+          slug: input.slug,
+          role: input.role,
+          client: input.client,
+          year: input.year,
+          shortDescription: input.shortDescription,
+          fullDescription: input.fullDescription,
+          size: input.size,
+          sortOrder: input.sortOrder,
+          featured: input.featured,
+          seoTitle: input.seoTitle,
+          seoDescription: input.seoDescription,
+          categoryId: categoryIds[0] ?? existing.categoryId,
+        },
+        select: { id: true, slug: true },
+      });
     });
     return { project, previousSlug: existing.slug };
   } catch (error) {

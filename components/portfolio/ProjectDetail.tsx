@@ -4,10 +4,9 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Phone, X } from "lucide-react";
 import { FaBehance, FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
-import { projectTones } from "@/components/portfolio/projectTones";
-import { type PortfolioCategory, type PortfolioGalleryImage, type PortfolioProject } from "@/data/portfolio";
+import { type PortfolioGalleryImage, type PortfolioProject } from "@/data/portfolio";
 import type { PublicSocial } from "@/lib/content/site-shape";
 import { softwareRegistry, type SoftwareId } from "@/data/software";
 
@@ -29,37 +28,48 @@ export function ProjectDetail({
   next,
   categories,
   contact,
+  ctaHref,
 }: {
   project: PortfolioProject;
   previous: { slug: string; title: string };
   next: { slug: string; title: string };
   categories: string[];
   contact: {
-    portraitSrc: string;
-    portraitWidth: number;
-    portraitHeight: number;
-    whatsapp: string;
     profiles: PublicSocial[];
+    callHref: string | null;
   };
+  ctaHref: string;
 }) {
   const router = useRouter();
   const routerRef = useRef(router);
   const shellRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [hireVisible, setHireVisible] = useState(true);
-  const hero = project.heroImage ?? project.coverImage;
+  const closingRef = useRef(false);
+  const [closing, setClosing] = useState(false);
   const titleId = `project-${project.slug}-title`;
   const tools = project.software;
-  const subtitle = [project.category, project.role].filter(Boolean).join(" · ");
-  const facts = projectFacts(project);
+  const categoryNames = project.categories?.length ? project.categories : project.category ? [project.category] : [];
+  const boards = project.galleryImages;
+
+  const closeHandlerRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     routerRef.current = router;
   }, [router]);
 
   function close() {
-    router.push(portfolioReturnHref(categories));
+    if (closingRef.current) return;
+    closingRef.current = true;
+    setClosing(true);
+    const href = portfolioReturnHref(categories);
+    requestAnimationFrame(() => {
+      routerRef.current.push(href, { scroll: false });
+    });
   }
+
+  useEffect(() => {
+    closeHandlerRef.current = close;
+  });
 
   function openProject(event: MouseEvent<HTMLAnchorElement>, slug: string) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
@@ -80,7 +90,7 @@ export function ProjectDetail({
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        routerRef.current.push(portfolioReturnHref(categories));
+        closeHandlerRef.current();
         return;
       }
 
@@ -122,199 +132,164 @@ export function ProjectDetail({
   }, [categories]);
 
   useEffect(() => {
-    closeRef.current?.focus();
+    const desktop = window.matchMedia("(min-width: 60rem)").matches;
+    const button = shellRef.current?.querySelector<HTMLButtonElement>(
+      desktop ? "[data-close='desktop']" : "[data-close='mobile']",
+    );
+    (button ?? closeRef.current)?.focus();
   }, [project.slug]);
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="project-overlay fixed inset-0 z-50 overflow-y-scroll" data-closing={closing ? "true" : "false"}>
       <button
         type="button"
         tabIndex={-1}
-        className="absolute inset-0 bg-[rgba(0,0,0,0.76)] backdrop-blur-[2px]"
+        className="fixed inset-0 bg-[rgba(0,0,0,0.76)] backdrop-blur-[2px]"
         aria-label="Close project"
         onClick={close}
       />
-      <div className="pointer-events-none absolute inset-0 flex justify-center split:items-center split:px-5 split:py-5">
-        <div
-          ref={shellRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          className="pointer-events-auto relative flex h-full w-full split:h-auto split:w-auto split:max-w-full split:items-stretch split:gap-3.5"
-        >
-          <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#fffdfb] text-ink split:h-auto split:max-h-[calc(100dvh-2.5rem)] split:w-[min(77.5rem,calc(100vw-8.5rem))] split:rounded-[1.375rem] split:shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
-            <header className="z-20 flex shrink-0 items-center justify-between gap-3 bg-[#fffdfb] px-4 py-3 split:absolute split:top-3 split:right-3 split:bg-transparent split:p-0">
-              <p className="min-w-0 truncate text-sm font-semibold tracking-wide split:hidden">{project.title}</p>
-              <button
-                ref={closeRef}
-                type="button"
-                onClick={close}
-                aria-label="Close project"
-                className="ml-auto grid size-11 shrink-0 place-items-center rounded-full text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink split:bg-[#f6f3ef]"
-              >
-                <X className="size-5" strokeWidth={1.75} aria-hidden="true" />
-              </button>
-            </header>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <article className={`px-5 pt-2 sm:px-10 ${hireVisible ? "pb-8 split:pb-36" : "pb-12 split:pb-14"}`}>
-                <Creator contact={contact} />
-                <h1 id={titleId} className="mt-8 text-[clamp(2.1rem,4vw,3.4rem)] font-medium tracking-tight">
-                  {project.title}
-                </h1>
-                <p className="mt-3 text-base text-ink/60">{subtitle}</p>
-                <Hero src={hero} category={project.category} width={project.heroWidth} height={project.heroHeight} />
-                {project.shortDescription ? (
-                  <p className="mt-8 max-w-2xl text-[1.05rem] leading-relaxed text-ink/75">{project.shortDescription}</p>
-                ) : null}
-                {facts.length > 0 ? (
-                  <dl className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    {facts.map((fact) => (
-                      <div key={fact.label}>
-                        <dt className="text-xs font-semibold tracking-[0.16em] text-ink/45 uppercase">{fact.label}</dt>
-                        <dd className="mt-2 text-base">{fact.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                ) : null}
-                {project.fullDescription ? (
-                  <section className="mt-12" aria-labelledby={`${titleId}-story`}>
-                    <h2 id={`${titleId}-story`} className="text-sm font-semibold tracking-[0.16em] uppercase">
-                      The brief
-                    </h2>
-                    <p className="mt-4 max-w-2xl text-[1.05rem] leading-relaxed text-ink/75">{project.fullDescription}</p>
-                  </section>
-                ) : null}
-                {tools.length > 0 ? (
-                  <section className="mt-12 split:hidden" aria-labelledby={`${titleId}-tools`}>
-                    <h2 id={`${titleId}-tools`} className="text-sm font-semibold tracking-[0.16em] uppercase">
-                      Used to make this
-                    </h2>
-                    <ul className="mt-4 flex flex-wrap gap-4">
-                      {tools.map((id) => (
-                        <ToolItem key={id} id={id} />
-                      ))}
-                    </ul>
-                  </section>
-                ) : null}
-                <section className="mt-12 split:hidden" aria-labelledby={`${titleId}-find`}>
-                  <h2 id={`${titleId}-find`} className="text-sm font-semibold tracking-[0.16em] uppercase">
-                    Find me
-                  </h2>
-                  <ul className="mt-4 flex flex-wrap gap-4">
-                    {orderedContacts(contact.profiles).map((item) => (
-                      <ContactItem key={item.id} item={item} />
-                    ))}
-                  </ul>
-                </section>
-                {project.galleryImages.length > 0 ? (
-                  <ul className="mt-12 grid gap-4">
-                    {project.galleryImages.map((image) => (
-                      <li key={image.src}>
-                        <Artwork image={image} />
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                {project.credits.length > 0 ? (
-                  <section className="mt-12" aria-labelledby={`${titleId}-credits`}>
-                    <h2 id={`${titleId}-credits`} className="text-sm font-semibold tracking-[0.16em] uppercase">
-                      Credits
-                    </h2>
-                    <ul className="mt-4 space-y-2 text-[1.02rem] text-ink/75">
-                      {project.credits.map((credit) => (
-                        <li key={`${credit.role}-${credit.name}`}>
-                          <span className="text-ink">{credit.role}. </span>
-                          {credit.name}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                ) : null}
-                <nav aria-label="Adjacent projects" className="mt-14 flex items-center justify-between gap-4 text-sm">
-                  <Link
-                    href={`/portfolio/${previous.slug}`}
-                    scroll={false}
-                    onClick={(event) => openProject(event, previous.slug)}
-                    className="rounded-sm text-ink/70 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
-                  >
-                    <span aria-hidden="true">← </span>
-                    <span className="sr-only">Previous project: </span>
-                    {previous.title}
-                  </Link>
-                  <Link
-                    href={`/portfolio/${next.slug}`}
-                    scroll={false}
-                    onClick={(event) => openProject(event, next.slug)}
-                    className="rounded-sm text-right text-ink/70 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
-                  >
-                    <span className="sr-only">Next project: </span>
-                    {next.title}
-                    <span aria-hidden="true"> →</span>
-                  </Link>
-                </nav>
-              </article>
-            </div>
-            {hireVisible ? (
-              <div className="shrink-0 border-t border-ink/10 bg-[#fffdfb] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] split:hidden">
-                <HireCard contact={contact} compact onDismiss={() => setHireVisible(false)} />
-              </div>
-            ) : null}
-            {hireVisible ? (
-              <div className="pointer-events-none absolute inset-x-0 bottom-4 z-30 hidden justify-center px-8 split:flex">
-                <div className="pointer-events-auto">
-                  <HireCard contact={contact} onDismiss={() => setHireVisible(false)} />
-                </div>
-              </div>
-            ) : null}
+      <div
+        ref={shellRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="project-stage pointer-events-none relative z-10 mx-auto flex min-h-full w-full justify-center split:items-start split:gap-4 split:py-6"
+      >
+        <div className="project-sheet pointer-events-auto relative w-full min-w-0 bg-[#fffdfb] text-ink split:max-w-[1400px] split:flex-1 split:rounded-[1.375rem] split:shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+          <div className="pointer-events-none sticky top-6 z-30 hidden h-0 split:block">
+            <button
+              data-close="desktop"
+              type="button"
+              onClick={close}
+              aria-label="Close project"
+              className="pointer-events-auto absolute top-5 right-5 grid size-11 place-items-center rounded-full border border-ink/10 bg-[#fffdfb] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              <X className="size-5" strokeWidth={1.75} aria-hidden="true" />
+            </button>
           </div>
-          <ActionRail tools={tools} profiles={contact.profiles} />
+          <div className="sticky top-0 z-20 flex justify-end bg-[#fffdfb] px-3 py-2 split:hidden">
+            <button
+              ref={closeRef}
+              data-close="mobile"
+              type="button"
+              onClick={close}
+              aria-label="Close project"
+              className="grid size-11 place-items-center rounded-full text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              <X className="size-5" strokeWidth={1.75} aria-hidden="true" />
+            </button>
+          </div>
+          <header className="project-case-header px-5 sm:px-8 split:pr-20">
+            <h1 id={titleId} className="text-[clamp(2.15rem,3.6vw,3.25rem)] leading-[1.02] font-semibold tracking-tight">
+              {project.title}
+            </h1>
+            {categoryNames.length > 0 || project.role ? (
+              <div className="mt-4 flex flex-col gap-3 sm:mt-5 sm:flex-row sm:gap-12">
+                {categoryNames.length > 0 ? (
+                  <div>
+                    <p className="text-[0.68rem] font-semibold tracking-[0.16em] text-ink/45 uppercase">Category</p>
+                    <p className="mt-1 text-base leading-snug text-ink">{categoryNames.join(" · ")}</p>
+                  </div>
+                ) : null}
+                {project.role ? (
+                  <div>
+                    <p className="text-[0.68rem] font-semibold tracking-[0.16em] text-ink/45 uppercase">Role</p>
+                    <p className="mt-1 text-base leading-snug text-ink">{project.role}</p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </header>
+          {boards.length > 0 ? (
+            <ul className="presentation-stream">
+              {boards.map((image, index) => (
+                <li key={`${image.src}-${index}`}>
+                  <Board image={image} title={project.title} priority={index === 0} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-5 py-10 text-center text-base text-ink/55 sm:px-8">Project presentation coming soon.</p>
+          )}
+          <MobileActions tools={tools} profiles={contact.profiles} callHref={contact.callHref} />
+          <ProjectCta href={ctaHref} className="border-t border-ink/12 px-5 py-5 split:hidden" />
+          <nav aria-label="Adjacent projects" className="project-footer-navigation">
+            <div className="grid gap-2 sm:grid-cols-2 sm:gap-8">
+              <Link
+                href={`/portfolio/${previous.slug}`}
+                scroll={false}
+                onClick={(event) => openProject(event, previous.slug)}
+                aria-label={`Previous project: ${previous.title}`}
+                className="project-neighbor group flex min-h-28 items-center gap-4 rounded-sm px-1 py-3 hover:bg-ink/5 focus-visible:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+              >
+                <ChevronLeft className="project-neighbor-icon size-10 shrink-0 [--neighbor-shift:-0.3rem]" strokeWidth={2.25} aria-hidden="true" />
+                <span className="min-w-0">
+                  <span className="block text-[0.68rem] font-semibold tracking-[0.16em] text-ink/45 uppercase">Previous project</span>
+                  <span className="mt-1 block text-xl leading-tight font-semibold tracking-tight">{previous.title}</span>
+                </span>
+              </Link>
+              <Link
+                href={`/portfolio/${next.slug}`}
+                scroll={false}
+                onClick={(event) => openProject(event, next.slug)}
+                aria-label={`Next project: ${next.title}`}
+                className="project-neighbor group flex min-h-28 items-center justify-end gap-4 rounded-sm px-1 py-3 text-right hover:bg-ink/5 focus-visible:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+              >
+                <span className="min-w-0">
+                  <span className="block text-[0.68rem] font-semibold tracking-[0.16em] text-ink/45 uppercase">Next project</span>
+                  <span className="mt-1 block text-xl leading-tight font-semibold tracking-tight">{next.title}</span>
+                </span>
+                <ChevronRight className="project-neighbor-icon size-10 shrink-0 [--neighbor-shift:0.3rem]" strokeWidth={2.25} aria-hidden="true" />
+              </Link>
+            </div>
+          </nav>
         </div>
+        <ActionRail tools={tools} profiles={contact.profiles} callHref={contact.callHref} ctaHref={ctaHref} />
       </div>
     </div>
   );
 }
 
-function Creator({ contact }: { contact: { portraitSrc: string; portraitWidth: number; portraitHeight: number } }) {
-  return (
-    <div className="flex items-center gap-3 pr-12">
-      <Image
-        src={contact.portraitSrc}
-        alt=""
-        width={contact.portraitWidth}
-        height={contact.portraitHeight}
-        className="size-10 rounded-full object-cover"
-      />
-      <div>
-        <p className="text-sm font-semibold leading-none">Edrisa</p>
-        <p className="mt-1 text-xs text-ink/55">Creative Director & Designer</p>
-      </div>
-    </div>
-  );
-}
+function Board({ image, title, priority }: { image: PortfolioGalleryImage; title: string; priority: boolean }) {
+  const kind = mediaKind(image);
+  const ratio = image.width && image.height ? { aspectRatio: `${image.width} / ${image.height}` } : undefined;
 
-function Hero({
-  src,
-  category,
-  width,
-  height,
-}: {
-  src: string | null;
-  category: string;
-  width?: number | null;
-  height?: number | null;
-}) {
-  if (!src) {
-    return <div className={`mt-8 aspect-[16/10] rounded-2xl ${toneFor(category)}`} aria-hidden="true" />;
+  if (kind === "VIDEO") {
+    const label = image.alt || `${title} video`;
+    return (
+      <video
+        controls
+        playsInline
+        preload="metadata"
+        aria-label={label}
+        title={label}
+        width={image.width ?? undefined}
+        height={image.height ?? undefined}
+        style={ratio}
+        className="presentation-media"
+      >
+        <source src={image.src} type={image.mimeType ?? undefined} />
+      </video>
+    );
   }
 
-  return (
-    <figure className="mt-8 overflow-hidden rounded-2xl">
-      <Artwork image={{ src, alt: "", caption: null, width: width ?? null, height: height ?? null }} priority />
-    </figure>
-  );
-}
+  if (kind === "GIF") {
+    return (
+      // GIFs stay on a plain image element so the animation is not frozen by the optimizer.
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={image.src}
+        alt={image.alt}
+        width={image.width ?? undefined}
+        height={image.height ?? undefined}
+        style={ratio}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
+        className="presentation-media"
+      />
+    );
+  }
 
-function Artwork({ image, priority = false }: { image: PortfolioGalleryImage; priority?: boolean }) {
   if (image.width && image.height) {
     return (
       <Image
@@ -323,136 +298,182 @@ function Artwork({ image, priority = false }: { image: PortfolioGalleryImage; pr
         width={image.width}
         height={image.height}
         priority={priority}
-        sizes="(min-width: 960px) 70vw, 100vw"
-        className="h-auto w-full"
+        loading={priority ? undefined : "lazy"}
+        sizes="(min-width: 960px) 1400px, 100vw"
+        className="presentation-media"
       />
     );
   }
 
   return (
-    // Dimensions are unknown until the file is supplied, so the image keeps its own ratio.
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={image.src} alt={image.alt} className="block h-auto w-full" fetchPriority={priority ? "high" : "auto"} />
+    <img
+      src={image.src}
+      alt={image.alt}
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
+      className="presentation-media"
+    />
   );
 }
 
-function toneFor(category: string) {
-  if (category in projectTones) return projectTones[category as PortfolioCategory];
-  return "bg-[#2e211c]";
+function mediaKind(image: PortfolioGalleryImage) {
+  const path = image.src.split("?")[0]?.toLowerCase() ?? "";
+  if (image.kind === "GIF" || image.mimeType === "image/gif" || path.endsWith(".gif")) return "GIF";
+  if (image.kind === "VIDEO" || image.mimeType?.startsWith("video/") || path.endsWith(".mp4") || path.endsWith(".webm")) return "VIDEO";
+  return "IMAGE";
 }
 
-function ActionRail({ tools, profiles }: { tools: SoftwareId[]; profiles: PublicSocial[] }) {
+function MobileActions({
+  tools,
+  profiles,
+  callHref,
+}: {
+  tools: SoftwareId[];
+  profiles: PublicSocial[];
+  callHref: string | null;
+}) {
+  const contacts = orderedContacts(profiles);
+  if (tools.length === 0 && contacts.length === 0 && !callHref) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 border-t border-ink/12 px-5 py-5 split:hidden">
+      {tools.map((id) => (
+        <ToolButton key={id} id={id} />
+      ))}
+      {tools.length > 0 ? <span className="mx-1 h-7 w-px bg-ink/15" aria-hidden="true" /> : null}
+      {contacts.map((item) => (
+        <ContactLink key={item.id} item={item} />
+      ))}
+      {callHref ? <CallLink href={callHref} /> : null}
+    </div>
+  );
+}
+
+function ActionRail({
+  tools,
+  profiles,
+  callHref,
+  ctaHref,
+}: {
+  tools: SoftwareId[];
+  profiles: PublicSocial[];
+  callHref: string | null;
+  ctaHref: string;
+}) {
   const contacts = orderedContacts(profiles);
 
   return (
-    <aside className="hidden shrink-0 flex-col items-center justify-center gap-2.5 self-center split:flex" aria-label="Project actions">
-      {tools.length > 0 ? (
-        <ul className="flex flex-col gap-2.5">
-          {tools.map((id) => {
-            const tool = softwareRegistry[id];
-            const Icon = tool.Icon;
-
-            return (
+    <aside className="project-rail pointer-events-auto sticky top-6 z-20 hidden h-[calc(100dvh-3rem)] shrink-0 split:block" aria-label="Project actions">
+      <div className="absolute top-1/2 left-0 flex w-max -translate-y-1/2 flex-col items-center gap-4">
+        {tools.length > 0 ? (
+          <ul className="flex flex-col gap-3">
+            {tools.map((id) => (
               <li key={id}>
-                <button type="button" aria-label={tool.label} className={`group relative ${circleClass}`}>
-                  <Icon className="size-6" aria-hidden="true" />
-                  <Tooltip label={tool.label} />
-                </button>
+                <ToolButton id={id} tooltip />
               </li>
-            );
-          })}
-        </ul>
-      ) : null}
-      {tools.length > 0 ? <div className="my-1 h-px w-7 bg-white/40" aria-hidden="true" /> : null}
-      <ul className="flex flex-col gap-2.5">
-        {contacts.map((item) => {
-          const Icon = contactIcons[item.id];
-
-          return (
+            ))}
+          </ul>
+        ) : null}
+        {tools.length > 0 ? <div className="h-px w-7 bg-white/40" aria-hidden="true" /> : null}
+        <ul className="flex flex-col items-center gap-4">
+          {contacts.map((item) => (
             <li key={item.id}>
-              <a
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={contactLabel(item)}
-                className={`group relative ${circleClass}`}
-              >
-                <Icon className="size-5" aria-hidden="true" />
-                <Tooltip label={item.label} />
-              </a>
+              <ContactLink item={item} labeled />
             </li>
-          );
-        })}
-      </ul>
+          ))}
+          {callHref ? (
+            <li>
+              <CallLink href={callHref} labeled />
+            </li>
+          ) : null}
+        </ul>
+      </div>
+      <ProjectCta href={ctaHref} dock />
     </aside>
   );
 }
 
-function ToolItem({ id }: { id: SoftwareId }) {
+function ProjectCta({ href, className, dock = false }: { href: string; className?: string; dock?: boolean }) {
+  return (
+    <a
+      href={href}
+      className={
+        dock
+          ? "project-cta absolute inset-x-0 bottom-0 z-30 block rounded-2xl bg-[#2e211c] px-2 py-3 text-center text-[#f7f1ea] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+          : `project-cta group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink ${className ?? ""}`
+      }
+    >
+      <span className={`block text-[0.62rem] font-semibold tracking-[0.12em] uppercase ${dock ? "text-white/70" : "text-ink/45"}`}>
+        Available for a project?
+      </span>
+      <span className={`mt-1.5 text-sm leading-tight font-semibold tracking-tight ${dock ? "block text-[#f7f1ea]" : "inline-flex items-center gap-1.5 text-ink"}`}>
+        Start Something
+        <ArrowRight className={`project-cta-arrow size-4 ${dock ? "ml-1 inline align-[-0.2em]" : "shrink-0"}`} strokeWidth={1.75} aria-hidden="true" />
+      </span>
+    </a>
+  );
+}
+
+function ToolButton({ id, tooltip = false }: { id: SoftwareId; tooltip?: boolean }) {
   const tool = softwareRegistry[id];
   const Icon = tool.Icon;
 
   return (
-    <li className="flex w-[4.5rem] flex-col items-center gap-1.5">
-      <button type="button" aria-label={tool.label} className={circleClass}>
-        <Icon className="size-6" aria-hidden="true" />
-      </button>
-      <span className="text-center text-xs leading-tight text-ink/70">{tool.shortLabel}</span>
-    </li>
+    <button type="button" aria-label={tool.label} className={`group relative ${circleClass}`}>
+      <Icon className="size-6" aria-hidden="true" />
+      {tooltip ? <Tooltip label={tool.label} /> : null}
+    </button>
   );
 }
 
-function ContactItem({ item }: { item: ContactProfile }) {
+function ContactLink({ item, labeled = false }: { item: PublicSocial; labeled?: boolean }) {
   const Icon = contactIcons[item.id];
 
-  return (
-    <li className="flex w-[4.5rem] flex-col items-center gap-1.5">
-      <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={contactLabel(item)} className={circleClass}>
-        <Icon className="size-5" aria-hidden="true" />
+  if (labeled) {
+    return (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={contactLabel(item)}
+        className="flex flex-col items-center gap-1.5 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      >
+        <span className={circleClass}>
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+        <span className="text-center text-[0.7rem] leading-tight text-[#f7f1ea]">{item.label}</span>
       </a>
-      <span className="text-center text-xs leading-tight text-ink/70">{item.label}</span>
-    </li>
+    );
+  }
+
+  return (
+    <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={contactLabel(item)} className={circleClass}>
+      <Icon className="size-5" aria-hidden="true" />
+    </a>
   );
 }
 
-function HireCard({
-  contact,
-  compact = false,
-  onDismiss,
-}: {
-  contact: { portraitSrc: string; portraitWidth: number; portraitHeight: number; whatsapp: string };
-  compact?: boolean;
-  onDismiss: () => void;
-}) {
-  return (
-    <div className="relative flex items-center gap-3 rounded-2xl bg-mocha-deep py-3 pr-10 pl-3 text-[#f7f1ea] shadow-[0_12px_36px_rgba(28,18,14,0.22)]">
-      <Image
-        src={contact.portraitSrc}
-        alt=""
-        width={contact.portraitWidth}
-        height={contact.portraitHeight}
-        className="size-10 shrink-0 rounded-full object-cover"
-      />
-      <p className={`min-w-0 flex-1 text-sm leading-snug ${compact ? "max-w-[11rem]" : "max-w-[14rem]"}`}>
-        {compact ? "Available for the right project." : "Edrisa is available for the right project."}
-      </p>
+function CallLink({ href, labeled = false }: { href: string; labeled?: boolean }) {
+  if (labeled) {
+    return (
       <a
-        href={contact.whatsapp}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="shrink-0 rounded-full bg-[#f7f1ea] px-3.5 py-2 text-sm font-semibold text-mocha-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        href={href}
+        aria-label="Call Edrisa"
+        className="flex flex-col items-center gap-1.5 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
-        Hire Edrisa
+        <span className={circleClass}>
+          <Phone className="size-5" strokeWidth={1.75} aria-hidden="true" />
+        </span>
+        <span className="text-center text-[0.7rem] leading-tight text-[#f7f1ea]">Call Now</span>
       </a>
-      <button
-        type="button"
-        onClick={onDismiss}
-        aria-label="Dismiss availability"
-        className="absolute top-2 right-2 grid size-6 place-items-center rounded-full text-white/70 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-      >
-        <X className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
-      </button>
-    </div>
+    );
+  }
+
+  return (
+    <a href={href} aria-label="Call Edrisa" className={circleClass}>
+      <Phone className="size-5" strokeWidth={1.75} aria-hidden="true" />
+    </a>
   );
 }
 
@@ -467,8 +488,6 @@ function Tooltip({ label }: { label: string }) {
   );
 }
 
-type ContactProfile = PublicSocial;
-
 function orderedContacts(profiles: PublicSocial[]) {
   return contactOrder.flatMap((id) => {
     const item = profiles.find((profile) => profile.id === id);
@@ -476,17 +495,8 @@ function orderedContacts(profiles: PublicSocial[]) {
   });
 }
 
-function contactLabel(item: ContactProfile) {
+function contactLabel(item: PublicSocial) {
   return "iconLabel" in item ? item.iconLabel : item.label;
-}
-
-function projectFacts(project: PortfolioProject) {
-  return [
-    project.client ? { label: "Client", value: project.client } : null,
-    project.year ? { label: "Year", value: String(project.year) } : null,
-    project.role ? { label: "Role", value: project.role } : null,
-    project.services.length > 0 ? { label: "Services", value: project.services.join(" / ") } : null,
-  ].filter((fact): fact is { label: string; value: string } => fact !== null);
 }
 
 function portfolioReturnHref(categories: string[]) {

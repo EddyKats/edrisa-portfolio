@@ -3,6 +3,7 @@ import "server-only";
 import { getDb } from "@/lib/db";
 import { ProjectWriteError } from "@/lib/content/projects";
 import { deletePortfolioAsset, storageKeyFromUrl, type PortfolioAsset } from "@/lib/storage";
+import { presentationKindFor } from "@/lib/storage/validation";
 
 async function projectOrThrow(projectId: string) {
   const project = await getDb().project.findUnique({
@@ -46,7 +47,7 @@ export async function clearProjectAsset(projectId: string, role: "cover" | "hero
   return { slug: project.slug, warning };
 }
 
-export async function addProjectGalleryImage(projectId: string, asset: PortfolioAsset) {
+export async function addProjectGalleryImage(projectId: string, asset: PortfolioAsset, originalName?: string) {
   const project = await projectOrThrow(projectId);
   const last = await getDb().projectImage.findFirst({
     where: { projectId },
@@ -61,10 +62,31 @@ export async function addProjectGalleryImage(projectId: string, asset: Portfolio
       width: asset.width,
       height: asset.height,
       sortOrder: (last?.sortOrder ?? -1) + 1,
+      kind: presentationKindFor(asset.mimeType),
+      mimeType: asset.mimeType,
+      originalName: cleanFileName(originalName),
     },
     select: { id: true },
   });
   return { slug: project.slug, imageId: image.id };
+}
+
+export async function setProjectPresentationOrder(projectId: string, orderedIds: string[]) {
+  const project = await projectOrThrow(projectId);
+  const images = await getDb().projectImage.findMany({
+    where: { projectId },
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+    select: { id: true },
+  });
+  const current = new Set(images.map((item) => item.id));
+  const unique = new Set(orderedIds);
+  if (orderedIds.length !== images.length || unique.size !== orderedIds.length || orderedIds.some((id) => !current.has(id))) {
+    throw new ProjectWriteError("That presentation order could not be saved.");
+  }
+  await getDb().$transaction(
+    orderedIds.map((id, sortOrder) => getDb().projectImage.update({ where: { id }, data: { sortOrder } })),
+  );
+  return { slug: project.slug };
 }
 
 export async function updateProjectGalleryText(imageId: string, altText: string, caption: string | null) {
@@ -118,6 +140,11 @@ export async function removeProjectFiles(urls: Array<string | null>) {
     if (warning) warnings.push(warning);
   }
   return warnings[0] ?? null;
+}
+
+function cleanFileName(value: string | undefined) {
+  const base = value?.split(/[/\\]/).pop()?.replace(/[\u0000-\u001f]/g, "").trim() ?? "";
+  return base ? base.slice(0, 180) : null;
 }
 
 async function removeStoredFile(url: string | null) {

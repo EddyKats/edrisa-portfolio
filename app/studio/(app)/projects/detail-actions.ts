@@ -7,6 +7,7 @@ import {
   deleteProjectGalleryImage,
   moveProjectGalleryImage,
   saveProjectAsset,
+  setProjectPresentationOrder,
   updateProjectGalleryText,
 } from "@/lib/content/project-media";
 import {
@@ -43,7 +44,7 @@ export async function prepareProjectUpload(
   file: { type: string; size: number },
 ): Promise<UploadTicket> {
   await requireAdmin();
-  if (!["cover", "hero", "gallery"].includes(role)) return { error: "That upload could not be started." };
+  if (!["cover", "hero", "gallery", "presentation"].includes(role)) return { error: "That upload could not be started." };
   try {
     const ticket = await createPortfolioUpload({ projectId, role, type: file.type, size: file.size });
     if ("error" in ticket) return { error: ticket.error };
@@ -53,7 +54,12 @@ export async function prepareProjectUpload(
   }
 }
 
-export async function confirmProjectUpload(projectId: string, role: PortfolioAssetRole, key: string): Promise<DetailState> {
+export async function confirmProjectUpload(
+  projectId: string,
+  role: PortfolioAssetRole,
+  key: string,
+  originalName?: string,
+): Promise<DetailState> {
   await requireAdmin();
   try {
     const asset = await inspectPortfolioAsset(projectId, key);
@@ -62,7 +68,9 @@ export async function confirmProjectUpload(projectId: string, role: PortfolioAss
       return { error: asset.error };
     }
     const saved =
-      role === "gallery" ? await addProjectGalleryImage(projectId, asset) : await saveProjectAsset(projectId, role, asset);
+      role === "gallery" || role === "presentation"
+        ? await addProjectGalleryImage(projectId, asset, originalName)
+        : await saveProjectAsset(projectId, role, asset);
     revalidateProjectContent([saved.slug]);
     return { ok: true, warning: "warning" in saved ? saved.warning ?? undefined : undefined };
   } catch (error) {
@@ -92,6 +100,17 @@ export async function saveGalleryText(_state: DetailState, formData: FormData): 
     return { ok: true };
   } catch (error) {
     return failure(error, "Save failed.");
+  }
+}
+
+export async function setPresentationOrder(projectId: string, orderedIds: string[]): Promise<DetailState> {
+  await requireAdmin();
+  try {
+    const saved = await setProjectPresentationOrder(projectId, orderedIds);
+    revalidateProjectContent([saved.slug]);
+    return { ok: true };
+  } catch (error) {
+    return failure(error, "The presentation could not be reordered.");
   }
 }
 

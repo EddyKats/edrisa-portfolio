@@ -6,14 +6,13 @@ export async function InternalFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-16 overflow-hidden rounded-[1.35rem] bg-[#2e211c] text-[#f7f1ea]">
-      <div className="relative z-10 flex flex-col gap-6 px-6 pt-8 sm:flex-row sm:items-start sm:justify-between sm:px-8 sm:pt-10">
-        <div>
-          <p className="max-w-[18rem] text-sm leading-relaxed text-white/72">{site.footerNote}</p>
-          {site.footerSecondary ? <p className="mt-3 text-sm text-white/72">{site.footerSecondary}</p> : null}
-          <p className="mt-4 text-sm text-white/88">© {year} Edrisa.</p>
+    <footer className="relative mt-16 overflow-hidden rounded-[1.35rem] bg-[#2e211c] px-8 pt-10 pb-8 text-[#f7f1ea] sm:px-10 sm:pt-12 sm:pb-10">
+      <div className="relative z-10 flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
+        <div className="max-w-[18rem] text-sm leading-relaxed text-white/72">
+          <p>Designed with intent.</p>
+          <p>Built with unreasonable attention to detail.</p>
         </div>
-        <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm sm:flex-col sm:items-end">
+        <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm sm:flex-col sm:items-end sm:text-right">
           {site.socials.map((item) => (
             <li key={item.id}>
               <a
@@ -26,11 +25,22 @@ export async function InternalFooter() {
               </a>
             </li>
           ))}
+          {site.callHref ? (
+            <li>
+              <a
+                href={site.callHref}
+                className="rounded-sm text-white/70 underline-offset-4 hover:text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+              >
+                Call
+              </a>
+            </li>
+          ) : null}
         </ul>
       </div>
-      <div className="relative z-0 mt-8 overflow-hidden px-4 sm:mt-6 sm:px-6" aria-hidden="true">
-        <EdrisaLogo className="h-auto w-[92%] max-w-none translate-y-3 sm:w-[52%] sm:translate-y-5" />
+      <div className="relative z-0 mt-12 flex justify-center sm:mt-14" aria-hidden="true">
+        <EdrisaLogo className="footer-wordmark h-auto w-[92%] max-w-[46rem] sm:w-[74%]" />
       </div>
+      <p className="relative z-10 mt-6 text-sm text-white/70">© {year} Edrisa.</p>
     </footer>
   );
 }

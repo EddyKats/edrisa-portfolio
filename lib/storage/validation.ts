@@ -1,8 +1,12 @@
 export const mediaBucket = "edrisa-media";
 
 export const maxImageBytes = 12 * 1024 * 1024;
+export const maxGifBytes = 25 * 1024 * 1024;
+export const maxVideoBytes = 100 * 1024 * 1024;
 
 export const maxImageLabel = "12 MB";
+export const maxGifLabel = "25 MB";
+export const maxVideoLabel = "100 MB";
 
 export const allowedImageTypes = {
   "image/jpeg": "jpg",
@@ -11,19 +15,29 @@ export const allowedImageTypes = {
   "image/avif": "avif",
 } as const;
 
+export const allowedMediaTypes = {
+  ...allowedImageTypes,
+  "image/gif": "gif",
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+} as const;
+
 export type AllowedImageType = keyof typeof allowedImageTypes;
+export type AllowedMediaType = keyof typeof allowedMediaTypes;
+export type PresentationKind = "IMAGE" | "GIF" | "VIDEO";
 
 const mediaNamespaces = ["development", "preview", "production"] as const;
 
 export type MediaNamespace = (typeof mediaNamespaces)[number];
 
 const namespaceName = mediaNamespaces.join("|");
-const imageName = String.raw`[0-9a-f-]{36}\.(?:jpg|png|webp|avif)`;
+const stillName = String.raw`[0-9a-f-]{36}\.(?:jpg|png|webp|avif)`;
+const mediaName = String.raw`[0-9a-f-]{36}\.(?:jpg|png|webp|avif|gif|mp4|webm)`;
 const keyPattern = new RegExp(
-  String.raw`^(?:${namespaceName})\/projects\/[A-Za-z0-9]+\/(?:cover|hero|gallery)\/${imageName}$`,
+  String.raw`^(?:${namespaceName})\/projects\/[A-Za-z0-9]+\/(?:cover|hero|gallery|presentation)\/${mediaName}$`,
 );
 const contentKeyPattern = new RegExp(
-  String.raw`^(?:${namespaceName})\/content\/(?:about-feature|experience|client|home-portrait|home-logo)\/[A-Za-z0-9-]+\/${imageName}$`,
+  String.raw`^(?:${namespaceName})\/content\/(?:about-feature|experience|client|home-portrait|home-logo)\/[A-Za-z0-9-]+\/${stillName}$`,
 );
 
 export const contentAssetScopes = ["about-feature", "experience", "client", "home-portrait", "home-logo"] as const;
@@ -34,21 +48,59 @@ export function isAllowedImageType(value: string): value is AllowedImageType {
   return value in allowedImageTypes;
 }
 
+export function isAllowedMediaType(value: string): value is AllowedMediaType {
+  return value in allowedMediaTypes;
+}
+
 export function extensionFor(type: AllowedImageType) {
   return allowedImageTypes[type];
+}
+
+export function extensionForMedia(type: AllowedMediaType) {
+  return allowedMediaTypes[type];
+}
+
+export function presentationKindFor(type: AllowedMediaType): PresentationKind {
+  if (type === "image/gif") return "GIF";
+  if (type === "video/mp4" || type === "video/webm") return "VIDEO";
+  return "IMAGE";
+}
+
+export function mediaLimit(type: AllowedMediaType) {
+  if (type === "image/gif") return { bytes: maxGifBytes, label: maxGifLabel };
+  if (type === "video/mp4" || type === "video/webm") return { bytes: maxVideoBytes, label: maxVideoLabel };
+  return { bytes: maxImageBytes, label: maxImageLabel };
 }
 
 export function validateImageUpload(input: { type: string; size: number }) {
   if (!isAllowedImageType(input.type)) {
     return "Use a JPEG, PNG, WebP, or AVIF image.";
   }
-  if (!Number.isFinite(input.size) || input.size <= 0) {
-    return "That file is empty.";
+  return validateSizedUpload(input.size, maxImageBytes, `Images must be ${maxImageLabel} or smaller.`);
+}
+
+export function validateMediaUpload(input: { type: string; size: number }) {
+  if (!isAllowedMediaType(input.type)) {
+    return "Use a JPEG, PNG, WebP, AVIF, GIF, MP4, or WebM file.";
   }
-  if (input.size > maxImageBytes) {
-    return `Images must be ${maxImageLabel} or smaller.`;
-  }
+  const limit = mediaLimit(input.type);
+  const noun = input.type.startsWith("video/") ? "Videos" : input.type === "image/gif" ? "GIFs" : "Images";
+  return validateSizedUpload(input.size, limit.bytes, `${noun} must be ${limit.label} or smaller.`);
+}
+
+function validateSizedUpload(size: number, max: number, tooLarge: string) {
+  if (!Number.isFinite(size) || size <= 0) return "That file is empty.";
+  if (size > max) return tooLarge;
   return null;
+}
+
+export function naturalFileNameCompare(a: string, b: string) {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+}
+
+export function boardWidthMismatch(reference: number | null, width: number | null) {
+  if (!reference || !width || reference <= 0) return false;
+  return Math.abs(width - reference) / reference > 0.01;
 }
 
 export function activeMediaNamespace(): MediaNamespace | null {
@@ -101,6 +153,27 @@ export function readImageSize(type: AllowedImageType, bytes: Uint8Array) {
   if (type === "image/jpeg") return readJpeg(bytes);
   if (type === "image/webp") return readWebp(bytes);
   return readAvif(bytes);
+}
+
+export function matchesMediaSignature(type: AllowedMediaType, bytes: Uint8Array) {
+  if (type === "image/gif") return ascii(bytes, 0, 6) === "GIF87a" || ascii(bytes, 0, 6) === "GIF89a";
+  if (type === "video/webm") return bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3;
+  if (type === "video/mp4") return ascii(bytes, 4, 4) === "ftyp";
+  return matchesImageSignature(type, bytes);
+}
+
+export function readMediaSize(type: AllowedMediaType, bytes: Uint8Array) {
+  if (type === "image/gif") return readGif(bytes);
+  if (type === "video/mp4" || type === "video/webm") return null;
+  return readImageSize(type, bytes);
+}
+
+function readGif(bytes: Uint8Array) {
+  if (bytes.length < 10) return null;
+  const width = bytes[6]! + (bytes[7]! << 8);
+  const height = bytes[8]! + (bytes[9]! << 8);
+  if (width <= 0 || height <= 0) return null;
+  return { width, height };
 }
 
 function readPng(bytes: Uint8Array) {

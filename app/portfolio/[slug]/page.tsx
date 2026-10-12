@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PortfolioScreen } from "@/components/portfolio/PortfolioScreen";
+import { publicPortfolioFilters } from "@/data/portfolio";
 import { ProjectDetail } from "@/components/portfolio/ProjectDetail";
 import { getPublicCta } from "@/lib/content/cta";
-import { getPublishedCategories, getPublishedProjects } from "@/lib/content/portfolio";
+import { getPublishedProjects } from "@/lib/content/portfolio";
 import { getPublicSite } from "@/lib/content/site";
 
 export const dynamic = "force-dynamic";
@@ -19,9 +20,11 @@ export async function generateMetadata({ params }: ProjectRouteProps): Promise<M
 
   if (!project) return {};
 
+  const site = await getPublicSite();
+
   return {
     title: { absolute: project.seoTitle || `${project.title} | Edrisa` },
-    description: project.seoDescription || project.shortDescription || `${project.title}. ${project.category}.`,
+    description: project.seoDescription || project.shortDescription || site.description,
     alternates: {
       canonical: `/portfolio/${project.slug}`,
     },
@@ -30,9 +33,8 @@ export async function generateMetadata({ params }: ProjectRouteProps): Promise<M
 
 export default async function ProjectRoute({ params }: ProjectRouteProps) {
   const { slug } = await params;
-  const [projects, categories, cta, site] = await Promise.all([
+  const [projects, cta, site] = await Promise.all([
     getPublishedProjects(),
-    getPublishedCategories(),
     getPublicCta("portfolio"),
     getPublicSite(),
   ]);
@@ -46,27 +48,17 @@ export default async function ProjectRoute({ params }: ProjectRouteProps) {
 
   return (
     <>
-      <PortfolioScreen
-        projects={projects}
-        categories={["All", ...categories]}
-        cta={
-          cta
-            ? { heading: cta.heading, body: cta.body, buttonLabel: cta.buttonLabel, href: cta.buttonHref }
-            : undefined
-        }
-      />
+      <PortfolioScreen projects={projects} ctaHref={cta?.buttonHref ?? "/contact"} />
       <ProjectDetail
         project={project}
         previous={{ slug: previous.slug, title: previous.title }}
         next={{ slug: next.slug, title: next.title }}
-        categories={categories}
+        categories={[...publicPortfolioFilters]}
         contact={{
-          portraitSrc: site.portraitSrc,
-          portraitWidth: site.portraitWidth,
-          portraitHeight: site.portraitHeight,
-          whatsapp: site.socials.find((item) => item.id === "whatsapp")?.href ?? "",
           profiles: site.socials,
+          callHref: site.callHref,
         }}
+        ctaHref={cta?.buttonHref ?? "/contact"}
       />
     </>
   );

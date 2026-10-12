@@ -34,7 +34,7 @@ function CreditRow({ credit, index, total }: { credit: Credit; index: number; to
 
   if (!editing) {
     return (
-      <li className="rounded-2xl bg-white p-4">
+      <li className="rounded-2xl border border-[#1c120e]/10 bg-[#fffdfb] p-4">
         <p className="text-sm font-semibold">{credit.label}</p>
         <p className="mt-1 text-sm text-[#1c120e]/70">{credit.value}</p>
         <div className="mt-3 flex flex-wrap gap-3 text-sm">
@@ -56,7 +56,7 @@ function CreditRow({ credit, index, total }: { credit: Credit; index: number; to
 
   return (
     <li>
-      <form action={action} className="grid gap-2 rounded-2xl bg-white p-4">
+      <form action={action} className="grid gap-2 rounded-2xl border border-[#1c120e]/10 bg-[#fffdfb] p-4">
         <input type="hidden" name="creditId" value={credit.id} />
         <label className="grid gap-1 text-sm">
           Label
@@ -81,7 +81,7 @@ function CreditRow({ credit, index, total }: { credit: Credit; index: number; to
 function CreditForm({ projectId }: { projectId: string }) {
   const [state, action] = useActionState(saveCredit, {});
   return (
-    <form action={action} className="grid gap-2 rounded-2xl bg-white p-4">
+    <form action={action} className="grid gap-2 rounded-2xl border border-[#1c120e]/10 bg-[#fffdfb] p-4">
       <input type="hidden" name="projectId" value={projectId} />
       <h3 className="text-sm font-semibold">Add a credit</h3>
       <label className="grid gap-1 text-sm">

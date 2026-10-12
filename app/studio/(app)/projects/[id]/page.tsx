@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation";
 import { updateProject } from "@/app/studio/(app)/projects/actions";
-import { DeleteProjectButton } from "@/components/studio/DeleteProjectButton";
-import { ProjectArtwork } from "@/components/studio/ProjectArtwork";
-import { ProjectCredits } from "@/components/studio/ProjectCredits";
-import { ProjectForm } from "@/components/studio/ProjectForm";
-import { listPortfolioCategories } from "@/lib/content/categories";
+import { ProjectEditor } from "@/components/studio/ProjectEditor";
+import { listCanonicalCategories } from "@/lib/content/categories";
 import { getStudioProject } from "@/lib/content/projects";
 import { listStudioServices } from "@/lib/content/services";
 import { listSoftwareCatalogue } from "@/lib/content/software";
@@ -20,64 +17,53 @@ export default async function EditProjectPage({
   const { saved } = await searchParams;
   const [project, categories, services, software] = await Promise.all([
     getStudioProject(id),
-    listPortfolioCategories(),
+    listCanonicalCategories(),
     listStudioServices(),
     listSoftwareCatalogue(),
   ]);
   if (!project) notFound();
 
+  const updatedLabel = new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }).format(project.updatedAt);
+
   return (
-    <section className="max-w-3xl">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{project.title}</h1>
-          <p className="mt-3 text-sm text-[#1c120e]/60">{project.published ? "Published" : "Draft"}</p>
-        </div>
-        <DeleteProjectButton id={project.id} title={project.title} />
-      </div>
-      {saved === "1" ? (
-        <p className="mt-6 rounded-xl bg-[#2e211c]/10 px-4 py-3 text-sm text-[#2e211c]" role="status">
-          Project created.
-        </p>
-      ) : null}
-
-      <h2 className="mt-10 text-lg font-semibold">Artwork</h2>
-      <ProjectArtwork
-        projectId={project.id}
-        coverUrl={project.coverImageUrl}
-        heroUrl={project.heroImageUrl}
-        images={project.images}
-      />
-
-      <ProjectForm
+    <section>
+      <ProjectEditor
+        justCreated={saved === "1"}
         action={updateProject}
-        mode="edit"
         categories={categories}
         services={services}
         software={software}
         selectedServiceIds={project.services.map((item) => item.serviceId)}
         selectedSoftwareIds={project.software.map((item) => item.softwareId)}
-        values={{
+        credits={project.credits}
+        project={{
           id: project.id,
           title: project.title,
           slug: project.slug,
-          categoryId: project.categoryId,
+          published: project.published,
+          role: project.role ?? "",
           client: project.client,
           year: project.year == null ? "" : String(project.year),
-          role: project.role ?? "",
           shortDescription: project.shortDescription ?? "",
           fullDescription: project.fullDescription ?? "",
           size: project.size,
           sortOrder: String(project.sortOrder),
           featured: project.featured,
-          published: project.published,
           seoTitle: project.seoTitle ?? "",
           seoDescription: project.seoDescription ?? "",
+          legacyCategory: project.category?.name ?? null,
+          categoryIds: project.categories.map((item) => item.categoryId),
+          coverUrl: project.coverImageUrl,
+          coverWidth: project.coverImageWidth,
+          coverHeight: project.coverImageHeight,
+          updatedLabel,
+          images: project.images,
         }}
       />
-
-      <h2 className="mt-10 text-lg font-semibold">Credits</h2>
-      <ProjectCredits projectId={project.id} credits={project.credits} />
     </section>
   );
 }

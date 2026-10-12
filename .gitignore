@@ -56,3 +56,6 @@ next-env.d.ts
 /fonts/*.ttf
 /fonts/*.woff
 /fonts/*.woff2
+!/fonts/LufgaLight.ttf
+!/fonts/LufgaSemiBold.ttf
+!/fonts/LufgaExtraBold.ttf

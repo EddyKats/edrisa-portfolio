@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getDb } from "@/lib/db";
-import type { PortfolioProject, ProjectSize } from "@/data/portfolio";
+import { canonicalPortfolioCategories, type PortfolioProject, type ProjectSize } from "@/data/portfolio";
 import type { SoftwareId } from "@/data/software";
 import { softwareIds } from "@/data/software";
 
@@ -15,6 +15,10 @@ const sizes: Record<string, ProjectSize> = {
 function projectQuery() {
   return {
     category: { select: { name: true, published: true } },
+    categories: {
+      orderBy: [{ sortOrder: "asc" as const }, { categoryId: "asc" as const }],
+      select: { category: { select: { name: true, published: true } } },
+    },
     images: { orderBy: [{ sortOrder: "asc" as const }, { id: "asc" as const }] },
     services: {
       orderBy: [{ sortOrder: "asc" as const }, { serviceId: "asc" as const }],
@@ -30,7 +34,7 @@ function projectQuery() {
 
 export async function getPublishedProjects() {
   const projects = await getDb().project.findMany({
-    where: { published: true, category: { published: true } },
+    where: { published: true },
     orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
     include: projectQuery(),
   });
@@ -42,7 +46,7 @@ export async function getPublishedProjectBySlug(slug: string) {
     where: { slug },
     include: projectQuery(),
   });
-  if (!project || !project.published || !project.category.published) return null;
+  if (!project?.published) return null;
   return toPublicProject(project);
 }
 
@@ -70,16 +74,30 @@ function toPublicProject(project: {
   size: string;
   seoTitle: string | null;
   seoDescription: string | null;
-  category: { name: string };
-  images: { url: string; altText: string; caption: string | null; width: number | null; height: number | null }[];
+  category: { name: string; published: boolean } | null;
+  categories: { category: { name: string; published: boolean } }[];
+  images: {
+    url: string;
+    altText: string;
+    caption: string | null;
+    width: number | null;
+    height: number | null;
+    kind: "IMAGE" | "GIF" | "VIDEO";
+    mimeType: string | null;
+  }[];
   services: { service: { title: string; published: boolean } }[];
   software: { software: { key: string; published: boolean } }[];
   credits: { label: string; value: string }[];
 }): PortfolioProject {
+  const categories = project.categories
+    .map((item) => item.category)
+    .filter((category) => category.published && isCanonicalCategory(category.name))
+    .map((category) => category.name);
   return {
     slug: project.slug,
     title: project.title,
-    category: project.category.name,
+    category: categories[0] ?? project.category?.name ?? "",
+    categories,
     client: project.client,
     year: project.year,
     role: project.role,
@@ -96,6 +114,8 @@ function toPublicProject(project: {
       caption: image.caption,
       width: image.width,
       height: image.height,
+      kind: image.kind,
+      mimeType: image.mimeType,
     })),
     credits: project.credits.map((credit) => ({ role: credit.label, name: credit.value })),
     software: project.software.flatMap((item) => {
@@ -106,6 +126,10 @@ function toPublicProject(project: {
     seoTitle: project.seoTitle,
     seoDescription: project.seoDescription,
   };
+}
+
+function isCanonicalCategory(name: string): name is (typeof canonicalPortfolioCategories)[number] {
+  return (canonicalPortfolioCategories as readonly string[]).includes(name);
 }
 
 function isSoftwareId(key: string): key is SoftwareId {

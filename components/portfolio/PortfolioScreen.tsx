@@ -8,26 +8,27 @@ import { portfolioCopy, type PortfolioProject } from "@/data/portfolio";
 
 export function PortfolioScreen({
   projects,
-  categories,
-  cta,
+  ctaHref = "/contact",
 }: {
   projects: PortfolioProject[];
-  categories: string[];
-  cta?: { heading: string; body: string; buttonLabel: string; href: string };
+  ctaHref?: string;
 }) {
   return (
     <InternalPageLayout section="portfolio">
-      <div className="mx-auto w-full max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
-        <InternalTitle>{portfolioCopy.title}</InternalTitle>
+      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20">
+        <InternalTitle>
+          <span className="block">{portfolioCopy.title}</span>
+          <span className="block font-light">{portfolioCopy.titleLine}</span>
+        </InternalTitle>
         <Suspense fallback={null}>
-          <PortfolioBrowser projects={projects} categories={categories} />
+          <PortfolioBrowser projects={projects} />
         </Suspense>
         <InternalCTA
           section="portfolio"
-          heading={cta?.heading ?? portfolioCopy.ctaHeading}
-          body={cta?.body ?? portfolioCopy.ctaBody}
-          label={cta?.buttonLabel ?? portfolioCopy.ctaLabel}
-          href={cta?.href ?? "/contact"}
+          heading={portfolioCopy.ctaHeading}
+          body={portfolioCopy.ctaBody}
+          label={portfolioCopy.ctaLabel}
+          href={ctaHref}
         />
         <InternalFooter />
       </div>

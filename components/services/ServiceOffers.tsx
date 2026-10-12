@@ -16,7 +16,7 @@ export function ServiceOffers({
   offers: { title: string; summary: string; icon: ServiceIconName; surface: NavId }[];
 }) {
   return (
-    <section aria-label="Main services" className="mt-14 sm:mt-16">
+    <section aria-label="Main services" className="mt-6 sm:mt-7">
       <ul className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
         {offers.map((offer) => {
           const Icon = icons[offer.icon];

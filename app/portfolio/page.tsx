@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PortfolioScreen } from "@/components/portfolio/PortfolioScreen";
 import { getPublicCta } from "@/lib/content/cta";
-import { getPublishedCategories, getPublishedProjects } from "@/lib/content/portfolio";
+import { getPublishedProjects } from "@/lib/content/portfolio";
 import { getPublicSite } from "@/lib/content/site";
 import { portfolioMeta } from "@/data/portfolio";
 
@@ -17,21 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PortfolioRoute() {
-  const [projects, categories, cta] = await Promise.all([
-    getPublishedProjects(),
-    getPublishedCategories(),
-    getPublicCta("portfolio"),
-  ]);
+  const [projects, cta] = await Promise.all([getPublishedProjects(), getPublicCta("portfolio")]);
 
-  return (
-    <PortfolioScreen
-      projects={projects}
-      categories={["All", ...categories]}
-      cta={
-        cta
-          ? { heading: cta.heading, body: cta.body, buttonLabel: cta.buttonLabel, href: cta.buttonHref }
-          : undefined
-      }
-    />
-  );
+  return <PortfolioScreen projects={projects} ctaHref={cta?.buttonHref ?? "/contact"} />;
 }

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
+import localFont from "next/font/local";
 import { getPublicSite } from "@/lib/content/site";
 import "./globals.css";
 
@@ -8,6 +9,16 @@ const manrope = Manrope({
   display: "swap",
   weight: ["500", "600", "700", "800"],
   variable: "--font-manrope",
+});
+
+const lufga = localFont({
+  src: [
+    { path: "../fonts/LufgaLight.ttf", weight: "300", style: "normal" },
+    { path: "../fonts/LufgaSemiBold.ttf", weight: "600", style: "normal" },
+    { path: "../fonts/LufgaExtraBold.ttf", weight: "800", style: "normal" },
+  ],
+  display: "swap",
+  variable: "--font-lufga",
 });
 
 export const dynamic = "force-dynamic";
@@ -62,7 +73,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   };
 
   return (
-    <html lang="en" className={`${manrope.variable} h-full antialiased`}>
+    <html lang="en" className={`${manrope.variable} ${lufga.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">
         <script
           type="application/ld+json"

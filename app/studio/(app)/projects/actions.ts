@@ -12,7 +12,7 @@ import {
   updateProjectRecord,
 } from "@/lib/content/projects";
 import { requireAdmin } from "@/lib/auth/require-admin";
-import { parseProjectForm } from "@/lib/studio/project-schema";
+import { parseCreateProjectForm, parseUpdateProjectForm } from "@/lib/studio/project-schema";
 
 export type ProjectActionState = {
   error?: string;
@@ -26,16 +26,13 @@ function failure(error: unknown, fallback = "The project could not be saved."): 
 
 export async function createProject(_state: ProjectActionState, formData: FormData): Promise<ProjectActionState> {
   await requireAdmin();
-  const parsed = parseProjectForm(formData, { generateSlug: true });
+  const parsed = parseCreateProjectForm(formData);
   if (!parsed.ok) return { error: parsed.error };
 
   let projectId = "";
   try {
     const project = await createProjectRecord(parsed.data);
     projectId = project.id;
-    if (formData.get("relations") === "1") {
-      await replaceProjectRelations(project.id, selectedIds(formData, "serviceId"), selectedIds(formData, "softwareId"));
-    }
     revalidateProjectContent([project.slug]);
   } catch (error) {
     return failure(error);
@@ -47,14 +44,12 @@ export async function createProject(_state: ProjectActionState, formData: FormDa
 export async function updateProject(_state: ProjectActionState, formData: FormData): Promise<ProjectActionState> {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
-  const parsed = parseProjectForm(formData, { generateSlug: false });
+  const parsed = parseUpdateProjectForm(formData);
   if (!parsed.ok) return { error: parsed.error };
 
   try {
     const { project, previousSlug } = await updateProjectRecord(id, parsed.data);
-    if (formData.get("relations") === "1") {
-      await replaceProjectRelations(id, selectedIds(formData, "serviceId"), selectedIds(formData, "softwareId"));
-    }
+    await replaceProjectRelations(id, selectedIds(formData, "serviceId"), selectedIds(formData, "softwareId"));
     revalidateProjectContent([previousSlug, project.slug]);
     return { ok: true };
   } catch (error) {

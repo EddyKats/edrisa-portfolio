@@ -9,25 +9,28 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
   extensionFor,
+  extensionForMedia,
   isContentAssetKey,
   isContentAssetScope,
   isPortfolioAssetKey,
   isDeletableAssetKey,
-  matchesImageSignature,
+  matchesMediaSignature,
   mediaBucket,
   namespacedAssetKey,
-  readImageSize,
+  readMediaSize,
   validateImageUpload,
+  validateMediaUpload,
   type AllowedImageType,
+  type AllowedMediaType,
   type ContentAssetScope,
 } from "./validation";
 
-export type PortfolioAssetRole = "cover" | "hero" | "gallery";
+export type PortfolioAssetRole = "cover" | "hero" | "gallery" | "presentation";
 
 export type PortfolioAsset = {
   publicUrl: string;
   key: string;
-  mimeType: AllowedImageType;
+  mimeType: AllowedMediaType;
   size: number;
   width: number | null;
   height: number | null;
@@ -62,12 +65,13 @@ export async function createPortfolioUpload(input: {
   type: string;
   size: number;
 }) {
-  const error = validateImageUpload(input);
+  const error = input.role === "presentation" ? validateMediaUpload(input) : validateImageUpload(input);
   if (error) return { error };
   assertProjectId(input.projectId);
-  const type = input.type as AllowedImageType;
+  const type = input.type as AllowedMediaType;
+  const extension = input.role === "presentation" ? extensionForMedia(type) : extensionFor(type as AllowedImageType);
   const key = namespacedAssetKey(
-    `projects/${input.projectId}/${input.role}/${crypto.randomUUID()}.${extensionFor(type)}`,
+    `projects/${input.projectId}/${input.role}/${crypto.randomUUID()}.${extension}`,
   );
   const command = new PutObjectCommand({
     Bucket: mediaBucket,
@@ -119,15 +123,19 @@ export async function inspectContentAsset(
 export async function uploadPortfolioAsset(input: {
   projectId: string;
   role: PortfolioAssetRole;
-  type: AllowedImageType;
+  type: AllowedMediaType;
   body: Uint8Array;
 }) {
-  const error = validateImageUpload({ type: input.type, size: input.body.byteLength });
+  const error =
+    input.role === "presentation"
+      ? validateMediaUpload({ type: input.type, size: input.body.byteLength })
+      : validateImageUpload({ type: input.type, size: input.body.byteLength });
   if (error) throw new Error(error);
-  if (!matchesImageSignature(input.type, input.body)) throw new Error("That file is not an allowed image.");
+  if (!matchesMediaSignature(input.type, input.body)) throw new Error("That file does not match an allowed format.");
   assertProjectId(input.projectId);
+  const extension = input.role === "presentation" ? extensionForMedia(input.type) : extensionFor(input.type as AllowedImageType);
   const key = namespacedAssetKey(
-    `projects/${input.projectId}/${input.role}/${crypto.randomUUID()}.${extensionFor(input.type)}`,
+    `projects/${input.projectId}/${input.role}/${crypto.randomUUID()}.${extension}`,
   );
   await client().send(
     new PutObjectCommand({
@@ -156,17 +164,17 @@ async function inspectStoredImage(key: string): Promise<PortfolioAsset | { error
   const stored = await client().send(new HeadObjectCommand({ Bucket: mediaBucket, Key: key }));
   const type = stored.ContentType ?? "";
   const size = stored.ContentLength ?? 0;
-  const invalid = validateImageUpload({ type, size });
+  const invalid = validateMediaUpload({ type, size });
   if (invalid) return { error: invalid };
 
   const sample = await readObjectStart(key);
-  const imageType = type as AllowedImageType;
-  if (!matchesImageSignature(imageType, sample)) return { error: "That file is not an allowed image." };
-  const dimensions = readImageSize(imageType, sample);
+  const mediaType = type as AllowedMediaType;
+  if (!matchesMediaSignature(mediaType, sample)) return { error: "That file does not match an allowed format." };
+  const dimensions = readMediaSize(mediaType, sample);
   return {
     publicUrl: publicAssetUrl(key),
     key,
-    mimeType: imageType,
+    mimeType: mediaType,
     size,
     width: dimensions?.width ?? null,
     height: dimensions?.height ?? null,

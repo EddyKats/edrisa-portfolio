@@ -30,7 +30,7 @@ export default async function AboutRoute() {
 
   return (
     <InternalPageLayout section="about">
-      <div className="mx-auto w-full max-w-[48rem] px-5 py-14 sm:px-8 sm:py-20">
+      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20" data-frame="about">
         <InternalTitle>{content?.pageTitle ?? aboutCopy.title}</InternalTitle>
         <AboutFeatureMedia src={feature} />
         <AboutIntro

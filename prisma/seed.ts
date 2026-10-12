@@ -1,7 +1,7 @@
 import { aboutCopy, aboutFeature, aboutJourney, aboutMeta, aboutStats } from "../data/about";
 import { contactCopy, contactDetails, contactMeta } from "../data/contact";
 import { navigation } from "../data/navigation";
-import { portfolioCategories, portfolioCopy, portfolioProjects } from "../data/portfolio";
+import { canonicalPortfolioCategories, portfolioCategories, portfolioCopy, portfolioProjects } from "../data/portfolio";
 import { capabilityPackages, serviceOffers, servicesCopy } from "../data/services";
 import { site, socialLinks } from "../data/site";
 import { softwareRegistry } from "../data/software";
@@ -147,6 +147,14 @@ async function main() {
     }
   }
 
+  for (const [index, name] of canonicalPortfolioCategories.entries()) {
+    await db.portfolioCategory.upsert({
+      where: { slug: slugify(name) },
+      create: { name, slug: slugify(name), sortOrder: index, published: true },
+      update: { published: true },
+    });
+  }
+
   const categories = portfolioCategories.filter((category) => category !== "All");
   for (const [index, name] of categories.entries()) {
     await db.portfolioCategory.upsert({
@@ -165,7 +173,7 @@ async function main() {
     const category = await db.portfolioCategory.findUnique({ where: { slug: slugify(project.category) } });
     if (!category) throw new Error(`Missing category for ${project.slug}`);
 
-    await db.project.upsert({
+    const saved = await db.project.upsert({
       where: { slug: project.slug },
       create: {
         slug: project.slug,
@@ -186,7 +194,15 @@ async function main() {
         seoDescription: null,
       },
       update: {},
+      select: { id: true },
     });
+    if ((canonicalPortfolioCategories as readonly string[]).includes(project.category)) {
+      await db.projectCategory.upsert({
+        where: { projectId_categoryId: { projectId: saved.id, categoryId: category.id } },
+        create: { projectId: saved.id, categoryId: category.id, sortOrder: 0 },
+        update: {},
+      });
+    }
   }
 
   const catalogue = Object.entries(softwareRegistry);

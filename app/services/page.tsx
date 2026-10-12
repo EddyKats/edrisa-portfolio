@@ -27,7 +27,7 @@ export default async function ServicesRoute() {
 
   return (
     <InternalPageLayout section="services">
-      <div className="mx-auto w-full max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
+      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20">
         <InternalTitle>{servicesCopy.title}</InternalTitle>
         <ServiceOffers offers={catalog.services} />
         <CapabilityPackages

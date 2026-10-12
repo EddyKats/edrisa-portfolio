@@ -6,13 +6,27 @@ export const portfolioMeta = {
 } as const;
 
 export const portfolioCopy = {
-  title: "Proof I Wasn't Just Moving Pixels Around",
-  emptyLabel: "Nothing filed here yet.",
-  ctaHeading: "Want the next one to be yours?",
-  ctaBody: "Bring the brief. I'll bring the unreasonable attention to detail.",
+  title: "Selected work.",
+  titleLine: "Built to be noticed.",
+  support: "Brand identities, campaigns, digital products and creative systems.",
+  emptyLabel: "Uploading projects",
+  ctaHeading: "Have something worth making memorable?",
+  ctaBody: "Bring the brief. I'll bring the thinking, craft and attention to detail.",
   ctaLabel: "Start a Project",
   pending: "To be added",
 } as const;
+
+/** Public filter bar only. "All" is not a database category. */
+export const canonicalPortfolioCategories = [
+  "Graphic Design",
+  "Branding",
+  "Web Development",
+  "App Development",
+] as const;
+
+export const publicPortfolioFilters = ["All", ...canonicalPortfolioCategories] as const;
+
+export type CanonicalPortfolioCategory = (typeof canonicalPortfolioCategories)[number];
 
 export const portfolioCategories = [
   "All",
@@ -40,12 +54,15 @@ export type PortfolioGalleryImage = {
   caption: string | null;
   width: number | null;
   height: number | null;
+  kind?: "IMAGE" | "GIF" | "VIDEO";
+  mimeType?: string | null;
 };
 
 export type PortfolioProject = {
   slug: string;
   title: string;
   category: string;
+  categories?: string[];
   client: string;
   year: number | null;
   role: string | null;

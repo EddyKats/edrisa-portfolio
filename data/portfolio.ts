@@ -1,3 +1,4 @@
+import { projectCta } from "@/data/project-cta";
 import type { SoftwareId } from "@/data/software";
 
 export const portfolioMeta = {
@@ -10,9 +11,9 @@ export const portfolioCopy = {
   titleLine: "Built to be noticed.",
   support: "Brand identities, campaigns, digital products and creative systems.",
   emptyLabel: "Uploading projects",
-  ctaHeading: "Have something worth making memorable?",
+  ctaHeading: projectCta.heading,
   ctaBody: "Bring the brief. I'll bring the thinking, craft and attention to detail.",
-  ctaLabel: "Start a Project",
+  ctaLabel: projectCta.label,
   pending: "To be added",
 } as const;
 

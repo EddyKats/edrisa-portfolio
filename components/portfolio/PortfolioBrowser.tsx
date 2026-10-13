@@ -66,7 +66,7 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
     const y = Number(sessionStorage.getItem(scrollKey));
     const slug = sessionStorage.getItem(focusKey);
     requestAnimationFrame(() => {
-      if (y > 0) window.scrollTo(0, y);
+      if (y > 0 && window.scrollY === 0) window.scrollTo(0, y);
       if (!slug) return;
       document.getElementById(`project-card-${slug}`)?.focus({ preventScroll: true });
       sessionStorage.removeItem(focusKey);

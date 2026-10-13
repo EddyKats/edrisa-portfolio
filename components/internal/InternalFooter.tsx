@@ -1,46 +1,77 @@
+import { FaBehance, FaLinkedinIn, FaPhone, FaWhatsapp } from "react-icons/fa";
 import { EdrisaLogo } from "@/components/site/EdrisaLogo";
 import { getPublicSite } from "@/lib/content/site";
+import type { PublicSocial } from "@/lib/content/site-shape";
+
+const socialIcons = {
+  behance: FaBehance,
+  linkedin: FaLinkedinIn,
+  whatsapp: FaWhatsapp,
+} as const;
+
+const marqueeCopies = [0, 1, 2];
 
 export async function InternalFooter() {
   const site = await getPublicSite();
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-16 overflow-hidden rounded-[1.35rem] bg-[#2e211c] px-8 pt-10 pb-8 text-[#f7f1ea] sm:px-10 sm:pt-12 sm:pb-10">
-      <div className="relative z-10 flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
-        <div className="max-w-[18rem] text-sm leading-relaxed text-white/72">
-          <p>Designed with intent.</p>
-          <p>Built with unreasonable attention to detail.</p>
+    <>
+      <footer className="site-footer mt-16 bg-[#f6f3ef] text-ink">
+        <div className="footer-top">
+          <p className="footer-kicker">Elsewhere on the internet</p>
+          <div className="footer-rule" aria-hidden="true" />
+          <ul className="footer-socials">
+            {site.socials.map((item) => (
+              <li key={item.id}>
+                <SocialAction item={item} />
+              </li>
+            ))}
+            {site.callHref ? (
+              <li>
+                <a href={site.callHref} className="footer-social" aria-label="Call Edrisa">
+                  <FaPhone className="footer-social-icon" aria-hidden="true" />
+                  <span>Call</span>
+                </a>
+              </li>
+            ) : null}
+          </ul>
         </div>
-        <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm sm:flex-col sm:items-end sm:text-right">
-          {site.socials.map((item) => (
-            <li key={item.id}>
-              <a
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-sm text-white/70 underline-offset-4 hover:text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-              >
-                {item.label}
-              </a>
-            </li>
-          ))}
-          {site.callHref ? (
-            <li>
-              <a
-                href={site.callHref}
-                className="rounded-sm text-white/70 underline-offset-4 hover:text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-              >
-                Call
-              </a>
-            </li>
-          ) : null}
-        </ul>
-      </div>
-      <div className="relative z-0 mt-12 flex justify-center sm:mt-14" aria-hidden="true">
-        <EdrisaLogo className="footer-wordmark h-auto w-[92%] max-w-[46rem] sm:w-[74%]" />
-      </div>
-      <p className="relative z-10 mt-6 text-sm text-white/70">© {year} Edrisa.</p>
-    </footer>
+        <div className="footer-marquee mt-12 sm:mt-16" aria-hidden="true">
+          <div className="footer-marquee-track">
+            <LogoSet />
+            <LogoSet />
+          </div>
+        </div>
+      </footer>
+      <p className="mt-14 text-center text-[1.15rem] font-medium text-ink">
+        © {year} Edrisa. All rights reserved
+      </p>
+    </>
+  );
+}
+
+function SocialAction({ item }: { item: PublicSocial }) {
+  const Icon = socialIcons[item.id];
+
+  return (
+    <a href={item.href} target="_blank" rel="noopener noreferrer" className="footer-social">
+      <Icon className="footer-social-icon" aria-hidden="true" />
+      <span>{item.label}</span>
+    </a>
+  );
+}
+
+function LogoSet() {
+  return (
+    <div className="footer-marquee-set">
+      {marqueeCopies.map((copy) => (
+        <div className="footer-marquee-item" key={copy}>
+          <div className="footer-marquee-window">
+            <EdrisaLogo className="footer-marquee-logo" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

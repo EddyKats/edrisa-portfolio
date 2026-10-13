@@ -8,6 +8,7 @@ import { InternalFooter } from "@/components/internal/InternalFooter";
 import { InternalPageLayout } from "@/components/internal/InternalPageLayout";
 import { InternalTitle } from "@/components/internal/InternalTitle";
 import { aboutCopy } from "@/data/about";
+import { projectCta } from "@/data/project-cta";
 import { getPublicAbout } from "@/lib/content/about";
 import { getPublicCta } from "@/lib/content/cta";
 import { getPublicSite } from "@/lib/content/site";
@@ -43,9 +44,9 @@ export default async function AboutRoute() {
         <AboutJourney title={aboutCopy.journeyTitle} entries={about.experience} />
         <InternalCTA
           section="about"
-          heading={cta?.heading ?? content?.ctaHeading ?? aboutCopy.ctaHeading}
+          heading={projectCta.heading}
           body={cta?.body ?? content?.ctaText ?? aboutCopy.ctaBody}
-          label={cta?.buttonLabel ?? content?.ctaButtonLabel ?? aboutCopy.ctaLabel}
+          label={projectCta.label}
           href={cta?.buttonHref ?? content?.ctaButtonHref ?? "/contact"}
         />
         <InternalFooter />

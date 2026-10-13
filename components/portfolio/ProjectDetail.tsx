@@ -6,11 +6,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight, Phone, X } from "lucide-react";
 import { FaBehance, FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
+import { projectCta } from "@/data/project-cta";
+import { EdrisaLogo } from "@/components/site/EdrisaLogo";
 import { type PortfolioGalleryImage, type PortfolioProject } from "@/data/portfolio";
 import type { PublicSocial } from "@/lib/content/site-shape";
 import { softwareRegistry, type SoftwareId } from "@/data/software";
 
 const returnKey = "edrisa-portfolio-return";
+const focusKey = "edrisa-portfolio-focus";
 const contactOrder = ["whatsapp", "behance", "linkedin"] as const;
 
 const contactIcons = {
@@ -19,8 +22,8 @@ const contactIcons = {
   whatsapp: FaWhatsapp,
 } as const;
 
-const circleClass =
-  "grid size-12 shrink-0 place-items-center rounded-full bg-[#f7f1ea] text-mocha-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink split:focus-visible:outline-white";
+const actionTileClass =
+  "group flex min-h-28 w-full flex-col items-center justify-center gap-2.5 rounded-2xl border border-ink/10 bg-[#fffdfb] px-3 py-4 text-ink transition-colors hover:border-ink/30 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:bg-[#f3ebe4]";
 
 export function ProjectDetail({
   project,
@@ -52,6 +55,8 @@ export function ProjectDetail({
   const boards = project.galleryImages;
 
   const closeHandlerRef = useRef<() => void>(() => {});
+  const releaseRef = useRef<() => void>(() => {});
+  const scrollbarPointerRef = useRef(false);
 
   useEffect(() => {
     routerRef.current = router;
@@ -60,6 +65,7 @@ export function ProjectDetail({
   function close() {
     if (closingRef.current) return;
     closingRef.current = true;
+    releaseRef.current();
     setClosing(true);
     const href = portfolioReturnHref(categories);
     requestAnimationFrame(() => {
@@ -71,6 +77,26 @@ export function ProjectDetail({
     closeHandlerRef.current = close;
   });
 
+  function pointerInScrollbar(scroller: HTMLDivElement, clientX: number) {
+    const gutter = scroller.offsetWidth - scroller.clientWidth;
+    if (gutter <= 0) return false;
+    return clientX >= scroller.getBoundingClientRect().right - gutter;
+  }
+
+  function onScrollerPointerDown(event: MouseEvent<HTMLDivElement>) {
+    scrollbarPointerRef.current = pointerInScrollbar(event.currentTarget, event.clientX);
+  }
+
+  function onScrollerClick(event: MouseEvent<HTMLDivElement>) {
+    if (scrollbarPointerRef.current || pointerInScrollbar(event.currentTarget, event.clientX)) {
+      scrollbarPointerRef.current = false;
+      return;
+    }
+    const target = event.target;
+    if (target instanceof Element && target.closest(".project-sheet, .project-rail")) return;
+    close();
+  }
+
   function openProject(event: MouseEvent<HTMLAnchorElement>, slug: string) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault();
@@ -80,6 +106,7 @@ export function ProjectDetail({
   useEffect(() => {
     const page = document.getElementById("internal-page");
     const scrollY = window.scrollY;
+    let released = false;
 
     if (page) page.setAttribute("inert", "");
     document.body.style.position = "fixed";
@@ -87,7 +114,26 @@ export function ProjectDetail({
     document.body.style.left = "0";
     document.body.style.right = "0";
 
+    function releasePortfolio() {
+      if (released) return;
+      released = true;
+      page?.removeAttribute("inert");
+      document.querySelector(".project-overlay")?.setAttribute("data-closing", "true");
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      window.scrollTo(0, scrollY);
+      const slug = sessionStorage.getItem(focusKey);
+      const card = slug ? document.getElementById(`project-card-${slug}`) : null;
+      if (card instanceof HTMLElement) card.focus({ preventScroll: true });
+      else if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    }
+
+    releaseRef.current = releasePortfolio;
+
     function onKeyDown(event: KeyboardEvent) {
+      if (closingRef.current) return;
       if (event.key === "Escape") {
         event.preventDefault();
         closeHandlerRef.current();
@@ -118,11 +164,26 @@ export function ProjectDetail({
       }
     }
 
+    function onTraverse(event: Event) {
+      if ("navigationType" in event && event.navigationType !== "traverse") return;
+      releasePortfolio();
+    }
+
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("popstate", releasePortfolio, true);
+    const navigation = (window as Window & { navigation?: EventTarget }).navigation;
+    navigation?.addEventListener("navigate", onTraverse);
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      if (page) page.removeAttribute("inert");
+      window.removeEventListener("popstate", releasePortfolio, true);
+      navigation?.removeEventListener("navigate", onTraverse);
+      releaseRef.current = () => {};
+      if (released) {
+        page?.removeAttribute("inert");
+        return;
+      }
+      page?.removeAttribute("inert");
       document.body.style.position = "";
       document.body.style.top = "";
       document.body.style.left = "";
@@ -140,14 +201,19 @@ export function ProjectDetail({
   }, [project.slug]);
 
   return (
-    <div className="project-overlay fixed inset-0 z-50 overflow-y-scroll" data-closing={closing ? "true" : "false"}>
+    <div className="project-overlay fixed inset-0 z-50 overflow-hidden" data-closing={closing ? "true" : "false"}>
       <button
         type="button"
         tabIndex={-1}
-        className="fixed inset-0 bg-[rgba(0,0,0,0.76)] backdrop-blur-[2px]"
+        className="project-backdrop fixed inset-0 z-0"
         aria-label="Close project"
         onClick={close}
       />
+      <div
+        className="project-scroller absolute inset-0 z-10 overflow-y-scroll"
+        onMouseDown={onScrollerPointerDown}
+        onClick={onScrollerClick}
+      >
       <div
         ref={shellRef}
         role="dialog"
@@ -155,46 +221,49 @@ export function ProjectDetail({
         aria-labelledby={titleId}
         className="project-stage pointer-events-none relative z-10 mx-auto flex min-h-full w-full justify-center split:items-start split:gap-4 split:py-6"
       >
-        <div className="project-sheet pointer-events-auto relative w-full min-w-0 bg-[#fffdfb] text-ink split:max-w-[1400px] split:flex-1 split:rounded-[1.375rem] split:shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+        <div
+          className="project-sheet pointer-events-auto relative w-full min-w-0 bg-[#070709] text-ink split:max-w-[1400px] split:flex-1 split:rounded-[1.375rem] split:shadow-[0_24px_70px_rgba(0,0,0,0.28)]"
+          onClick={(event) => event.stopPropagation()}
+        >
           <div className="pointer-events-none sticky top-6 z-30 hidden h-0 split:block">
             <button
               data-close="desktop"
               type="button"
               onClick={close}
               aria-label="Close project"
-              className="pointer-events-auto absolute top-5 right-5 grid size-11 place-items-center rounded-full border border-ink/10 bg-[#fffdfb] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+              className="pointer-events-auto absolute top-5 right-5 grid size-11 place-items-center rounded-full bg-[#f4efe8] text-[#070709] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <X className="size-5" strokeWidth={1.75} aria-hidden="true" />
             </button>
           </div>
-          <div className="sticky top-0 z-20 flex justify-end bg-[#fffdfb] px-3 py-2 split:hidden">
+          <div className="sticky top-0 z-20 flex justify-end bg-[#070709] px-3 py-2 split:hidden">
             <button
               ref={closeRef}
               data-close="mobile"
               type="button"
               onClick={close}
               aria-label="Close project"
-              className="grid size-11 place-items-center rounded-full text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+              className="grid size-11 place-items-center rounded-full bg-[#f4efe8] text-[#070709] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <X className="size-5" strokeWidth={1.75} aria-hidden="true" />
             </button>
           </div>
-          <header className="project-case-header px-5 sm:px-8 split:pr-20">
-            <h1 id={titleId} className="text-[clamp(2.15rem,3.6vw,3.25rem)] leading-[1.02] font-semibold tracking-tight">
+          <header className="project-case-header bg-[#070709] px-5 text-white sm:px-8 split:rounded-t-[1.375rem] split:pr-20">
+            <h1 id={titleId} className="text-[clamp(2.15rem,3.6vw,3.25rem)] leading-[1.02] font-semibold tracking-tight text-white">
               {project.title}
             </h1>
             {categoryNames.length > 0 || project.role ? (
               <div className="mt-4 flex flex-col gap-3 sm:mt-5 sm:flex-row sm:gap-12">
                 {categoryNames.length > 0 ? (
                   <div>
-                    <p className="text-[0.68rem] font-semibold tracking-[0.16em] text-ink/45 uppercase">Category</p>
-                    <p className="mt-1 text-base leading-snug text-ink">{categoryNames.join(" · ")}</p>
+                    <p className="text-[0.68rem] font-semibold tracking-[0.16em] text-white/58 uppercase">Category</p>
+                    <p className="mt-1 text-base leading-snug text-[#f7f4ff]">{categoryNames.join(" · ")}</p>
                   </div>
                 ) : null}
                 {project.role ? (
                   <div>
-                    <p className="text-[0.68rem] font-semibold tracking-[0.16em] text-ink/45 uppercase">Role</p>
-                    <p className="mt-1 text-base leading-snug text-ink">{project.role}</p>
+                    <p className="text-[0.68rem] font-semibold tracking-[0.16em] text-white/58 uppercase">Role</p>
+                    <p className="mt-1 text-base leading-snug text-[#f7f4ff]">{project.role}</p>
                   </div>
                 ) : null}
               </div>
@@ -209,42 +278,20 @@ export function ProjectDetail({
               ))}
             </ul>
           ) : (
-            <p className="px-5 py-10 text-center text-base text-ink/55 sm:px-8">Project presentation coming soon.</p>
+            <p className="px-5 py-10 text-center text-base text-white/70 sm:px-8">Project presentation coming soon.</p>
           )}
-          <MobileActions tools={tools} profiles={contact.profiles} callHref={contact.callHref} />
-          <ProjectCta href={ctaHref} className="border-t border-ink/12 px-5 py-5 split:hidden" />
-          <nav aria-label="Adjacent projects" className="project-footer-navigation">
-            <div className="grid gap-2 sm:grid-cols-2 sm:gap-8">
-              <Link
-                href={`/portfolio/${previous.slug}`}
-                scroll={false}
-                onClick={(event) => openProject(event, previous.slug)}
-                aria-label={`Previous project: ${previous.title}`}
-                className="project-neighbor group flex min-h-28 items-center gap-4 rounded-sm px-1 py-3 hover:bg-ink/5 focus-visible:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
-              >
-                <ChevronLeft className="project-neighbor-icon size-10 shrink-0 [--neighbor-shift:-0.3rem]" strokeWidth={2.25} aria-hidden="true" />
-                <span className="min-w-0">
-                  <span className="block text-[0.68rem] font-semibold tracking-[0.16em] text-ink/45 uppercase">Previous project</span>
-                  <span className="mt-1 block text-xl leading-tight font-semibold tracking-tight">{previous.title}</span>
-                </span>
-              </Link>
-              <Link
-                href={`/portfolio/${next.slug}`}
-                scroll={false}
-                onClick={(event) => openProject(event, next.slug)}
-                aria-label={`Next project: ${next.title}`}
-                className="project-neighbor group flex min-h-28 items-center justify-end gap-4 rounded-sm px-1 py-3 text-right hover:bg-ink/5 focus-visible:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
-              >
-                <span className="min-w-0">
-                  <span className="block text-[0.68rem] font-semibold tracking-[0.16em] text-ink/45 uppercase">Next project</span>
-                  <span className="mt-1 block text-xl leading-tight font-semibold tracking-tight">{next.title}</span>
-                </span>
-                <ChevronRight className="project-neighbor-icon size-10 shrink-0 [--neighbor-shift:0.3rem]" strokeWidth={2.25} aria-hidden="true" />
-              </Link>
-            </div>
-          </nav>
+          <ProjectClose
+            tools={tools}
+            profiles={contact.profiles}
+            callHref={contact.callHref}
+            ctaHref={ctaHref}
+            previous={previous}
+            next={next}
+            onOpen={openProject}
+          />
         </div>
-        <ActionRail tools={tools} profiles={contact.profiles} callHref={contact.callHref} ctaHref={ctaHref} />
+        <ActionRail tools={tools} profiles={contact.profiles} callHref={contact.callHref} />
+      </div>
       </div>
     </div>
   );
@@ -324,7 +371,99 @@ function mediaKind(image: PortfolioGalleryImage) {
   return "IMAGE";
 }
 
-function MobileActions({
+function ProjectClose({
+  tools,
+  profiles,
+  callHref,
+  ctaHref,
+  previous,
+  next,
+  onOpen,
+}: {
+  tools: SoftwareId[];
+  profiles: PublicSocial[];
+  callHref: string | null;
+  ctaHref: string;
+  previous: { slug: string; title: string };
+  next: { slug: string; title: string };
+  onOpen: (event: MouseEvent<HTMLAnchorElement>, slug: string) => void;
+}) {
+  const contacts = orderedContacts(profiles);
+  const hasActions = tools.length > 0 || contacts.length > 0 || Boolean(callHref);
+
+  return (
+    <div className="project-end">
+      {hasActions ? (
+        <section aria-label="Contact" className="mx-auto w-full max-w-3xl split:hidden">
+          <p className="text-center text-[0.72rem] font-semibold tracking-[0.18em] text-white/55 uppercase">Direct contact</p>
+          <ul className="mt-5 flex flex-wrap justify-center gap-3">
+            {contacts.map((item) => (
+              <li key={item.id} className="w-[calc(50%-0.4rem)] sm:w-36">
+                <ContactLink item={item} />
+              </li>
+            ))}
+            {callHref ? (
+              <li className="w-[calc(50%-0.4rem)] sm:w-36">
+                <CallLink href={callHref} />
+              </li>
+            ) : null}
+          </ul>
+          {tools.length > 0 ? (
+            <ul className="mt-4 flex flex-wrap justify-center gap-2">
+              {tools.map((id) => (
+                <li key={id}>
+                  <ToolButton id={id} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      ) : null}
+      <ProjectCta href={ctaHref} />
+      <nav aria-label="Adjacent projects" className="project-footer-navigation">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+          <Link
+            href={`/portfolio/${previous.slug}`}
+            scroll={false}
+            onClick={(event) => onOpen(event, previous.slug)}
+            aria-label={`Previous project: ${previous.title}`}
+            className="project-neighbor group flex min-h-32 items-center gap-4 rounded-2xl border border-white/12 bg-white/[0.04] px-5 py-5 text-white hover:border-white/28 hover:bg-white/[0.08] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-36 sm:px-6"
+          >
+            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#5446DF,#B52EE5)] text-white">
+              <ChevronLeft className="project-neighbor-icon size-7 [--neighbor-shift:-0.3rem]" strokeWidth={2.25} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[0.72rem] font-semibold tracking-[0.16em] text-white/55 uppercase">Previous project</span>
+              <span className="mt-1.5 block text-[1.35rem] leading-tight font-semibold tracking-tight sm:text-[1.6rem]">{previous.title}</span>
+            </span>
+          </Link>
+          <Link
+            href={`/portfolio/${next.slug}`}
+            scroll={false}
+            onClick={(event) => onOpen(event, next.slug)}
+            aria-label={`Next project: ${next.title}`}
+            className="project-neighbor group flex min-h-32 items-center justify-between gap-4 rounded-2xl border border-white/12 bg-white/[0.04] px-5 py-5 text-right text-white hover:border-white/28 hover:bg-white/[0.08] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-36 sm:px-6"
+          >
+            <span className="min-w-0 flex-1 text-right">
+              <span className="block text-[0.72rem] font-semibold tracking-[0.16em] text-white/55 uppercase">Next project</span>
+              <span className="mt-1.5 block text-[1.35rem] leading-tight font-semibold tracking-tight sm:text-[1.6rem]">{next.title}</span>
+            </span>
+            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#5446DF,#B52EE5)] text-white">
+              <ChevronRight className="project-neighbor-icon size-7 [--neighbor-shift:0.3rem]" strokeWidth={2.25} aria-hidden="true" />
+            </span>
+          </Link>
+        </div>
+      </nav>
+      <div className="project-end-mark" aria-hidden="true">
+        <div className="project-end-logo">
+          <EdrisaLogo className="project-end-logo-image" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActionRail({
   tools,
   profiles,
   callHref,
@@ -337,154 +476,120 @@ function MobileActions({
   if (tools.length === 0 && contacts.length === 0 && !callHref) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 border-t border-ink/12 px-5 py-5 split:hidden">
-      {tools.map((id) => (
-        <ToolButton key={id} id={id} />
-      ))}
-      {tools.length > 0 ? <span className="mx-1 h-7 w-px bg-ink/15" aria-hidden="true" /> : null}
-      {contacts.map((item) => (
-        <ContactLink key={item.id} item={item} />
-      ))}
-      {callHref ? <CallLink href={callHref} /> : null}
-    </div>
-  );
-}
-
-function ActionRail({
-  tools,
-  profiles,
-  callHref,
-  ctaHref,
-}: {
-  tools: SoftwareId[];
-  profiles: PublicSocial[];
-  callHref: string | null;
-  ctaHref: string;
-}) {
-  const contacts = orderedContacts(profiles);
-
-  return (
-    <aside className="project-rail pointer-events-auto sticky top-6 z-20 hidden h-[calc(100dvh-3rem)] shrink-0 split:block" aria-label="Project actions">
-      <div className="absolute top-1/2 left-0 flex w-max -translate-y-1/2 flex-col items-center gap-4">
+    <aside
+      className="project-rail pointer-events-auto sticky top-6 z-20 hidden h-[calc(100dvh-3rem)] shrink-0 split:block"
+      aria-label="Contact"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="absolute top-1/2 left-0 flex w-max -translate-y-1/2 flex-col items-center gap-3">
         {tools.length > 0 ? (
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col items-center gap-2">
             {tools.map((id) => (
               <li key={id}>
-                <ToolButton id={id} tooltip />
+                <ToolButton id={id} compact />
               </li>
             ))}
           </ul>
         ) : null}
-        {tools.length > 0 ? <div className="h-px w-7 bg-white/40" aria-hidden="true" /> : null}
-        <ul className="flex flex-col items-center gap-4">
+        {tools.length > 0 ? <div className="h-px w-7 bg-white/30" aria-hidden="true" /> : null}
+        <ul className="flex flex-col items-center gap-3">
           {contacts.map((item) => (
             <li key={item.id}>
-              <ContactLink item={item} labeled />
+              <ContactLink item={item} rail />
             </li>
           ))}
           {callHref ? (
             <li>
-              <CallLink href={callHref} labeled />
+              <CallLink href={callHref} rail />
             </li>
           ) : null}
         </ul>
       </div>
-      <ProjectCta href={ctaHref} dock />
     </aside>
   );
 }
 
-function ProjectCta({ href, className, dock = false }: { href: string; className?: string; dock?: boolean }) {
+function ProjectCta({ href }: { href: string }) {
   return (
-    <a
-      href={href}
-      className={
-        dock
-          ? "project-cta absolute inset-x-0 bottom-0 z-30 block rounded-2xl bg-[#2e211c] px-2 py-3 text-center text-[#f7f1ea] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-          : `project-cta group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink ${className ?? ""}`
-      }
-    >
-      <span className={`block text-[0.62rem] font-semibold tracking-[0.12em] uppercase ${dock ? "text-white/70" : "text-ink/45"}`}>
-        Available for a project?
-      </span>
-      <span className={`mt-1.5 text-sm leading-tight font-semibold tracking-tight ${dock ? "block text-[#f7f1ea]" : "inline-flex items-center gap-1.5 text-ink"}`}>
-        Start Something
-        <ArrowRight className={`project-cta-arrow size-4 ${dock ? "ml-1 inline align-[-0.2em]" : "shrink-0"}`} strokeWidth={1.75} aria-hidden="true" />
-      </span>
-    </a>
+    <section aria-labelledby="project-cta-title" className="project-cta mx-auto w-full max-w-[34rem] rounded-[1.35rem] bg-[linear-gradient(112deg,#5446DF_0%,#6A3AE6_28%,#8A3AE9_54%,#A23DEB_78%,#B52EE5_100%)] px-6 py-10 text-center text-white sm:px-10 sm:py-12">
+      <p id="project-cta-title" className="text-[clamp(1.45rem,2.6vw,2rem)] leading-tight font-bold tracking-tight text-white">
+        {projectCta.heading}
+      </p>
+      <a href={href} className="project-cta-button mt-6 inline-flex items-center gap-2 rounded-full bg-[#f6f3ff] px-7 py-3.5 text-lg font-semibold tracking-tight text-[#2a1868] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+        {projectCta.label}
+        <ArrowRight className="project-cta-arrow size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+      </a>
+    </section>
   );
 }
 
-function ToolButton({ id, tooltip = false }: { id: SoftwareId; tooltip?: boolean }) {
+const railCircleClass = "grid size-12 place-items-center rounded-full bg-[#f4efe8] text-[#2e211c]";
+const railLinkClass =
+  "flex flex-col items-center gap-1 rounded-md text-[#f7f1ea] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+
+function ToolButton({ id, compact = false }: { id: SoftwareId; compact?: boolean }) {
   const tool = softwareRegistry[id];
   const Icon = tool.Icon;
 
+  if (compact) {
+    return (
+      <button type="button" aria-label={tool.label} className={railCircleClass}>
+        <Icon className="size-5" aria-hidden="true" />
+      </button>
+    );
+  }
+
   return (
-    <button type="button" aria-label={tool.label} className={`group relative ${circleClass}`}>
-      <Icon className="size-6" aria-hidden="true" />
-      {tooltip ? <Tooltip label={tool.label} /> : null}
+    <button type="button" className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-sm font-medium text-white hover:border-white/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+      <Icon className="size-4" aria-hidden="true" />
+      {tool.label}
     </button>
   );
 }
 
-function ContactLink({ item, labeled = false }: { item: PublicSocial; labeled?: boolean }) {
+function ContactLink({ item, rail = false }: { item: PublicSocial; rail?: boolean }) {
   const Icon = contactIcons[item.id];
 
-  if (labeled) {
+  if (rail) {
     return (
-      <a
-        href={item.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={contactLabel(item)}
-        className="flex flex-col items-center gap-1.5 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-      >
-        <span className={circleClass}>
+      <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={contactLabel(item)} className={railLinkClass}>
+        <span className={railCircleClass}>
           <Icon className="size-5" aria-hidden="true" />
         </span>
-        <span className="text-center text-[0.7rem] leading-tight text-[#f7f1ea]">{item.label}</span>
+        <span className="text-center text-[0.68rem] leading-tight text-white/75">{item.label}</span>
       </a>
     );
   }
 
   return (
-    <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={contactLabel(item)} className={circleClass}>
-      <Icon className="size-5" aria-hidden="true" />
+    <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={contactLabel(item)} className={actionTileClass}>
+      <span className="grid size-11 place-items-center rounded-full bg-[#2a1868] text-[#f6f3ff] motion-safe:transition-transform motion-safe:group-hover:-translate-y-0.5">
+        <Icon className="size-5" aria-hidden="true" />
+      </span>
+      <span className="text-sm font-medium tracking-tight">{item.label}</span>
     </a>
   );
 }
 
-function CallLink({ href, labeled = false }: { href: string; labeled?: boolean }) {
-  if (labeled) {
+function CallLink({ href, rail = false }: { href: string; rail?: boolean }) {
+  if (rail) {
     return (
-      <a
-        href={href}
-        aria-label="Call Edrisa"
-        className="flex flex-col items-center gap-1.5 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-      >
-        <span className={circleClass}>
+      <a href={href} aria-label="Call Edrisa" className={railLinkClass}>
+        <span className={railCircleClass}>
           <Phone className="size-5" strokeWidth={1.75} aria-hidden="true" />
         </span>
-        <span className="text-center text-[0.7rem] leading-tight text-[#f7f1ea]">Call Now</span>
+        <span className="text-center text-[0.68rem] leading-tight text-white/75">Call Now</span>
       </a>
     );
   }
 
   return (
-    <a href={href} aria-label="Call Edrisa" className={circleClass}>
-      <Phone className="size-5" strokeWidth={1.75} aria-hidden="true" />
+    <a href={href} aria-label="Call Edrisa" className={actionTileClass}>
+      <span className="grid size-11 place-items-center rounded-full bg-[#2a1868] text-[#f6f3ff] motion-safe:transition-transform motion-safe:group-hover:-translate-y-0.5">
+        <Phone className="size-5" strokeWidth={1.75} aria-hidden="true" />
+      </span>
+      <span className="text-sm font-medium tracking-tight">Call Now</span>
     </a>
-  );
-}
-
-function Tooltip({ label }: { label: string }) {
-  return (
-    <span
-      role="tooltip"
-      className="pointer-events-none absolute top-1/2 right-[calc(100%+0.6rem)] -translate-y-1/2 rounded-md bg-[#1c120e] px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-    >
-      {label}
-    </span>
   );
 }
 

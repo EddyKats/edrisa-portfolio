@@ -1,3 +1,5 @@
+import { projectCta } from "@/data/project-cta";
+
 export const servicesMeta = {
   title: "Services | Edrisa",
   description:
@@ -11,9 +13,9 @@ export const servicesCopy = {
   clientsHeading: "Some Logos I've Stared At For Too Long",
   clientsNote: "The frames stay empty until the actual logo files are added.",
   talkLabel: "Talk About It",
-  ctaHeading: "Need something less ordinary?",
+  ctaHeading: projectCta.heading,
   ctaBody: "If the brief is specific, so is the work.",
-  ctaLabel: "Start a Project",
+  ctaLabel: projectCta.label,
 } as const;
 
 export const serviceOffers = [

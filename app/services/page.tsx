@@ -6,6 +6,7 @@ import { InternalTitle } from "@/components/internal/InternalTitle";
 import { CapabilityPackages } from "@/components/services/CapabilityPackages";
 import { ClientStrip } from "@/components/services/ClientStrip";
 import { ServiceOffers } from "@/components/services/ServiceOffers";
+import { projectCta } from "@/data/project-cta";
 import { servicesCopy } from "@/data/services";
 import { getPublicServices } from "@/lib/content/catalog";
 import { getPublicCta } from "@/lib/content/cta";
@@ -38,9 +39,9 @@ export default async function ServicesRoute() {
         <ClientStrip heading={servicesCopy.clientsHeading} note={servicesCopy.clientsNote} clients={catalog.clients} />
         <InternalCTA
           section="services"
-          heading={cta?.heading ?? servicesCopy.ctaHeading}
+          heading={projectCta.heading}
           body={cta?.body ?? servicesCopy.ctaBody}
-          label={cta?.buttonLabel ?? servicesCopy.ctaLabel}
+          label={projectCta.label}
           href={cta?.buttonHref ?? "/contact"}
         />
         <InternalFooter />

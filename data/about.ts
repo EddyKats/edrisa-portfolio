@@ -1,3 +1,5 @@
+import { projectCta } from "@/data/project-cta";
+
 export const aboutMeta = {
   title: "About Edrisa | Creative Director & Designer",
   description:
@@ -13,9 +15,9 @@ export const aboutCopy = {
   story:
     "What started with pixels and curiosity turned into branding, campaigns, products, teams, late-night revisions, suspicious amounts of coffee, and eventually building ideas from the ground up. Somewhere along the way, I stopped thinking of design as decoration and started treating it as a way of making things easier to notice, understand and remember.",
   journeyTitle: "Previously, on Edrisa...",
-  ctaHeading: "Got something worth obsessing over?",
+  ctaHeading: projectCta.heading,
   ctaBody: "Bring the idea. I'll bring the unreasonable attention to detail.",
-  ctaLabel: "Let's Make Something",
+  ctaLabel: projectCta.label,
 } as const;
 
 /**

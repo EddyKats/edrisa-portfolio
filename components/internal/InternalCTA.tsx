@@ -39,7 +39,7 @@ export function InternalCTA({
         <p className="mx-auto mt-4 max-w-[28rem] text-[0.98rem] leading-relaxed text-[#f4efe8]/78">{body}</p>
         <Link
           href={href}
-          className={`mt-8 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 ${surface} ${buttonTone}`}
+          className={`mt-8 inline-flex min-h-14 items-center justify-center gap-2.5 rounded-full px-8 py-4 text-lg font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 ${surface} ${buttonTone}`}
         >
           {label}
           <span aria-hidden="true">→</span>

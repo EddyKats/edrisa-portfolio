@@ -1,56 +1,112 @@
 import type { Metadata } from "next";
-import { AboutFeatureMedia } from "@/components/about/AboutFeatureMedia";
-import { AboutIntro } from "@/components/about/AboutIntro";
-import { AboutJourney } from "@/components/about/AboutJourney";
-import { AboutStats } from "@/components/about/AboutStats";
+import { AboutProfile } from "@/components/about/AboutProfile";
 import { InternalCTA } from "@/components/internal/InternalCTA";
 import { InternalFooter } from "@/components/internal/InternalFooter";
 import { InternalPageLayout } from "@/components/internal/InternalPageLayout";
-import { InternalTitle } from "@/components/internal/InternalTitle";
-import { aboutCopy } from "@/data/about";
-import { projectCta } from "@/data/project-cta";
+import { aboutCopy, aboutMeta, aboutProfile } from "@/data/about";
 import { getPublicAbout } from "@/lib/content/about";
 import { getPublicCta } from "@/lib/content/cta";
+import { getPublishedProjects } from "@/lib/content/portfolio";
 import { getPublicSite } from "@/lib/content/site";
+import { projectCta } from "@/data/project-cta";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [about, site] = await Promise.all([getPublicAbout(), getPublicSite()]);
   return {
-    title: { absolute: about.content?.seoTitle || site.title },
-    description: about.content?.seoDescription || site.description,
+    title: { absolute: aboutMeta.title },
+    description: aboutMeta.description,
     alternates: { canonical: "/about" },
+    openGraph: {
+      title: aboutMeta.title,
+      description: aboutMeta.description,
+      url: "/about",
+    },
   };
 }
 
 export default async function AboutRoute() {
-  const [about, cta] = await Promise.all([getPublicAbout(), getPublicCta("about")]);
-  const content = about.content;
-  const feature = content?.featureMediaType === "image" ? content.featureMediaUrl : null;
+  const [about, site, projects, cta] = await Promise.all([
+    getPublicAbout(),
+    getPublicSite(),
+    getPublishedProjects(),
+    getPublicCta("about"),
+  ]);
+  const image = profileImage(site.url, about.content?.featureMediaUrl, site.portraitSrc, site.portraitWidth, site.portraitHeight);
+  const profileUrl = new URL("/about", site.url).href;
+  const sameAs = site.socials.filter((item) => item.id === "linkedin" || item.id === "behance").map((item) => item.href);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    url: profileUrl,
+    mainEntity: {
+      "@type": "Person",
+      name: aboutProfile.name,
+      alternateName: aboutProfile.alternateName,
+      url: profileUrl,
+      jobTitle: aboutProfile.title,
+      description:
+        "Ugandan multidisciplinary designer and software developer working across graphic design, branding, web development and digital products.",
+      ...(image ? { image: publicAssetUrl(site.url, image.src) } : {}),
+      sameAs,
+      alumniOf: {
+        "@type": "CollegeOrUniversity",
+        name: aboutProfile.education.school,
+      },
+      hasCredential: {
+        "@type": "EducationalOccupationalCredential",
+        credentialCategory: "degree",
+        name: aboutProfile.education.credential,
+        recognizedBy: {
+          "@type": "CollegeOrUniversity",
+          name: aboutProfile.education.school,
+        },
+        dateCreated: "2026-02",
+      },
+    },
+  };
 
   return (
     <InternalPageLayout section="about">
-      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20" data-frame="about">
-        <InternalTitle>{content?.pageTitle ?? aboutCopy.title}</InternalTitle>
-        <AboutFeatureMedia src={feature} />
-        <AboutIntro
-          heading={content?.introHeading ?? aboutCopy.introHeading}
-          intro={content?.introParagraph ?? aboutCopy.intro}
-          storyHeading={content?.storyHeading ?? aboutCopy.storyHeading}
-          story={content?.storyBody ?? aboutCopy.story}
-        />
-        <AboutStats stats={about.stats} />
-        <AboutJourney title={aboutCopy.journeyTitle} entries={about.experience} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20">
+        <AboutProfile image={image} socials={site.socials} projects={projects.slice(0, 4)} />
         <InternalCTA
           section="about"
           heading={projectCta.heading}
-          body={cta?.body ?? content?.ctaText ?? aboutCopy.ctaBody}
+          body={cta?.body ?? about.content?.ctaText ?? aboutCopy.ctaBody}
           label={projectCta.label}
-          href={cta?.buttonHref ?? content?.ctaButtonHref ?? "/contact"}
+          href={cta?.buttonHref ?? about.content?.ctaButtonHref ?? "/contact"}
         />
         <InternalFooter />
       </div>
     </InternalPageLayout>
   );
+}
+
+function profileImage(
+  siteUrl: string,
+  feature: string | null | undefined,
+  portrait: string,
+  width: number,
+  height: number,
+) {
+  const src = crawlable(feature) ? feature! : crawlable(portrait) ? portrait : null;
+  if (!src) return null;
+  return {
+    src,
+    width,
+    height,
+    alt: "Portrait of Kasibante Edrisa",
+  };
+}
+
+function crawlable(src: string | null | undefined) {
+  return Boolean(src && (src.startsWith("https://") || src.startsWith("/")));
+}
+
+function publicAssetUrl(siteUrl: string, src: string) {
+  if (src.startsWith("https://")) return src;
+  return new URL(src, siteUrl).href;
 }

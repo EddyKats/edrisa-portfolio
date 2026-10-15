@@ -22,9 +22,6 @@ const contactIcons = {
   whatsapp: FaWhatsapp,
 } as const;
 
-const actionTileClass =
-  "group flex min-h-28 w-full flex-col items-center justify-center gap-2.5 rounded-2xl border border-ink/10 bg-[#fffdfb] px-3 py-4 text-ink transition-colors hover:border-ink/30 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:bg-[#f3ebe4]";
-
 export function ProjectDetail({
   project,
   previous,
@@ -394,16 +391,17 @@ function ProjectClose({
   return (
     <div className="project-end">
       {hasActions ? (
-        <section aria-label="Contact" className="mx-auto w-full max-w-3xl split:hidden">
-          <p className="text-center text-[0.72rem] font-semibold tracking-[0.18em] text-white/55 uppercase">Direct contact</p>
-          <ul className="mt-5 flex flex-wrap justify-center gap-3">
+        <section aria-label="Contact" className="project-contact split:hidden">
+          <p className="project-contact-kicker">Direct contact</p>
+          <div className="project-contact-rule" aria-hidden="true" />
+          <ul className="project-contact-list">
             {contacts.map((item) => (
-              <li key={item.id} className="w-[calc(50%-0.4rem)] sm:w-36">
+              <li key={item.id}>
                 <ContactLink item={item} />
               </li>
             ))}
             {callHref ? (
-              <li className="w-[calc(50%-0.4rem)] sm:w-36">
+              <li>
                 <CallLink href={callHref} />
               </li>
             ) : null}
@@ -562,11 +560,9 @@ function ContactLink({ item, rail = false }: { item: PublicSocial; rail?: boolea
   }
 
   return (
-    <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={contactLabel(item)} className={actionTileClass}>
-      <span className="grid size-11 place-items-center rounded-full bg-[#2a1868] text-[#f6f3ff] motion-safe:transition-transform motion-safe:group-hover:-translate-y-0.5">
-        <Icon className="size-5" aria-hidden="true" />
-      </span>
-      <span className="text-sm font-medium tracking-tight">{item.label}</span>
+    <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={contactLabel(item)} className="project-contact-action">
+      <Icon className="project-contact-icon" aria-hidden="true" />
+      <span>{item.label}</span>
     </a>
   );
 }
@@ -584,11 +580,9 @@ function CallLink({ href, rail = false }: { href: string; rail?: boolean }) {
   }
 
   return (
-    <a href={href} aria-label="Call Edrisa" className={actionTileClass}>
-      <span className="grid size-11 place-items-center rounded-full bg-[#2a1868] text-[#f6f3ff] motion-safe:transition-transform motion-safe:group-hover:-translate-y-0.5">
-        <Phone className="size-5" strokeWidth={1.75} aria-hidden="true" />
-      </span>
-      <span className="text-sm font-medium tracking-tight">Call Now</span>
+    <a href={href} aria-label="Call Edrisa" className="project-contact-action">
+      <Phone className="project-contact-icon" strokeWidth={1.75} aria-hidden="true" />
+      <span>Call Now</span>
     </a>
   );
 }

@@ -1,9 +1,9 @@
 import { projectCta } from "@/data/project-cta";
 
 export const aboutMeta = {
-  title: "About Edrisa | Creative Director & Designer",
+  title: "Kasibante Edrisa — Multidisciplinary Designer & Software Developer",
   description:
-    "Edrisa is a multidisciplinary creative working across identity, advertising, product design, and creative direction.",
+    "Kasibante Edrisa is a Ugandan multidisciplinary designer and software developer working across graphic design, branding, web development and digital products. Head of Graphics at Edutech Media Group.",
 } as const;
 
 export const aboutCopy = {
@@ -18,6 +18,50 @@ export const aboutCopy = {
   ctaHeading: projectCta.heading,
   ctaBody: "Bring the idea. I'll bring the unreasonable attention to detail.",
   ctaLabel: projectCta.label,
+} as const;
+
+export const aboutProfile = {
+  name: "Kasibante Edrisa",
+  alternateName: "Edrisa",
+  title: "Multidisciplinary Designer & Software Developer",
+  summary:
+    "I work at the intersection of visual communication, branding and technology — building identities, campaigns, websites and digital products.",
+  facts: "Kampala, Uganda · Graphic Design · Branding · Web & App Development",
+  bioHeading: "About",
+  bio: [
+    "Kasibante Edrisa is a Ugandan multidisciplinary designer and software developer working across graphic design, brand identity, web development and digital products.",
+    "He currently leads the Graphics Department at Edutech Media Group and has worked across brand management, creative direction and technology-led projects.",
+  ],
+  disciplinesHeading: "What I do",
+  disciplines: [
+    { title: "Graphic Design", text: "Visual communication with a point of view." },
+    { title: "Branding", text: "Identities and campaigns built to be recognized." },
+    { title: "Web Development", text: "Websites that carry the work, not just the look." },
+    { title: "App Development", text: "Digital products shaped with the same care." },
+  ],
+  experience: [
+    {
+      company: "Edutech Media Group",
+      steps: ["Started as Graphic Designer", "Then Head of Graphics Department"],
+      note: "Joined as a graphic designer and was later promoted to lead the department.",
+    },
+    {
+      company: "Harnivok Solutions",
+      steps: ["Brand Manager"],
+      note: "Brand management and visual direction for a manufacturing business.",
+    },
+  ],
+  educationHeading: "Education",
+  education: {
+    credential: "Bachelor of Computer Science",
+    school: "Metropolitan International University",
+    detail: "Graduated February 2026",
+  },
+  credentialsHeading: "Certifications",
+  credentialsNote: "Completed credentials will be listed here, with the issuer and a public link, once they are earned.",
+  presenceHeading: "Elsewhere on the internet",
+  selectedHeading: "Selected work",
+  selectedNote: "A few published projects across the disciplines above.",
 } as const;
 
 /**

@@ -25,7 +25,7 @@ export default async function ContactRoute() {
 
   return (
     <InternalPageLayout section="contact">
-      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20" data-frame="contact">
+      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20">
         <InternalTitle>{contact?.pageTitle ?? contactCopy.title}</InternalTitle>
         <p className="mx-auto mt-4 max-w-md text-center text-[1.05rem] leading-relaxed text-ink/70">
           {contact?.subtitle ?? contactCopy.subheading}

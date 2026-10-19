@@ -10,6 +10,8 @@ import { getPublicAbout } from "@/lib/content/about";
 import { getPublicCta } from "@/lib/content/cta";
 import { getPublishedProjects } from "@/lib/content/portfolio";
 import { getPublicSite } from "@/lib/content/site";
+import { absoluteAsset, personId, personNode, withGraph } from "@/lib/content/jsonld";
+import { JsonLd } from "@/components/site/JsonLd";
 import { projectCta } from "@/data/project-cta";
 
 export const dynamic = "force-dynamic";
@@ -42,53 +44,48 @@ export default async function AboutRoute({
   ]);
   const image = profileImage(site.url, about.content?.featureMediaUrl, site.portraitSrc, site.portraitWidth, site.portraitHeight);
   const profileUrl = new URL("/about", site.url).href;
-  const sameAs = site.socials.filter((item) => item.id === "linkedin" || item.id === "behance").map((item) => item.href);
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ProfilePage",
-    url: profileUrl,
-    mainEntity: {
-      "@type": "Person",
-      name: aboutProfile.name,
-      alternateName: aboutProfile.alternateName,
-      url: profileUrl,
-      jobTitle: aboutProfile.title,
-      description:
-        "Multidisciplinary designer and software developer working across graphic design, branding, web development and digital products.",
-      ...(image ? { image: publicAssetUrl(site.url, image.src) } : {}),
-      sameAs,
-      alumniOf: {
-        "@type": "CollegeOrUniversity",
-        name: aboutProfile.education.school,
-      },
-      hasCredential: [
-        {
-          "@type": "EducationalOccupationalCredential",
-          credentialCategory: "degree",
-          name: aboutProfile.education.credential,
-          recognizedBy: {
-            "@type": "CollegeOrUniversity",
-            name: aboutProfile.education.school,
-          },
-          dateCreated: "2026-02",
+  const person = {
+    ...personNode(site, image ? publicAssetUrl(site.url, image.src) : absoluteAsset(site.url, site.portraitSrc)),
+    hasCredential: [
+      {
+        "@type": "EducationalOccupationalCredential",
+        credentialCategory: "degree",
+        name: aboutProfile.education.credential,
+        recognizedBy: {
+          "@type": "CollegeOrUniversity",
+          name: aboutProfile.education.school,
         },
-        ...aboutProfile.credentials
-          .filter((item) => item.published && item.completed)
-          .map((item) => ({
-            "@type": "EducationalOccupationalCredential",
-            name: item.name,
-            recognizedBy: {
-              "@type": "Organization",
-              name: item.issuer,
-            },
-            ...(item.credentialUrl ? { url: item.credentialUrl } : {}),
-            ...(item.credentialId ? { credentialId: item.credentialId } : {}),
-            ...(item.issueDate ? { dateCreated: item.issueDate } : {}),
-          })),
-      ],
-    },
+        dateCreated: "2026-02",
+      },
+      ...aboutProfile.credentials
+        .filter((item) => item.published && item.completed)
+        .map((item) => ({
+          "@type": "EducationalOccupationalCredential",
+          name: item.name,
+          recognizedBy: {
+            "@type": "Organization",
+            name: item.issuer,
+          },
+          ...(item.credentialUrl ? { url: item.credentialUrl } : {}),
+          ...(item.credentialId ? { credentialId: item.credentialId } : {}),
+          ...(item.issueDate ? { dateCreated: item.issueDate } : {}),
+        })),
+    ],
   };
+  const jsonLd = withGraph(
+    site,
+    [
+      {
+        "@type": "ProfilePage",
+        "@id": profileUrl,
+        url: profileUrl,
+        name: aboutMeta.title,
+        mainEntity: { "@id": personId(site.url.replace(/\/$/, "")) },
+      },
+      person,
+    ],
+    image ? publicAssetUrl(site.url, image.src) : null,
+  );
 
   const workIndex = workSlug ? projects.findIndex((item) => item.slug === workSlug) : -1;
   const opened = workIndex >= 0 ? projects[workIndex] : null;
@@ -101,7 +98,7 @@ export default async function AboutRoute({
       section="about"
       bleed={image ? <AboutHeroBleed image={image} /> : null}
     >
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <JsonLd data={jsonLd} />
       <div className="internal-frame px-5 pt-14 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:px-8 sm:pt-20 split:pt-8">
         <AboutProfile socials={site.socials} callHref={site.callHref} projects={projects} />
         <div className="about-sheet-continue">

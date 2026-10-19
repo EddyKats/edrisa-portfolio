@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
 import localFont from "next/font/local";
+import { personIdentity, studioBrand } from "@/data/identity";
+import { Analytics } from "@/components/site/Analytics";
+import { JsonLd } from "@/components/site/JsonLd";
+import { absoluteAsset, siteGraph } from "@/lib/content/jsonld";
 import { getPublicSite } from "@/lib/content/site";
 import "./globals.css";
 
@@ -25,27 +29,37 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const site = await getPublicSite();
+  const google = process.env.GOOGLE_SITE_VERIFICATION?.trim();
   return {
     metadataBase: new URL(site.url),
     title: {
       default: site.title,
-      template: `%s · ${site.name}`,
+      template: `%s · ${studioBrand.name}`,
     },
     description: site.description,
-    applicationName: site.name,
-    authors: [{ name: site.name, url: site.url }],
-    creator: site.name,
-    keywords: ["edrisa", "creative director", "brand designer", "portfolio", "branding"],
+    applicationName: studioBrand.name,
+    authors: [{ name: personIdentity.name, url: site.url }],
+    creator: personIdentity.name,
+    keywords: [
+      "Kasibante Edrisa",
+      "Edrisa",
+      "Kasibante",
+      "Edrisa Studio",
+      "graphic designer",
+      "branding",
+      "web development",
+      "app development",
+    ],
     openGraph: {
       type: "website",
       locale: "en_US",
       url: site.url,
-      siteName: site.name,
+      siteName: studioBrand.name,
       title: site.title,
       description: site.description,
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: site.title,
       description: site.description,
     },
@@ -53,6 +67,7 @@ export async function generateMetadata(): Promise<Metadata> {
       index: true,
       follow: true,
     },
+    verification: google ? { google } : undefined,
   };
 }
 
@@ -63,22 +78,13 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const site = await getPublicSite();
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: site.name,
-    url: site.url,
-    jobTitle: "Creative Director and Brand Designer",
-    description: site.description,
-  };
+  const portrait = absoluteAsset(site.url, site.portraitSrc);
 
   return (
     <html lang="en" className={`${manrope.variable} ${lufga.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <JsonLd data={siteGraph(site, portrait)} />
+        <Analytics />
         {children}
       </body>
     </html>

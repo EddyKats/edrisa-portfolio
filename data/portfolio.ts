@@ -2,8 +2,9 @@ import { projectCta } from "@/data/project-cta";
 import type { SoftwareId } from "@/data/software";
 
 export const portfolioMeta = {
-  title: "Portfolio | Edrisa",
-  description: "Selected brand, campaign, and digital work by Edrisa.",
+  title: "Selected work · Kasibante Edrisa",
+  description:
+    "Selected graphic design, branding, and digital work by Kasibante Edrisa of Edrisa Studio.",
 } as const;
 
 export const portfolioCopy = {

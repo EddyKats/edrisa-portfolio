@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth, signIn, signOut, studioAuthConfigured } from "@/auth";
+import { StudioMark } from "@/components/studio/StudioMark";
 import { isStudioAdmin } from "@/lib/auth/admin";
 
 export const metadata: Metadata = {
@@ -28,9 +29,7 @@ export default async function StudioSignInPage({
     <main className="studio-app grid min-h-dvh place-items-center px-6" style={{ colorScheme: "light" }}>
       <section className="w-full max-w-md rounded-[1.75rem] bg-white px-7 py-8 shadow-[0_30px_80px_rgba(28,24,64,0.12)]">
         <div className="studio-brand px-0 pb-2">
-          <span className="studio-brand-mark" aria-hidden="true">
-            e
-          </span>
+          <StudioMark />
           <span>Studio</span>
         </div>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-[#1c1840]">Sign in</h1>

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { ContactDetails } from "@/components/contact/ContactDetails";
+import { ContactFaq } from "@/components/contact/ContactFaq";
 import { ContactForm } from "@/components/contact/ContactForm";
+import { JsonLd } from "@/components/site/JsonLd";
 import { InternalFooter } from "@/components/internal/InternalFooter";
 import { InternalPageLayout } from "@/components/internal/InternalPageLayout";
 import { contactCopy, contactDetails, contactMeta, splitContactTitle } from "@/data/contact";
 import { getPublicContact } from "@/lib/content/contact";
 import { toTelHref } from "@/lib/content/phone";
+import { publicStoredTitle } from "@/lib/content/jsonld";
 import { getPublicSite } from "@/lib/content/site";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +16,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const contact = await getPublicContact();
   return {
-    title: { absolute: contact?.seoTitle || contactMeta.title },
+    title: { absolute: publicStoredTitle(contact?.seoTitle, contactMeta.title) },
     description: contact?.seoDescription || contactMeta.description,
     alternates: { canonical: "/contact" },
   };
@@ -48,6 +51,18 @@ export default async function ContactRoute() {
           />
           <ContactForm heading={contact?.formHeading || contactCopy.formHeading} inbox={email} />
         </div>
+        <ContactFaq heading={contactCopy.faqHeading} items={contactCopy.faq} />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: contactCopy.faq.map((item) => ({
+              "@type": "Question",
+              name: item.question,
+              acceptedAnswer: { "@type": "Answer", text: item.answer },
+            })),
+          }}
+        />
         <InternalFooter />
       </div>
     </InternalPageLayout>

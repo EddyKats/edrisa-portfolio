@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { StudioMark } from "@/components/studio/StudioMark";
 import { studioContentLinks, studioOverviewLinks, studioSiteLinks, type StudioLink } from "@/components/studio/studio-links";
 
 function isActive(pathname: string, href: string) {
@@ -40,6 +41,15 @@ export function StudioNav() {
       <div className="studio-nav-group">
         <p className="studio-nav-kicker">Website</p>
         <ul>
+          <li>
+            <Link href="/" target="_blank" rel="noreferrer" className="studio-nav-person">
+              <StudioMark className="studio-nav-site-mark" />
+              <span>
+                <span className="studio-nav-person-name">Public site</span>
+                <span className="studio-nav-person-note">edrisastudio.com</span>
+              </span>
+            </Link>
+          </li>
           {studioSiteLinks.map((link) => (
             <li key={link.href}>
               <Link href={link.href} target="_blank" rel="noreferrer" className="studio-nav-person">

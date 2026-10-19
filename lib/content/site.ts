@@ -1,5 +1,6 @@
 import "server-only";
 
+import { isStalePublicHost } from "@/data/identity";
 import { site, socialLinks, socialProfiles } from "@/data/site";
 import { getDb } from "@/lib/db";
 import { ContentWriteError } from "@/lib/content/errors";
@@ -74,11 +75,13 @@ export async function getPublicSite(): Promise<PublicSite> {
   const logoSrc = home?.logoUrl || settings.logoUrl || site.logoSrc;
   const portraitMode = hero.mode === "sequence" && hero.frames.length > 1 ? "sequence" : "single";
 
+  const staleHost = isStalePublicHost(settings.siteUrl);
+  const publicUrl = (staleHost ? site.url : settings.siteUrl).replace(/\/$/, "");
   return {
-    name: settings.siteName,
-    title: settings.defaultSeoTitle || site.title,
-    description: settings.defaultSeoDescription || site.description,
-    url: settings.siteUrl,
+    name: staleHost ? site.name : settings.siteName,
+    title: staleHost ? site.title : settings.defaultSeoTitle || site.title,
+    description: staleHost ? site.description : settings.defaultSeoDescription || site.description,
+    url: publicUrl,
     portraitSrc,
     portraits: hero.frames.map((frame) => frame.src),
     portraitMode,

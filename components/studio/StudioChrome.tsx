@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { StudioMark } from "@/components/studio/StudioMark";
 import { StudioNav } from "@/components/studio/StudioNav";
 import { StudioRail, type StudioOverview } from "@/components/studio/StudioRail";
 import { StudioTopBar } from "@/components/studio/StudioTopBar";
@@ -25,9 +26,7 @@ export function StudioChrome({
           if ((event.target as HTMLElement).closest("a")) setOpen(false);
         }}>
         <div className="studio-brand">
-          <span className="studio-brand-mark" aria-hidden="true">
-            e
-          </span>
+          <StudioMark />
           <span>Studio</span>
         </div>
         <StudioNav />

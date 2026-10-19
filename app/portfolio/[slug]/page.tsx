@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PortfolioScreen } from "@/components/portfolio/PortfolioScreen";
+import { JsonLd } from "@/components/site/JsonLd";
 import { publicPortfolioFilters } from "@/data/portfolio";
 import { ProjectDetail } from "@/components/portfolio/ProjectDetail";
 import { getPublicCta } from "@/lib/content/cta";
+import { projectSeoTitle, projectWorkNode, publicStoredTitle } from "@/lib/content/jsonld";
 import { getPublishedProjects } from "@/lib/content/portfolio";
 import { getPublicSite } from "@/lib/content/site";
 
@@ -23,8 +25,13 @@ export async function generateMetadata({ params }: ProjectRouteProps): Promise<M
   const site = await getPublicSite();
 
   return {
-    title: { absolute: project.seoTitle || `${project.title} | Edrisa` },
-    description: project.seoDescription || project.shortDescription || site.description,
+    title: {
+      absolute: publicStoredTitle(project.seoTitle, projectSeoTitle(project.title, project.category)),
+    },
+    description:
+      project.seoDescription ||
+      project.shortDescription ||
+      `${project.title} by Kasibante Edrisa of Edrisa Studio.`,
     alternates: {
       canonical: `/portfolio/${project.slug}`,
     },
@@ -48,6 +55,7 @@ export default async function ProjectRoute({ params }: ProjectRouteProps) {
 
   return (
     <>
+      <JsonLd data={projectWorkNode(site, project)} />
       <PortfolioScreen projects={projects} ctaHref={cta?.buttonHref ?? "/contact"} />
       <ProjectDetail
         project={project}

@@ -7,6 +7,7 @@ import { navigation } from "@/data/navigation";
 import { portfolioCopy } from "@/data/portfolio";
 import { projectCta } from "@/data/project-cta";
 import { capabilityPackages, serviceOffers, servicesCopy } from "@/data/services";
+import { isStalePublicHost } from "@/data/identity";
 import { site, socialLinks } from "@/data/site";
 import { getDb } from "@/lib/db";
 import { displayFromTelHref, telFromWhatsapp } from "@/lib/content/phone";
@@ -19,6 +20,7 @@ const publicPhone = (() => {
 
 export async function ensureStudioContent() {
   const db = getDb();
+  await ensureCanonicalSiteUrl(db);
   if (!(await needsSiteAlign(db))) return;
 
   const tile = (id: "about" | "services" | "contact" | "portfolio") =>
@@ -327,6 +329,29 @@ export async function ensureStudioContent() {
       },
     });
   }
+}
+
+async function ensureCanonicalSiteUrl(db: ReturnType<typeof getDb>) {
+  const settings = await db.siteSettings.findUnique({ where: { id: "site" }, select: { siteUrl: true } });
+  if (settings && isStalePublicHost(settings.siteUrl)) {
+    await db.siteSettings.update({
+      where: { id: "site" },
+      data: {
+        siteUrl: site.url,
+        siteName: site.name,
+        defaultSeoTitle: site.title,
+        defaultSeoDescription: site.description,
+      },
+    });
+  }
+
+  await db.contactContent.updateMany({
+    where: {
+      id: "contact",
+      OR: [{ seoTitle: "Contact | Edrisa" }, { seoTitle: { contains: "| Edrisa" } }],
+    },
+    data: { seoTitle: contactMeta.title, seoDescription: contactMeta.description },
+  });
 }
 
 async function needsSiteAlign(db: ReturnType<typeof getDb>) {

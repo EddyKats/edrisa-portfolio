@@ -2,9 +2,9 @@ import { aboutProfile } from "@/data/about";
 import { projectCta } from "@/data/project-cta";
 
 export const servicesMeta = {
-  title: "Services | Edrisa",
+  title: "Graphic design, branding, web and apps · Kasibante Edrisa",
   description:
-    "Graphic design, branding, web development and app development from Kasibante Edrisa, multidisciplinary designer and software developer.",
+    "Graphic design, branding, web development and app development from Kasibante Edrisa of Edrisa Studio.",
 } as const;
 
 export const servicesCopy = {

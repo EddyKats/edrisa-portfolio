@@ -46,6 +46,10 @@ export function ContactDetails({
           </div>
         ) : null}
       </dl>
+      <p className="about-support mt-6 max-w-[28rem]">
+        Start a project on this page. LinkedIn and Behance are for the work of Kasibante Edrisa; WhatsApp is for a
+        short brief.
+      </p>
       <h2 className="about-chapter-title contact-elsewhere">{socialHeading}</h2>
       <SocialLinks
         profiles={socials}

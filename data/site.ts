@@ -1,9 +1,9 @@
 export const site = {
-  name: "edrisa",
-  title: "edrisa · Creative Director & Brand Designer",
+  name: "Edrisa Studio",
+  title: "Kasibante Edrisa · Edrisa Studio",
   description:
-    "Portfolio of edrisa, a creative director and brand designer. Identity, brand work, and selected projects.",
-  url: "https://edrisa.studio",
+    "Kasibante Edrisa is a multidisciplinary designer and software developer. Graphic design, branding, web development and digital products from Edrisa Studio.",
+  url: "https://edrisastudio.com",
   portraitSrc: "/images/edrisa-portrait.jpg",
   portraitWidth: 3333,
   portraitHeight: 4167,

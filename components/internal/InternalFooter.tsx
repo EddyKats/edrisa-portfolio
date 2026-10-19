@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { FaBehance, FaLinkedinIn, FaPhone, FaWhatsapp } from "react-icons/fa";
 import { EdrisaLogo } from "@/components/site/EdrisaLogo";
+import { navigation } from "@/data/navigation";
 import { getPublicSite } from "@/lib/content/site";
 import type { PublicSocial } from "@/lib/content/site-shape";
 
@@ -36,6 +38,13 @@ export async function InternalFooter() {
               </li>
             ) : null}
           </ul>
+          <nav aria-label="Site" className="mt-10 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-semibold tracking-tight">
+            {navigation.map((item) => (
+              <Link key={item.id} href={item.href} className="text-ink/80 hover:text-ink">
+                {item.title}
+              </Link>
+            ))}
+          </nav>
         </div>
         <div className="footer-marquee mt-12 sm:mt-16" aria-hidden="true">
           <div className="footer-marquee-track">

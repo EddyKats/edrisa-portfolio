@@ -2,6 +2,7 @@ import { SimpleForm } from "@/components/studio/SimpleForm";
 import { StudioPageHead } from "@/components/studio/StudioPageHead";
 import { ImageField } from "@/components/studio/editor";
 import { confirmSiteLogo, savePortfolioCta, saveSettings } from "@/app/studio/(app)/settings/actions";
+import { SeoCutoverNote } from "@/components/studio/SeoCutoverNote";
 import { getPublicCta } from "@/lib/content/cta";
 import { getStudioSettings } from "@/lib/content/site";
 
@@ -12,9 +13,10 @@ export default async function StudioSettingsPage() {
     <section>
       <StudioPageHead
         title="Site settings"
-        note="Social links, footer copy, and default SEO are shared across the site."
+        note="Social links, footer copy, and default SEO are shared across the site. Site URL should be https://edrisastudio.com."
       />
       <div className="studio-stack">
+        <SeoCutoverNote />
         <SimpleForm
           action={saveSettings}
           fields={[

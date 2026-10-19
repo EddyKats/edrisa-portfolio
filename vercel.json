@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.edrisastudio.com" }],
+      "destination": "https://edrisastudio.com/:path*",
+      "permanent": true
+    }
+  ]
+}

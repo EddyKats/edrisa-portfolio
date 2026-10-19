@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { StudioMark } from "@/components/studio/StudioMark";
 import { getStudioOverview } from "@/lib/content/overview";
 
 const chips = [
@@ -41,7 +42,10 @@ export default async function StudioDashboard() {
   return (
     <div className="studio-dash">
       <section className="studio-banner">
-        <p>Edrisa studio</p>
+        <p className="studio-banner-brand">
+          <StudioMark />
+          Edrisa studio
+        </p>
         <h1>Keep the public site in step with the work</h1>
         <Link href="/studio/projects/new" className="studio-banner-btn">
           New project

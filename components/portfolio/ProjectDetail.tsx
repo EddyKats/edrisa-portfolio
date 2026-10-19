@@ -251,6 +251,7 @@ export function ProjectDetail({
             <h1 id={titleId} className="text-[clamp(2.15rem,3.6vw,3.25rem)] leading-[1.02] font-semibold tracking-tight text-white">
               {project.title}
             </h1>
+            <p className="mt-3 text-base leading-snug text-white/72">By Kasibante Edrisa · Edrisa Studio</p>
             {categoryNames.length > 0 || project.role ? (
               <div className="mt-4 flex flex-col gap-3 sm:mt-5 sm:flex-row sm:gap-12">
                 {categoryNames.length > 0 ? (

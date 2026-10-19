@@ -1,41 +1,48 @@
+import { aboutProfile } from "@/data/about";
 import { projectCta } from "@/data/project-cta";
 
 export const servicesMeta = {
   title: "Services | Edrisa",
   description:
-    "Brand identity, creative and advertising, and digital experiences from Edrisa.",
+    "Graphic design, branding, web development and app development from Kasibante Edrisa, multidisciplinary designer and software developer.",
 } as const;
 
 export const servicesCopy = {
-  title: "Things I'm Suspiciously Good At",
-  capabilitiesHeading: "Pick Your Problem",
-  capabilitiesNote: "No prices here. These are the kinds of problems, not a menu with invented numbers.",
-  clientsHeading: "Some Logos I've Stared At For Too Long",
-  clientsNote: "The frames stay empty until the actual logo files are added.",
-  talkLabel: "Talk About It",
+  title: "Things I'm",
+  titleLine: "Suspiciously Good At",
+  offersHeading: aboutProfile.disciplinesHeading,
+  capabilitiesHeading: "What the work covers",
+  placesHeading: "Where the work has been",
+  talkLabel: projectCta.label,
   ctaHeading: projectCta.heading,
-  ctaBody: "If the brief is specific, so is the work.",
+  ctaBody: "Bring the idea. I'll bring the unreasonable attention to detail.",
   ctaLabel: projectCta.label,
 } as const;
 
 export const serviceOffers = [
   {
-    title: "Brand Identity",
-    summary: "Making businesses look like they know exactly what they're doing.",
-    icon: "gem",
-    surface: "about",
+    title: "Graphic Design",
+    summary: "Visual communication with a point of view, including logos, vector graphics, image work and campaign design.",
+    icon: "gem" as const,
+    surface: "about" as const,
   },
   {
-    title: "Creative & Advertising",
-    summary: 'The part where "make it pop" gets translated into actual design.',
-    icon: "zap",
-    surface: "services",
+    title: "Branding",
+    summary: "Identities and campaigns built to be recognized, including brand management and visual direction.",
+    icon: "zap" as const,
+    surface: "services" as const,
   },
   {
-    title: "Digital Experiences",
-    summary: "Websites, products and interfaces that behave as good as they look.",
-    icon: "layers",
-    surface: "portfolio",
+    title: "Web Development",
+    summary: "Websites that carry the work, not just the look, including front end development with HTML, CSS, JavaScript and React.",
+    icon: "layers" as const,
+    surface: "portfolio" as const,
+  },
+  {
+    title: "App Development",
+    summary: "Digital products shaped with the same care, including UI · UX, research, wireframes and prototypes.",
+    icon: "layers" as const,
+    surface: "contact" as const,
   },
 ] as const;
 
@@ -43,29 +50,19 @@ export type ServiceIconName = (typeof serviceOffers)[number]["icon"];
 
 export const capabilityPackages = [
   {
-    name: "Brand",
-    items: ["Brand strategy", "Identity systems", "Logo design", "Guidelines"],
+    name: "Graphic Design",
+    items: ["Graphic Design", "Visual Communication", "Campaign Design"],
   },
   {
-    name: "Campaign",
-    items: ["Advertising concepts", "Social campaigns", "Print", "Outdoor", "Creative direction"],
+    name: "Branding",
+    items: ["Branding", "Creative Direction", "Brand management"],
   },
   {
-    name: "Digital",
-    items: ["Web design", "UI · UX", "Product design", "Design systems"],
+    name: "Web Development",
+    items: ["Web Development", "Front end development", "Next.js", "React"],
   },
-] as const;
-
-/**
- * Drop logo files in public/images/clients/, then set src.
- * Example: src: "/images/clients/client-01.svg"
- * Do not download logos from the web.
- */
-export const clientSlots = [
-  { id: "client-01", src: null as string | null, alt: "Client logo" },
-  { id: "client-02", src: null as string | null, alt: "Client logo" },
-  { id: "client-03", src: null as string | null, alt: "Client logo" },
-  { id: "client-04", src: null as string | null, alt: "Client logo" },
-  { id: "client-05", src: null as string | null, alt: "Client logo" },
-  { id: "client-06", src: null as string | null, alt: "Client logo" },
+  {
+    name: "App Development",
+    items: ["App Development", "UI · UX", "Wireframes and prototypes"],
+  },
 ] as const;

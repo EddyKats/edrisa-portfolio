@@ -2,45 +2,51 @@ import type { Metadata } from "next";
 import { InternalCTA } from "@/components/internal/InternalCTA";
 import { InternalFooter } from "@/components/internal/InternalFooter";
 import { InternalPageLayout } from "@/components/internal/InternalPageLayout";
-import { InternalTitle } from "@/components/internal/InternalTitle";
 import { CapabilityPackages } from "@/components/services/CapabilityPackages";
 import { ClientStrip } from "@/components/services/ClientStrip";
 import { ServiceOffers } from "@/components/services/ServiceOffers";
+import { aboutCopy } from "@/data/about";
 import { projectCta } from "@/data/project-cta";
-import { servicesCopy } from "@/data/services";
-import { getPublicServices } from "@/lib/content/catalog";
+import { capabilityPackages, serviceOffers, servicesCopy, servicesMeta } from "@/data/services";
 import { getPublicCta } from "@/lib/content/cta";
-import { getPublicSite } from "@/lib/content/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getPublicSite();
   return {
-    title: { absolute: site.title },
-    description: site.description,
+    title: { absolute: servicesMeta.title },
+    description: servicesMeta.description,
     alternates: { canonical: "/services" },
   };
 }
 
 export default async function ServicesRoute() {
-  const [catalog, cta] = await Promise.all([getPublicServices(), getPublicCta("services")]);
+  const cta = await getPublicCta("services");
 
   return (
     <InternalPageLayout section="services">
       <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20">
-        <InternalTitle>{servicesCopy.title}</InternalTitle>
-        <ServiceOffers offers={catalog.services} />
+        <header className="services-intro">
+          <h1 className="about-name font-display tracking-tight">
+            <span className="block">{servicesCopy.title}</span>
+            <span className="block">{servicesCopy.titleLine}</span>
+          </h1>
+        </header>
+        <ServiceOffers heading={servicesCopy.offersHeading} offers={[...serviceOffers]} />
         <CapabilityPackages
           heading={servicesCopy.capabilitiesHeading}
-          note={servicesCopy.capabilitiesNote}
-          packages={catalog.packages}
+          packages={capabilityPackages.map((entry) => ({
+            id: entry.name,
+            name: entry.name,
+            items: [...entry.items],
+            buttonLabel: servicesCopy.talkLabel,
+          }))}
         />
-        <ClientStrip heading={servicesCopy.clientsHeading} note={servicesCopy.clientsNote} clients={catalog.clients} />
+        <ClientStrip heading={servicesCopy.placesHeading} />
         <InternalCTA
           section="services"
           heading={projectCta.heading}
-          body={cta?.body ?? servicesCopy.ctaBody}
+          body={aboutCopy.ctaBody}
           label={projectCta.label}
           href={cta?.buttonHref ?? "/contact"}
         />

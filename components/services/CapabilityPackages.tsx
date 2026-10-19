@@ -1,37 +1,49 @@
 import Link from "next/link";
-import { internalButtonClass } from "@/components/internal/InternalCTA";
+import { getNavItem } from "@/data/navigation";
+
+const servicesSurface = getNavItem("services").surfaceClass;
+
 export function CapabilityPackages({
   heading,
-  note,
   packages,
 }: {
   heading: string;
-  note: string;
-  packages: { id: string; name: string; items: string[]; buttonLabel: string }[];
+  packages: { id: string; name: string; description?: string | null; items: string[]; buttonLabel: string }[];
 }) {
   return (
-    <section aria-labelledby="services-capabilities-title" className="mt-24 sm:mt-28">
-      <h2
-        id="services-capabilities-title"
-        className="text-center text-[clamp(1.7rem,2.2vw,2.15rem)] font-semibold tracking-tight"
-      >
+    <section aria-labelledby="services-capabilities-title" className="services-block">
+      <h2 id="services-capabilities-title" className="about-chapter-title">
         {heading}
       </h2>
-      <p className="mx-auto mt-4 max-w-md text-center text-sm leading-relaxed text-ink/60">
-        {note}
-      </p>
-      <ul className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        {packages.map((pack) => (
-          <li key={pack.id} className="flex flex-col rounded-2xl bg-white px-6 py-8 shadow-[0_12px_40px_rgb(28_18_14/0.05)]">
-            <h3 className="text-sm font-semibold tracking-[0.18em] uppercase">{pack.name}</h3>
-            <ul className="mt-6 flex-1 space-y-2 text-[0.98rem] leading-relaxed text-ink/75">
-              {pack.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <Link href="/contact" className={`mt-8 self-start ${internalButtonClass}`}>
-              {pack.buttonLabel}
-            </Link>
+      <ul className="services-packages">
+        {packages.map((pack, index) => (
+          <li key={pack.id} className="services-package">
+            <p className="services-package-index" aria-hidden="true">
+              {String(index + 1).padStart(2, "0")}
+            </p>
+            <div className="services-package-body">
+              <h3 className="text-[1.35rem] leading-tight font-semibold tracking-tight">{pack.name}</h3>
+              {pack.description ? (
+                <p className="mt-2 max-w-[28rem] text-sm leading-relaxed text-ink/65">{pack.description}</p>
+              ) : null}
+              <ul className="about-skills mt-5">
+                {pack.items.map((item, itemIndex) => (
+                  <li key={item}>
+                    <span className="about-skills-index">{String(itemIndex + 1).padStart(2, "0")}</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <div className="services-package-talk">
+                <Link
+                  href="/contact"
+                  className={`services-package-talk-btn ${servicesSurface}`}
+                >
+                  {pack.buttonLabel}
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+            </div>
           </li>
         ))}
       </ul>

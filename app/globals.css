@@ -227,6 +227,149 @@ body {
   margin-inline: auto;
 }
 
+.services-intro {
+  max-width: 36rem;
+}
+
+.services-block {
+  margin-top: 4.5rem;
+  padding-top: 2.35rem;
+  border-top: 1px solid rgb(28 18 14 / 0.12);
+}
+
+.services-packages {
+  display: grid;
+  gap: 2.75rem;
+  margin-top: 2.25rem;
+  align-items: stretch;
+}
+
+.services-package {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 0.35rem 0.95rem;
+}
+
+.services-package-index {
+  grid-row: 1 / -1;
+  margin: 0;
+  font-size: clamp(2.15rem, 3.2vw, 2.85rem);
+  font-weight: 600;
+  letter-spacing: -0.08em;
+  line-height: 0.85;
+  color: rgb(28 18 14 / 0.2);
+}
+
+.services-package-body {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.services-package-talk {
+  margin-top: auto;
+  padding-top: 2.35rem;
+}
+
+.services-package-talk-btn {
+  display: inline-flex;
+  min-height: 3.15rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.85rem 1.35rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 10px 22px rgb(228 36 123 / 0.22);
+}
+
+.services-package-talk-btn:hover {
+  filter: brightness(1.06);
+}
+
+.services-package-talk-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 6px rgb(28 18 14 / 0.22);
+}
+
+@media (min-width: 48rem) {
+  .services-packages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.5rem 2.75rem;
+  }
+}
+
+.client-marquee-wrap {
+  display: grid;
+  gap: 1.75rem;
+  margin-top: 2.25rem;
+}
+
+.client-marquee {
+  overflow: hidden;
+}
+
+.client-marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 3.5rem;
+  align-items: center;
+  animation: client-marquee 36s linear infinite;
+}
+
+.client-marquee--reverse .client-marquee-track {
+  animation-direction: reverse;
+}
+
+.client-marquee:hover .client-marquee-track {
+  animation-play-state: paused;
+}
+
+.client-marquee-item {
+  display: flex;
+  height: 4.5rem;
+  width: 10.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.client-marquee-img {
+  width: auto;
+  max-width: 9.5rem;
+  height: auto;
+  max-height: 3.25rem;
+  object-fit: contain;
+  filter: brightness(0);
+}
+
+@keyframes client-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .client-marquee-track {
+    animation: none;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: center;
+    gap: 2rem 2.5rem;
+  }
+}
+
 .about-hero-bleed {
   --about-side: 0px;
   --about-main-center: 50vw;

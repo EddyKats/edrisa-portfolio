@@ -38,6 +38,7 @@ export function AboutJourney({ title, entries }: { title: string; entries: Journ
                   alt=""
                   width={160}
                   height={160}
+                  loading="lazy"
                   className="size-full object-cover"
                 />
               ) : (

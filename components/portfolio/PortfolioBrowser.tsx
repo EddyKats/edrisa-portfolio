@@ -253,6 +253,7 @@ export function ProjectCard({
             src={image}
             alt=""
             fill
+            loading="lazy"
             sizes="(min-width: 1280px) 34vw, (min-width: 640px) 46vw, 100vw"
             className="object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover:scale-[1.03]"
           />

@@ -60,6 +60,7 @@ export function HomeStageMedia({
                 alt={alt}
                 fill
                 priority={priority && position === 0}
+                loading={priority && position === 0 ? undefined : "lazy"}
                 quality={90}
                 sizes={sizes}
                 unoptimized={frame.kind === "GIF"}
@@ -105,7 +106,7 @@ function HomeVideo({
       loop
       playsInline
       autoPlay={play}
-      preload="metadata"
+      preload={play ? "auto" : "none"}
       className={`h-full w-full ${className}`}
     />
   );

@@ -308,7 +308,7 @@ function Board({ image, title, priority }: { image: PortfolioGalleryImage; title
       <video
         controls
         playsInline
-        preload="metadata"
+        preload={priority ? "metadata" : "none"}
         aria-label={label}
         title={label}
         width={image.width ?? undefined}

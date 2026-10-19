@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/clear-dev-cache.mjs && next dev",
-    "build": "prisma generate && node scripts/migrate-deploy.mjs && next build",
+    "build": "prisma generate && next build",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "node scripts/migrate-deploy.mjs",
     "db:seed": "node --env-file=.env.local --import tsx prisma/seed.ts",
     "start": "next start",
     "lint": "eslint",

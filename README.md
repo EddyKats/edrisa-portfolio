@@ -37,7 +37,11 @@ Copy `.env.example` to `.env.local` and fill in the values there. Do not commit 
 - `AUTH_SECRET` — session encryption secret
 - `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` — GitHub OAuth app
 
-The GitHub OAuth callback is `/api/auth/callback/github`.
+The GitHub OAuth callback is `/api/auth/callback/github`. GitHub must list every origin you sign in from. For the live site add:
+
+`https://edrisastudio.com/api/auth/callback/github`
+
+Keep localhost (and the Vercel URL if you still use it) on the same OAuth app. GitHub → Settings → Developer settings → OAuth Apps → Authorization callback URL. The homepage URL should be `https://edrisastudio.com`. On Vercel production, set `AUTH_URL` to `https://edrisastudio.com`.
 
 After the database exists:
 
@@ -45,6 +49,8 @@ After the database exists:
 npm run db:migrate
 npm run db:seed
 ```
+
+Production deploys generate the Prisma client and build Next.js. They do not run `prisma migrate deploy` on every Vercel build (that fights Neon for an advisory lock). After a new migration file, run `npm run db:deploy` against the production database.
 
 `db:migrate` creates a versioned Prisma migration. `db:seed` copies the current `data/*.ts` content into Neon. It does not invent missing facts, and it does not assign software to projects.
 

@@ -6,6 +6,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Mail } from "lucide-react";
 import type { NavItem } from "@/data/navigation";
 import { NavIcon } from "@/components/icons/NavIcon";
+import { HomeStageMedia } from "@/components/home/HomeStageMedia";
+import type { HomeSectionMedia } from "@/lib/content/site-shape";
 
 const MotionLink = motion.create(Link);
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -17,6 +19,7 @@ type NavigationTileProps = {
   surfaceClass?: string;
   eyebrow?: string;
   artwork: string;
+  media?: HomeSectionMedia;
 };
 
 export function NavigationTile({
@@ -26,6 +29,7 @@ export function NavigationTile({
   surfaceClass = item.surfaceClass,
   eyebrow,
   artwork,
+  media,
 }: NavigationTileProps) {
   const reduce = useReducedMotion();
 
@@ -52,7 +56,19 @@ export function NavigationTile({
           <span
             aria-hidden="true"
             className={`absolute inset-0 origin-center transition-transform duration-500 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:transform-none ${surfaceClass}`}
-          />
+          >
+            {media && media.frames.length > 0 ? (
+              <>
+                <HomeStageMedia
+                  frames={media.frames}
+                  mode={media.mode}
+                  alt=""
+                  sizes="(min-width: 960px) 25vw, 50vw"
+                />
+                <span className="absolute inset-0 bg-black/28" />
+              </>
+            ) : null}
+          </span>
           <span aria-hidden="true" className="nav-mark" data-tile={item.id}>
             <span className="nav-mark-core" />
             <span className="nav-mark-ring" />

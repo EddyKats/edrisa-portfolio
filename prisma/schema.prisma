@@ -47,6 +47,10 @@ model HomeContent {
   portraitUrl        String?
   logoUrl            String?
   portraitMode       String         @default("single")
+  aboutMode          String         @default("single")
+  servicesMode       String         @default("single")
+  contactMode        String         @default("single")
+  portfolioMode      String         @default("single")
   aboutTileLabel     String
   servicesTileLabel  String
   contactTileLabel   String
@@ -59,11 +63,14 @@ model HomePortrait {
   id        String      @id @default(cuid())
   homeId    String      @default("home")
   home      HomeContent @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  surface   String      @default("hero")
   imageUrl  String
+  kind      String      @default("IMAGE")
+  mimeType  String?
   sortOrder Int         @default(0)
   published Boolean     @default(true)
 
-  @@index([homeId, sortOrder])
+  @@index([homeId, surface, sortOrder])
 }
 
 model AboutContent {

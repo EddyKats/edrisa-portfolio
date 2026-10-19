@@ -1,8 +1,15 @@
+import type { HomeFrame, HomeMediaMode } from "@/lib/content/home-surfaces";
+
 export type PublicSocial = {
   id: "behance" | "linkedin" | "whatsapp";
   label: string;
   href: string;
   iconLabel?: string;
+};
+
+export type HomeSectionMedia = {
+  mode: HomeMediaMode;
+  frames: HomeFrame[];
 };
 
 export type PublicSite = {
@@ -12,7 +19,14 @@ export type PublicSite = {
   url: string;
   portraitSrc: string;
   portraits: string[];
-  portraitMode: "single" | "sequence";
+  portraitMode: HomeMediaMode;
+  hero: HomeSectionMedia;
+  tiles: {
+    about: HomeSectionMedia;
+    services: HomeSectionMedia;
+    contact: HomeSectionMedia;
+    portfolio: HomeSectionMedia;
+  };
   portraitWidth: number;
   portraitHeight: number;
   logoSrc: string;

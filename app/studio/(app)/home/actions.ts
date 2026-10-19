@@ -2,14 +2,14 @@
 
 import { requireAdmin } from "@/lib/auth/require-admin";
 import {
-  addHomePortrait,
-  deleteHomePortrait,
-  moveHomePortrait,
+  addHomeMedia,
+  deleteHomeMedia,
+  moveHomeMedia,
   saveHomeLabels,
-  saveHomePortrait,
-  saveHomePortraitItem,
-  saveHomePortraitMode,
+  saveHomeMediaItem,
+  saveHomeSurfaceMode,
 } from "@/lib/content/home";
+import { isHomeSurface, isHomeMediaMode } from "@/lib/content/home-surfaces";
 import { revalidatePublicContent } from "@/lib/content/revalidate";
 import { failure, text, type StudioState } from "@/lib/studio/form";
 import { verifiedContentAsset } from "../media-actions";
@@ -35,9 +35,10 @@ export async function saveHome(_state: StudioState, formData: FormData): Promise
 export async function saveHomeMode(_state: StudioState, formData: FormData): Promise<StudioState> {
   await requireAdmin();
   try {
-    const mode = text(formData, "portraitMode");
-    if (mode !== "single" && mode !== "sequence") return { error: "Choose a portrait display." };
-    await saveHomePortraitMode(mode);
+    const surface = text(formData, "surface");
+    const mode = text(formData, "mode");
+    if (!isHomeSurface(surface) || !isHomeMediaMode(mode)) return { error: "Choose a display for that section." };
+    await saveHomeSurfaceMode(surface, mode);
     revalidatePublicContent(paths);
     return { ok: true };
   } catch (error) {
@@ -45,23 +46,12 @@ export async function saveHomeMode(_state: StudioState, formData: FormData): Pro
   }
 }
 
-export async function confirmHomePortrait(key: string): Promise<StudioState> {
+export async function confirmAddHomeMedia(surface: string, ownerId: string, key: string): Promise<StudioState> {
   await requireAdmin();
   try {
-    const asset = await verifiedContentAsset("home-portrait", "home", key);
-    const result = await saveHomePortrait(asset.publicUrl);
-    revalidatePublicContent(paths);
-    return { ok: true, warning: result.warning ?? undefined };
-  } catch (error) {
-    return failure(error, "Upload failed.");
-  }
-}
-
-export async function confirmAddHomePortrait(ownerId: string, key: string): Promise<StudioState> {
-  await requireAdmin();
-  try {
-    const asset = await verifiedContentAsset("home-portrait", ownerId, key);
-    await addHomePortrait(asset.publicUrl);
+    if (!isHomeSurface(surface)) return { error: "Choose a homepage section." };
+    const asset = await verifiedContentAsset("home-media", ownerId, key);
+    await addHomeMedia({ surface, url: asset.publicUrl, mimeType: asset.mimeType });
     revalidatePublicContent(paths);
     return { ok: true };
   } catch (error) {
@@ -69,11 +59,11 @@ export async function confirmAddHomePortrait(ownerId: string, key: string): Prom
   }
 }
 
-export async function confirmHomeGalleryPortrait(id: string, key: string): Promise<StudioState> {
+export async function confirmHomeMediaItem(id: string, key: string): Promise<StudioState> {
   await requireAdmin();
   try {
-    const asset = await verifiedContentAsset("home-portrait", id, key);
-    const result = await saveHomePortraitItem(id, asset.publicUrl);
+    const asset = await verifiedContentAsset("home-media", id, key);
+    const result = await saveHomeMediaItem(id, asset.publicUrl, asset.mimeType);
     revalidatePublicContent(paths);
     return { ok: true, warning: result.warning ?? undefined };
   } catch (error) {
@@ -84,7 +74,7 @@ export async function confirmHomeGalleryPortrait(id: string, key: string): Promi
 export async function removeHomePicture(id: string): Promise<StudioState> {
   await requireAdmin();
   try {
-    const result = await deleteHomePortrait(id);
+    const result = await deleteHomeMedia(id);
     revalidatePublicContent(paths);
     return { ok: true, warning: result.warning ?? undefined };
   } catch (error) {
@@ -95,7 +85,7 @@ export async function removeHomePicture(id: string): Promise<StudioState> {
 export async function reorderHomePicture(id: string, direction: "up" | "down"): Promise<StudioState> {
   await requireAdmin();
   try {
-    await moveHomePortrait(id, direction);
+    await moveHomeMedia(id, direction);
     revalidatePublicContent(paths);
     return { ok: true };
   } catch (error) {

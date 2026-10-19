@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { getNavItem, type NavId } from "@/data/navigation";
 import { NavigationTile } from "@/components/home/NavigationTile";
+import type { PublicSite } from "@/lib/content/site-shape";
 
 const homeOrder = ["portfolio", "about", "services", "contact"] as const satisfies readonly NavId[];
 
@@ -35,8 +36,10 @@ function homeSurface(id: NavId) {
 
 export function NavigationGrid({
   labels,
+  tiles,
 }: {
   labels: { about: string; services: string; contact: string; portfolio: string };
+  tiles: PublicSite["tiles"];
 }) {
   return (
     <nav
@@ -53,6 +56,7 @@ export function NavigationGrid({
           surfaceClass={homeSurface(id)}
           eyebrow={homeEyebrow[id]}
           artwork={titleArtwork(id)}
+          media={tiles[id]}
         />
       ))}
     </nav>

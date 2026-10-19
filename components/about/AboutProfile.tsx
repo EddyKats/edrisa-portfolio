@@ -101,7 +101,7 @@ export function AboutProfile({
     <>
       <div className="about-summary grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-x-10 xl:grid-cols-12 xl:gap-x-14">
         <header className="md:col-span-2 xl:col-span-5">
-          <h1 className="about-name font-display tracking-tight">
+          <h1 id="about-name" className="about-name font-display tracking-tight">
             {aboutProfile.name.split(" ").map((part) => (
               <span key={part} className="block">
                 {part}

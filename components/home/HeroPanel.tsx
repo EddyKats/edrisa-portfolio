@@ -1,25 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
+import { HomeStageMedia } from "@/components/home/HomeStageMedia";
 import type { PublicSite } from "@/lib/content/site-shape";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export function HeroPanel({ site }: { site: PublicSite }) {
   const reduce = useReducedMotion();
-  const frames = site.portraits.length > 0 ? site.portraits : [site.portraitSrc];
-  const rotating = !reduce && site.portraitMode === "sequence" && frames.length > 1;
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (!rotating) return;
-    const timer = window.setInterval(() => {
-      setIndex((current) => (current + 1) % frames.length);
-    }, 5500);
-    return () => window.clearInterval(timer);
-  }, [frames.length, rotating]);
 
   return (
     <section
@@ -27,25 +16,14 @@ export function HeroPanel({ site }: { site: PublicSite }) {
       className="home-hero @container relative isolate bg-[linear-gradient(180deg,#51392f_0%,#442f28_58%,#2e211c_100%)]"
     >
       <div className="absolute inset-0">
-        {frames.map((src, frame) => (
-          <motion.div
-            key={`${src}-${frame}`}
-            className="absolute inset-0"
-            initial={false}
-            animate={{ opacity: frame === index ? 1 : 0 }}
-            transition={{ duration: rotating ? 0.9 : 0.6, ease }}
-          >
-            <Image
-              src={src}
-              alt="Portrait of Edrisa"
-              fill
-              priority={frame === 0}
-              quality={90}
-              sizes="(min-width: 960px) 50vw, 100vw"
-              className="object-cover object-[center_top]"
-            />
-          </motion.div>
-        ))}
+        <HomeStageMedia
+          frames={site.hero.frames}
+          mode={site.hero.mode}
+          alt="Portrait of Edrisa"
+          sizes="(min-width: 960px) 50vw, 100vw"
+          objectClass="object-cover object-[center_top]"
+          priority
+        />
       </div>
 
       <div

@@ -93,13 +93,14 @@ export async function createContentUpload(input: {
   type: string;
   size: number;
 }) {
-  const error = validateImageUpload(input);
-  if (error || !isContentAssetScope(input.scope)) return { error: error ?? "That upload could not be started." };
+  if (!isContentAssetScope(input.scope)) return { error: "That upload could not be started." };
+  const allowVideo = input.scope === "home-media";
+  const error = allowVideo ? validateMediaUpload(input) : validateImageUpload(input);
+  if (error) return { error };
   assertOwnerId(input.ownerId);
-  const type = input.type as AllowedImageType;
-  const key = namespacedAssetKey(
-    `content/${input.scope}/${input.ownerId}/${crypto.randomUUID()}.${extensionFor(type)}`,
-  );
+  const type = input.type as AllowedMediaType;
+  const extension = allowVideo ? extensionForMedia(type) : extensionFor(type as AllowedImageType);
+  const key = namespacedAssetKey(`content/${input.scope}/${input.ownerId}/${crypto.randomUUID()}.${extension}`);
   const command = new PutObjectCommand({
     Bucket: mediaBucket,
     Key: key,

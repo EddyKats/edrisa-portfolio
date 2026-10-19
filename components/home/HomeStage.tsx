@@ -22,7 +22,7 @@ export function HomeStage({
       </a>
       <main className="home-screen">
         <HeroPanel site={site} />
-        <NavigationGrid labels={labels} />
+        <NavigationGrid labels={labels} tiles={site.tiles} />
       </main>
     </>
   );

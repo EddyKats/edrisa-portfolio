@@ -90,6 +90,7 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
 
   return (
     <div className="mt-6 sm:mt-7">
+      <div className="filter-stick sticky top-[5.5rem] z-30 -mx-5 px-5 py-2 sm:-mx-8 sm:px-8 split:top-[1.125rem] split:mx-0 split:px-0">
       <div
         role="group"
         aria-label="Filter projects"
@@ -114,6 +115,7 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
             </button>
           );
         })}
+      </div>
       </div>
       {visible.length === 0 ? (
         <UploadingProjects reduce={reduce} />

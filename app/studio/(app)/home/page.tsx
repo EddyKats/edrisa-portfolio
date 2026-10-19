@@ -1,18 +1,17 @@
 import { SimpleForm } from "@/components/studio/SimpleForm";
-import { HomePortraits } from "@/components/studio/HomePortraits";
+import { HomeMediaBoard } from "@/components/studio/HomeMediaBoard";
 import { StudioPageHead } from "@/components/studio/StudioPageHead";
 import { saveHome } from "@/app/studio/(app)/home/actions";
 import { getStudioHome } from "@/lib/content/home";
 
 export default async function StudioHomePage() {
   const home = await getStudioHome();
-  const mode = home.portraitMode === "sequence" ? "sequence" : "single";
 
   return (
     <section>
       <StudioPageHead
         title="Home"
-        note="Tile labels and portraits save to the public homepage. The grid, gradients, and motion stay in code."
+        note="Each homepage panel can use one still, a changing set of pictures, or video. Labels and media save to the live site. The grid and motion stay in code."
       />
       <div className="studio-stack">
         <SimpleForm
@@ -24,7 +23,7 @@ export default async function StudioHomePage() {
             { name: "portfolioTileLabel", label: "Portfolio tile", defaultValue: home.portfolioTileLabel },
           ]}
         />
-        <HomePortraits mode={mode} portraitUrl={home.portraitUrl} portraits={home.portraits} />
+        <HomeMediaBoard home={home} />
       </div>
     </section>
   );

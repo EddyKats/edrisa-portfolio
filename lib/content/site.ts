@@ -3,9 +3,10 @@ import "server-only";
 import { site, socialLinks, socialProfiles } from "@/data/site";
 import { getDb } from "@/lib/db";
 import { ContentWriteError } from "@/lib/content/errors";
+import { framesFor } from "@/lib/content/home";
 import { removeStoredFile } from "@/lib/content/media";
 import { resolveCallHref } from "@/lib/content/phone";
-import type { PublicSite } from "@/lib/content/site-shape";
+import type { HomeSectionMedia, PublicSite } from "@/lib/content/site-shape";
 import { httpsUrlSchema, optionalText, whatsappUrlSchema } from "@/lib/studio/urls";
 
 export async function getPublicSite(): Promise<PublicSite> {
@@ -29,6 +30,13 @@ export async function getPublicSite(): Promise<PublicSite> {
       portraitSrc: site.portraitSrc,
       portraits: [site.portraitSrc],
       portraitMode: "single",
+      hero: { mode: "single", frames: [{ src: site.portraitSrc, kind: "IMAGE" }] },
+      tiles: {
+        about: { mode: "single", frames: [] },
+        services: { mode: "single", frames: [] },
+        contact: { mode: "single", frames: [] },
+        portfolio: { mode: "single", frames: [] },
+      },
       portraitWidth: site.portraitWidth,
       portraitHeight: site.portraitHeight,
       logoSrc: site.logoSrc,
@@ -41,10 +49,30 @@ export async function getPublicSite(): Promise<PublicSite> {
     };
   }
 
-  const sequence = home?.portraitMode === "sequence" ? home.portraits.map((item) => item.imageUrl).filter(Boolean) : [];
-  const portraitSrc = sequence[0] || home?.portraitUrl || settings.homepagePortraitUrl || site.portraitSrc;
+  const grouped = {
+    hero: home?.portraits.filter((item) => item.surface === "hero") ?? [],
+    about: home?.portraits.filter((item) => item.surface === "about") ?? [],
+    services: home?.portraits.filter((item) => item.surface === "services") ?? [],
+    contact: home?.portraits.filter((item) => item.surface === "contact") ?? [],
+    portfolio: home?.portraits.filter((item) => item.surface === "portfolio") ?? [],
+  };
+  const hero: HomeSectionMedia = {
+    mode: home?.portraitMode === "sequence" ? "sequence" : "single",
+    frames: framesFor(grouped.hero, home?.portraitMode ?? "single"),
+  };
+  if (hero.frames.length === 0 && (home?.portraitUrl || settings.homepagePortraitUrl || site.portraitSrc)) {
+    hero.frames = [{ src: home?.portraitUrl || settings.homepagePortraitUrl || site.portraitSrc, kind: "IMAGE" }];
+  }
+  const tiles = {
+    about: sectionMedia(home?.aboutMode, grouped.about),
+    services: sectionMedia(home?.servicesMode, grouped.services),
+    contact: sectionMedia(home?.contactMode, grouped.contact),
+    portfolio: sectionMedia(home?.portfolioMode, grouped.portfolio),
+  };
+  const portraitSrc =
+    hero.frames.find((frame) => frame.kind !== "VIDEO")?.src || home?.portraitUrl || settings.homepagePortraitUrl || site.portraitSrc;
   const logoSrc = home?.logoUrl || settings.logoUrl || site.logoSrc;
-  const portraitMode = home?.portraitMode === "sequence" && sequence.length > 0 ? "sequence" : "single";
+  const portraitMode = hero.mode === "sequence" && hero.frames.length > 1 ? "sequence" : "single";
 
   return {
     name: settings.siteName,
@@ -52,8 +80,10 @@ export async function getPublicSite(): Promise<PublicSite> {
     description: settings.defaultSeoDescription || site.description,
     url: settings.siteUrl,
     portraitSrc,
-    portraits: portraitMode === "sequence" ? sequence : [portraitSrc],
+    portraits: hero.frames.map((frame) => frame.src),
     portraitMode,
+    hero,
+    tiles,
     portraitWidth: site.portraitWidth,
     portraitHeight: site.portraitHeight,
     logoSrc,
@@ -133,4 +163,9 @@ export async function saveSiteLogo(url: string) {
 
 export function blankToNull(value: string) {
   return optionalText.parse(value);
+}
+
+function sectionMedia(mode: string | undefined, items: { imageUrl: string; kind: string; published: boolean }[]): HomeSectionMedia {
+  const display = mode === "sequence" ? "sequence" : "single";
+  return { mode: display, frames: framesFor(items, display) };
 }

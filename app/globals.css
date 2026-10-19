@@ -15,6 +15,12 @@ body {
   color: #fff;
 }
 
+html:has(#internal-page),
+html:has(#internal-page) body {
+  background: #fffbf3;
+  color: var(--color-ink);
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -222,9 +228,13 @@ body {
 }
 
 .internal-frame {
+  display: flex;
   width: 100%;
   max-width: 72rem;
   margin-inline: auto;
+  min-height: 100%;
+  flex: 1;
+  flex-direction: column;
 }
 
 .services-intro,
@@ -555,7 +565,7 @@ body {
   position: absolute;
   top: 58dvh;
   right: 0;
-  bottom: 0;
+  bottom: -40vh;
   left: 0;
   z-index: 1;
   pointer-events: none;
@@ -1228,6 +1238,10 @@ body {
   .footer-marquee-item {
     margin-right: 0;
   }
+}
+
+.filter-stick {
+  background: #fffbf3;
 }
 
 .filter-row {

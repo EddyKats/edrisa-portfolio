@@ -39,8 +39,11 @@ const keyPattern = new RegExp(
 const contentKeyPattern = new RegExp(
   String.raw`^(?:${namespaceName})\/content\/(?:about-feature|experience|client|home-portrait|home-logo)\/[A-Za-z0-9-]+\/${stillName}$`,
 );
+const homeMediaKeyPattern = new RegExp(
+  String.raw`^(?:${namespaceName})\/content\/home-media\/[A-Za-z0-9-]+\/${mediaName}$`,
+);
 
-export const contentAssetScopes = ["about-feature", "experience", "client", "home-portrait", "home-logo"] as const;
+export const contentAssetScopes = ["about-feature", "experience", "client", "home-portrait", "home-logo", "home-media"] as const;
 
 export type ContentAssetScope = (typeof contentAssetScopes)[number];
 
@@ -117,7 +120,7 @@ export function namespacedAssetKey(relativeKey: string) {
 export function isDeletableAssetKey(key: string) {
   const namespace = activeMediaNamespace();
   if (!namespace || !key.startsWith(`${namespace}/`)) return false;
-  return keyPattern.test(key) || contentKeyPattern.test(key);
+  return keyPattern.test(key) || contentKeyPattern.test(key) || homeMediaKeyPattern.test(key);
 }
 
 export function isPortfolioAssetKey(projectId: string, key: string) {
@@ -131,7 +134,8 @@ export function isContentAssetScope(value: string): value is ContentAssetScope {
 
 export function isContentAssetKey(scope: ContentAssetScope, ownerId: string, key: string) {
   const namespace = activeMediaNamespace();
-  return Boolean(namespace) && key.startsWith(`${namespace}/content/${scope}/${ownerId}/`) && contentKeyPattern.test(key);
+  if (!namespace || !key.startsWith(`${namespace}/content/${scope}/${ownerId}/`)) return false;
+  return scope === "home-media" ? homeMediaKeyPattern.test(key) : contentKeyPattern.test(key);
 }
 
 export function matchesImageSignature(type: AllowedImageType, bytes: Uint8Array) {

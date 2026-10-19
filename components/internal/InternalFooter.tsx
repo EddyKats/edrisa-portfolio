@@ -44,7 +44,7 @@ export async function InternalFooter() {
           </div>
         </div>
       </footer>
-      <p className="copyright-line mt-10 text-[0.875rem] font-medium text-ink sm:mt-14 md:text-[1.15rem]">
+      <p className="copyright-line mt-10 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] text-[0.875rem] font-medium text-ink sm:mt-14 md:text-[1.15rem]">
         <span className="sr-only">© {year} Edrisa. All rights reserved</span>
         <span aria-hidden="true" className="copyright-visible">
           <span className="font-bold">© {year}</span>

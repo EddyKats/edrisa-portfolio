@@ -3,6 +3,13 @@ import "server-only";
 import { navigation } from "@/data/navigation";
 import { getDb } from "@/lib/db";
 import { ContentWriteError } from "@/lib/content/errors";
+import {
+  kindFromMime,
+  modeField,
+  type HomeMediaKind,
+  type HomeMediaMode,
+  type HomeSurface,
+} from "@/lib/content/home-surfaces";
 import { removeStoredFile } from "@/lib/content/media";
 
 export async function getHomeLabels() {
@@ -22,6 +29,20 @@ export async function getStudioHome() {
     include: { portraits: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }] } },
   });
   if (!row) throw new ContentWriteError("Homepage content has not been seeded.");
+  const hasHero = row.portraits.some((item) => item.surface === "hero");
+  if (!hasHero && row.portraitUrl) {
+    await db.homePortrait.create({
+      data: {
+        homeId: "home",
+        surface: "hero",
+        imageUrl: row.portraitUrl,
+        kind: "IMAGE",
+        sortOrder: 0,
+        published: true,
+      },
+    });
+    return getStudioHome();
+  }
   return row;
 }
 
@@ -40,54 +61,40 @@ export async function saveHomeLabels(input: {
   await getDb().homeContent.update({ where: { id: "home" }, data: labels });
 }
 
-export async function saveHomePortraitMode(mode: "single" | "sequence") {
+export async function saveHomeSurfaceMode(surface: HomeSurface, mode: HomeMediaMode) {
   const db = getDb();
-  const home = await db.homeContent.findUnique({
-    where: { id: "home" },
-    include: { portraits: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }] } },
-  });
+  const home = await db.homeContent.findUnique({ where: { id: "home" } });
   if (!home) throw new ContentWriteError("Homepage content has not been seeded.");
-
-  if (mode === "sequence" && home.portraits.length === 0 && home.portraitUrl) {
-    await db.homePortrait.create({
-      data: { homeId: "home", imageUrl: home.portraitUrl, sortOrder: 0, published: true },
-    });
-  }
-
-  await db.homeContent.update({ where: { id: "home" }, data: { portraitMode: mode } });
+  await db.homeContent.update({ where: { id: "home" }, data: { [modeField(surface)]: mode } });
 }
 
-export async function saveHomePortrait(url: string) {
+export async function addHomeMedia(input: { surface: HomeSurface; url: string; mimeType: string | null }) {
   const db = getDb();
-  const current = await db.homeContent.findUnique({ where: { id: "home" }, select: { portraitUrl: true } });
-  await syncPrimaryPortrait(url);
-  const warning =
-    current?.portraitUrl && current.portraitUrl !== url && current.portraitUrl.startsWith("http") && !(await stillUsed(current.portraitUrl))
-      ? await removeStoredFile(current.portraitUrl)
-      : null;
-  return { warning };
-}
-
-export async function addHomePortrait(url: string) {
-  const db = getDb();
-  const count = await db.homePortrait.count({ where: { homeId: "home" } });
+  const count = await db.homePortrait.count({ where: { homeId: "home", surface: input.surface } });
   const created = await db.homePortrait.create({
-    data: { homeId: "home", imageUrl: url, sortOrder: count, published: true },
+    data: {
+      homeId: "home",
+      surface: input.surface,
+      imageUrl: input.url,
+      kind: kindFromMime(input.mimeType),
+      mimeType: input.mimeType,
+      sortOrder: count,
+      published: true,
+    },
   });
-  if (count === 0) await syncPrimaryPortrait(url);
+  if (input.surface === "hero") await syncHeroStill();
   return created.id;
 }
 
-export async function saveHomePortraitItem(id: string, url: string) {
+export async function saveHomeMediaItem(id: string, url: string, mimeType: string | null) {
   const db = getDb();
   const current = await db.homePortrait.findUnique({ where: { id } });
   if (!current) throw new ContentWriteError("That picture could not be found.");
-  await db.homePortrait.update({ where: { id }, data: { imageUrl: url } });
-  const first = await db.homePortrait.findFirst({
-    where: { homeId: "home", published: true },
-    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+  await db.homePortrait.update({
+    where: { id },
+    data: { imageUrl: url, kind: kindFromMime(mimeType), mimeType },
   });
-  if (first?.id === id) await syncPrimaryPortrait(url);
+  if (current.surface === "hero") await syncHeroStill();
   const warning =
     current.imageUrl !== url && current.imageUrl.startsWith("http") && !(await stillUsed(current.imageUrl))
       ? await removeStoredFile(current.imageUrl)
@@ -95,25 +102,23 @@ export async function saveHomePortraitItem(id: string, url: string) {
   return { warning };
 }
 
-export async function deleteHomePortrait(id: string) {
+export async function deleteHomeMedia(id: string) {
   const db = getDb();
   const current = await db.homePortrait.findUnique({ where: { id } });
   if (!current) throw new ContentWriteError("That picture could not be found.");
   await db.homePortrait.delete({ where: { id } });
-  const first = await db.homePortrait.findFirst({
-    where: { homeId: "home", published: true },
-    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
-  });
-  await syncPrimaryPortrait(first?.imageUrl ?? current.imageUrl);
+  if (current.surface === "hero") await syncHeroStill();
   return {
     warning: current.imageUrl.startsWith("http") && !(await stillUsed(current.imageUrl)) ? await removeStoredFile(current.imageUrl) : null,
   };
 }
 
-export async function moveHomePortrait(id: string, direction: "up" | "down") {
+export async function moveHomeMedia(id: string, direction: "up" | "down") {
   const db = getDb();
+  const current = await db.homePortrait.findUnique({ where: { id } });
+  if (!current) return;
   const rows = await db.homePortrait.findMany({
-    where: { homeId: "home" },
+    where: { homeId: "home", surface: current.surface },
     orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
     select: { id: true },
   });
@@ -124,11 +129,19 @@ export async function moveHomePortrait(id: string, direction: "up" | "down") {
   const [item] = next.splice(index, 1);
   next.splice(target, 0, item!);
   await db.$transaction(next.map((row, sortOrder) => db.homePortrait.update({ where: { id: row.id }, data: { sortOrder } })));
-  const first = next[0];
-  if (first) {
-    const row = await db.homePortrait.findUnique({ where: { id: first.id } });
-    if (row) await syncPrimaryPortrait(row.imageUrl);
-  }
+  if (current.surface === "hero") await syncHeroStill();
+}
+
+export function framesFor(
+  items: { imageUrl: string; kind: string; published: boolean }[],
+  mode: string,
+) {
+  const published = items.filter((item) => item.published && item.imageUrl);
+  const chosen = mode === "sequence" ? published : published.slice(0, 1);
+  return chosen.map((item) => ({
+    src: item.imageUrl,
+    kind: (item.kind === "VIDEO" || item.kind === "GIF" ? item.kind : "IMAGE") as HomeMediaKind,
+  }));
 }
 
 async function stillUsed(url: string) {
@@ -140,11 +153,20 @@ async function stillUsed(url: string) {
   return inGallery > 0 || home?.portraitUrl === url;
 }
 
-async function syncPrimaryPortrait(url: string | null) {
+async function syncHeroStill() {
   const db = getDb();
+  const firstImage = await db.homePortrait.findFirst({
+    where: { homeId: "home", surface: "hero", published: true, kind: { not: "VIDEO" } },
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+  });
+  const firstAny = await db.homePortrait.findFirst({
+    where: { homeId: "home", surface: "hero", published: true },
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+  });
+  const url = firstImage?.imageUrl ?? firstAny?.imageUrl ?? null;
   await db.$transaction([
     db.homeContent.update({ where: { id: "home" }, data: { portraitUrl: url } }),
-    db.siteSettings.update({ where: { id: "site" }, data: { homepagePortraitUrl: url } }),
+    db.siteSettings.update({ where: { id: "site" }, data: { homepagePortraitUrl: firstImage?.imageUrl ?? null } }),
   ]);
 }
 

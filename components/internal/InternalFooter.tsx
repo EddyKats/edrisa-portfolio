@@ -17,7 +17,7 @@ export async function InternalFooter() {
 
   return (
     <>
-      <footer className="site-footer mt-16 bg-[#f6f3ef] text-ink">
+      <footer className="site-footer mt-16 text-ink">
         <div className="footer-top">
           <p className="footer-kicker">Elsewhere on the internet</p>
           <div className="footer-rule" aria-hidden="true" />

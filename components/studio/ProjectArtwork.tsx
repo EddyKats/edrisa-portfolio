@@ -263,7 +263,7 @@ function PresentationEditor({ projectId, images }: { projectId: string; images: 
     setBusy(true);
     setStatus({});
     for (const [index, file] of ordered.entries()) {
-      setProgress(ordered.length > 1 ? `Uploading ${index + 1} of ${ordered.length} — ${file.name}` : `Uploading ${file.name}`);
+      setProgress(ordered.length > 1 ? `Uploading ${index + 1} of ${ordered.length} · ${file.name}` : `Uploading ${file.name}`);
       const ticket = await prepareProjectUpload(projectId, "presentation", { type: file.type, size: file.size });
       if (!ticket.uploadUrl || !ticket.key || !ticket.contentType) {
         setStatus({ error: uploadFailure(file, ticket.error ?? "Upload failed.") });
@@ -646,7 +646,7 @@ function Status({ state }: { state: DetailState }) {
 
 function uploadFailure(file: File, message: string) {
   const detail = message.replace(/^upload failed\.?\s*/i, "").trim();
-  return detail ? `${file.name} — Upload failed — ${detail}` : `${file.name} — Upload failed.`;
+  return detail ? `${file.name}: Upload failed. ${detail}` : `${file.name}: Upload failed.`;
 }
 
 function fileName(url: string) {

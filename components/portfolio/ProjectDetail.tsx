@@ -29,6 +29,7 @@ export function ProjectDetail({
   categories,
   contact,
   ctaHref,
+  source = "portfolio",
 }: {
   project: PortfolioProject;
   previous: { slug: string; title: string };
@@ -39,6 +40,7 @@ export function ProjectDetail({
     callHref: string | null;
   };
   ctaHref: string;
+  source?: "portfolio" | "about";
 }) {
   const router = useRouter();
   const routerRef = useRef(router);
@@ -64,7 +66,7 @@ export function ProjectDetail({
     closingRef.current = true;
     releaseRef.current();
     setClosing(true);
-    const href = portfolioReturnHref(categories);
+    const href = source === "about" ? "/about" : portfolioReturnHref(categories);
     requestAnimationFrame(() => {
       routerRef.current.push(href, { scroll: false });
     });
@@ -97,7 +99,7 @@ export function ProjectDetail({
   function openProject(event: MouseEvent<HTMLAnchorElement>, slug: string) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault();
-    router.push(projectPath(slug, categories), { scroll: false });
+    router.push(source === "about" ? aboutWorkPath(slug) : projectPath(slug, categories), { scroll: false });
   }
 
   useEffect(() => {
@@ -284,6 +286,7 @@ export function ProjectDetail({
             ctaHref={ctaHref}
             previous={previous}
             next={next}
+            source={source}
             onOpen={openProject}
           />
         </div>
@@ -375,6 +378,7 @@ function ProjectClose({
   ctaHref,
   previous,
   next,
+  source,
   onOpen,
 }: {
   tools: SoftwareId[];
@@ -383,6 +387,7 @@ function ProjectClose({
   ctaHref: string;
   previous: { slug: string; title: string };
   next: { slug: string; title: string };
+  source: "portfolio" | "about";
   onOpen: (event: MouseEvent<HTMLAnchorElement>, slug: string) => void;
 }) {
   const contacts = orderedContacts(profiles);
@@ -392,7 +397,7 @@ function ProjectClose({
     <div className="project-end">
       {hasActions ? (
         <section aria-label="Contact" className="project-contact split:hidden">
-          <p className="project-contact-kicker">Direct contact</p>
+          <p className="project-contact-kicker">Elsewhere on the internet</p>
           <div className="project-contact-rule" aria-hidden="true" />
           <ul className="project-contact-list">
             {contacts.map((item) => (
@@ -421,7 +426,7 @@ function ProjectClose({
       <nav aria-label="Adjacent projects" className="project-footer-navigation">
         <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
           <Link
-            href={`/portfolio/${previous.slug}`}
+            href={source === "about" ? aboutWorkPath(previous.slug) : `/portfolio/${previous.slug}`}
             scroll={false}
             onClick={(event) => onOpen(event, previous.slug)}
             aria-label={`Previous project: ${previous.title}`}
@@ -436,7 +441,7 @@ function ProjectClose({
             </span>
           </Link>
           <Link
-            href={`/portfolio/${next.slug}`}
+            href={source === "about" ? aboutWorkPath(next.slug) : `/portfolio/${next.slug}`}
             scroll={false}
             onClick={(event) => onOpen(event, next.slug)}
             aria-label={`Next project: ${next.title}`}
@@ -596,6 +601,10 @@ function orderedContacts(profiles: PublicSocial[]) {
 
 function contactLabel(item: PublicSocial) {
   return "iconLabel" in item ? item.iconLabel : item.label;
+}
+
+function aboutWorkPath(slug: string) {
+  return `/about?work=${encodeURIComponent(slug)}`;
 }
 
 function portfolioReturnHref(categories: string[]) {

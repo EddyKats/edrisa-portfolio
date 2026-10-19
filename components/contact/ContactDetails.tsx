@@ -21,7 +21,7 @@ export function ContactDetails({
       <h2 className="text-xl font-semibold tracking-tight">{detailsHeading}</h2>
       <dl className="mt-8 space-y-6">
         <div>
-          <dt className="text-xs font-semibold tracking-[0.16em] text-ink/50 uppercase">Email</dt>
+          <dt className="text-xs font-semibold tracking-[0.16em] text-ink/55 uppercase">Email</dt>
           <dd className="mt-1">
             {email ? (
               <a
@@ -36,7 +36,7 @@ export function ContactDetails({
           </dd>
         </div>
         <div>
-          <dt className="text-xs font-semibold tracking-[0.16em] text-ink/50 uppercase">Phone</dt>
+          <dt className="text-xs font-semibold tracking-[0.16em] text-ink/55 uppercase">Phone</dt>
           <dd className="mt-1 text-ink/70">
             {phone ? (
               <a
@@ -51,7 +51,7 @@ export function ContactDetails({
           </dd>
         </div>
         <div>
-          <dt className="text-xs font-semibold tracking-[0.16em] text-ink/50 uppercase">Location</dt>
+          <dt className="text-xs font-semibold tracking-[0.16em] text-ink/55 uppercase">Location</dt>
           <dd className="mt-1">{location ?? "Not listed yet"}</dd>
         </div>
       </dl>

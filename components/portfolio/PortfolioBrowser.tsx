@@ -45,7 +45,7 @@ function isFilter(value: string | null, categories: string[]): value is string {
   return Boolean(value && categories.includes(value));
 }
 
-const sizeClass: Record<ProjectSize, string> = {
+export const portfolioSizeClass: Record<ProjectSize, string> = {
   large: "h-[26rem] sm:h-[30rem] xl:h-auto xl:row-span-2",
   wide: "h-[17rem] sm:col-span-2 xl:col-span-2 xl:h-auto",
   tall: "h-[24rem] sm:h-[28rem] xl:h-auto xl:row-span-2",
@@ -123,7 +123,7 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
             {visible.map((project) => (
               <motion.li
                 key={project.slug}
-                className={sizeClass[project.size]}
+                className={portfolioSizeClass[project.size]}
                 layout={reduce ? false : true}
                 initial={reduce ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -161,7 +161,7 @@ function UploadingProjects({ reduce }: { reduce: boolean | null }) {
   return (
     <div
       role="status"
-      className="mx-auto mt-8 flex w-full max-w-lg flex-col gap-4 rounded-[1.05rem] border border-ink/20 bg-[#f7f1ea] px-5 py-6 sm:px-6 sm:py-7"
+      className="mx-auto mt-8 flex w-full max-w-lg flex-col gap-4 rounded-[1.05rem] border border-ink/20 bg-[#fffbf3] px-5 py-6 sm:px-6 sm:py-7"
     >
       <div className="flex items-center justify-between gap-4">
         <span className="flex min-w-0 items-center gap-3">
@@ -187,13 +187,15 @@ function UploadingProjects({ reduce }: { reduce: boolean | null }) {
   );
 }
 
-function ProjectCard({
+export function ProjectCard({
   project,
-  filter,
+  filter = "All",
+  href,
   onOpen,
 }: {
   project: PortfolioProject;
-  filter: string;
+  filter?: string;
+  href?: string;
   onOpen: () => void;
 }) {
   const image = project.coverImage;
@@ -203,9 +205,10 @@ function ProjectCard({
       <Link
         id={`project-card-${project.slug}`}
         href={
-          filter === "All"
+          href ??
+          (filter === "All"
             ? `/portfolio/${project.slug}`
-            : `/portfolio/${project.slug}?category=${encodeURIComponent(filter)}`
+            : `/portfolio/${project.slug}?category=${encodeURIComponent(filter)}`)
         }
         scroll={false}
         onClick={onOpen}

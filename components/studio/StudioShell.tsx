@@ -5,7 +5,7 @@ import { StudioNav } from "@/components/studio/StudioNav";
 
 export function StudioShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh bg-[#f4f1ec] text-[#1c120e]" style={{ colorScheme: "light" }}>
+    <div className="min-h-dvh bg-[#fffbf3] text-[#1c120e]" style={{ colorScheme: "light" }}>
       <div className="mx-auto flex min-h-dvh w-full max-w-[1600px] flex-col lg:flex-row">
         <aside className="flex shrink-0 flex-col bg-[#2e211c] text-[#f7f1ea] lg:sticky lg:top-0 lg:h-dvh lg:w-60">
           <div className="px-5 pt-5 pb-3 lg:pt-6 lg:pb-4">

@@ -3,7 +3,9 @@ import { AboutHeroBleed, AboutProfile } from "@/components/about/AboutProfile";
 import { InternalCTA } from "@/components/internal/InternalCTA";
 import { InternalFooter } from "@/components/internal/InternalFooter";
 import { InternalPageLayout } from "@/components/internal/InternalPageLayout";
+import { ProjectDetail } from "@/components/portfolio/ProjectDetail";
 import { aboutCopy, aboutMeta, aboutProfile } from "@/data/about";
+import { publicPortfolioFilters } from "@/data/portfolio";
 import { getPublicAbout } from "@/lib/content/about";
 import { getPublicCta } from "@/lib/content/cta";
 import { getPublishedProjects } from "@/lib/content/portfolio";
@@ -25,7 +27,13 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function AboutRoute() {
+export default async function AboutRoute({
+  searchParams,
+}: {
+  searchParams: Promise<{ work?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const workSlug = typeof params.work === "string" ? params.work : undefined;
   const [about, site, projects, cta] = await Promise.all([
     getPublicAbout(),
     getPublicSite(),
@@ -47,49 +55,82 @@ export default async function AboutRoute() {
       url: profileUrl,
       jobTitle: aboutProfile.title,
       description:
-        "Ugandan multidisciplinary designer and software developer working across graphic design, branding, web development and digital products.",
+        "Multidisciplinary designer and software developer working across graphic design, branding, web development and digital products.",
       ...(image ? { image: publicAssetUrl(site.url, image.src) } : {}),
       sameAs,
       alumniOf: {
         "@type": "CollegeOrUniversity",
         name: aboutProfile.education.school,
       },
-      hasCredential: {
-        "@type": "EducationalOccupationalCredential",
-        credentialCategory: "degree",
-        name: aboutProfile.education.credential,
-        recognizedBy: {
-          "@type": "CollegeOrUniversity",
-          name: aboutProfile.education.school,
+      hasCredential: [
+        {
+          "@type": "EducationalOccupationalCredential",
+          credentialCategory: "degree",
+          name: aboutProfile.education.credential,
+          recognizedBy: {
+            "@type": "CollegeOrUniversity",
+            name: aboutProfile.education.school,
+          },
+          dateCreated: "2026-02",
         },
-        dateCreated: "2026-02",
-      },
+        ...aboutProfile.credentials
+          .filter((item) => item.published && item.completed)
+          .map((item) => ({
+            "@type": "EducationalOccupationalCredential",
+            name: item.name,
+            recognizedBy: {
+              "@type": "Organization",
+              name: item.issuer,
+            },
+            ...(item.credentialUrl ? { url: item.credentialUrl } : {}),
+            ...(item.credentialId ? { credentialId: item.credentialId } : {}),
+            ...(item.issueDate ? { dateCreated: item.issueDate } : {}),
+          })),
+      ],
     },
   };
 
+  const workIndex = workSlug ? projects.findIndex((item) => item.slug === workSlug) : -1;
+  const opened = workIndex >= 0 ? projects[workIndex] : null;
+  const previous = opened ? projects[(workIndex - 1 + projects.length) % projects.length] ?? opened : null;
+  const next = opened ? projects[(workIndex + 1) % projects.length] ?? opened : null;
+
   return (
+    <>
     <InternalPageLayout
       section="about"
       bleed={image ? <AboutHeroBleed image={image} /> : null}
     >
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20 split:pt-8">
-        <AboutProfile
-          image={image}
-          socials={site.socials}
-          callHref={site.callHref}
-          projects={projects.slice(0, 4)}
-        />
-        <InternalCTA
-          section="about"
-          heading={projectCta.heading}
-          body={cta?.body ?? about.content?.ctaText ?? aboutCopy.ctaBody}
-          label={projectCta.label}
-          href={cta?.buttonHref ?? about.content?.ctaButtonHref ?? "/contact"}
-        />
-        <InternalFooter />
+        <AboutProfile socials={site.socials} callHref={site.callHref} projects={projects} />
+        <div className="about-sheet-continue">
+          <InternalCTA
+            section="about"
+            heading={projectCta.heading}
+            body={cta?.body ?? about.content?.ctaText ?? aboutCopy.ctaBody}
+            label={projectCta.label}
+            href={cta?.buttonHref ?? about.content?.ctaButtonHref ?? "/contact"}
+          />
+          <InternalFooter />
+        </div>
       </div>
     </InternalPageLayout>
+    {opened && previous && next ? (
+      <ProjectDetail
+        source="about"
+        project={opened}
+        previous={{ slug: previous.slug, title: previous.title }}
+        next={{ slug: next.slug, title: next.title }}
+        categories={[...publicPortfolioFilters]}
+        contact={{
+          profiles: site.socials,
+          callHref: site.callHref,
+        }}
+        ctaHref={cta?.buttonHref ?? about.content?.ctaButtonHref ?? "/contact"}
+      />
+    ) : null}
+    </>
   );
 }
 

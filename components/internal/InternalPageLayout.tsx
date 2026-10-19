@@ -19,7 +19,10 @@ export function InternalPageLayout({
   const reduce = useReducedMotion();
 
   return (
-    <div id="internal-page" className="relative min-h-dvh bg-[#f6f3ef] text-ink">
+    <div
+      id="internal-page"
+      className={`relative min-h-dvh text-ink ${bleed ? "bg-transparent" : "bg-[#fffbf3]"}`}
+    >
       {bleed}
       <SectionMobileHeader section={section} />
       <div className="relative z-10 split:flex split:items-start split:gap-8 split:px-5 split:py-[1.125rem]">

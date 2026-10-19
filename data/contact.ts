@@ -8,7 +8,7 @@ export const contactCopy = {
   subheading: "If you made it this far, we should probably talk.",
   detailsHeading: "The practical part",
   formHeading: "Write it down",
-  socialHeading: "Elsewhere on the Internet",
+  socialHeading: "Elsewhere on the internet",
   locationNote: "No map embed. The city is the point.",
   sendLabel: "Send It My Way",
   pendingNote: "Sending isn't connected yet. Filling this in will not deliver a message.",

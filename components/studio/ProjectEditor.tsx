@@ -137,7 +137,7 @@ export function ProjectEditor({
 
   return (
     <div className="mx-auto grid w-full max-w-[68rem] gap-8">
-      <div className="sticky top-0 z-30 -mx-5 border-b border-[#1c120e]/10 bg-[#f4f1ec]/95 px-5 py-4 backdrop-blur-sm sm:-mx-8 sm:px-8">
+      <div className="sticky top-0 z-30 -mx-5 border-b border-[#1c120e]/10 bg-[#fffbf3]/95 px-5 py-4 backdrop-blur-sm sm:-mx-8 sm:px-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="truncate text-3xl font-semibold tracking-tight sm:text-4xl">{title || "Untitled project"}</h1>

@@ -52,7 +52,7 @@ export const capabilityPackages = [
   },
   {
     name: "Digital",
-    items: ["Web design", "UI/UX", "Product design", "Design systems"],
+    items: ["Web design", "UI · UX", "Product design", "Design systems"],
   },
 ] as const;
 

@@ -1,6 +1,6 @@
 export const site = {
   name: "edrisa",
-  title: "edrisa — Creative Director & Brand Designer",
+  title: "edrisa · Creative Director & Brand Designer",
   description:
     "Portfolio of edrisa, a creative director and brand designer. Identity, brand work, and selected projects.",
   url: "https://edrisa.studio",
@@ -14,7 +14,7 @@ export const site = {
 } as const;
 
 /**
- * WhatsApp uses https://wa.me/<digits> — country code and number only, no plus sign or spaces.
+ * WhatsApp uses https://wa.me/<digits>: country code and number only, no plus sign or spaces.
  */
 export const socialLinks = {
   behance: "https://www.behance.net/kasibanteedrisa1",

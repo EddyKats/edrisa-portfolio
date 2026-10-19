@@ -25,7 +25,7 @@ export default async function StudioSignInPage({
   const denied = Boolean(session?.user) || error === "AccessDenied";
 
   return (
-    <main className="grid min-h-dvh place-items-center bg-[#f4f1ec] px-6 text-[#1c120e]" style={{ colorScheme: "light" }}>
+    <main className="grid min-h-dvh place-items-center bg-[#fffbf3] px-6 text-[#1c120e]" style={{ colorScheme: "light" }}>
       <section className="w-full max-w-md rounded-2xl bg-white px-6 py-8 shadow-[0_16px_50px_rgba(28,18,14,0.08)]">
         <p className="text-xs tracking-[0.18em] text-[#1c120e]/50 uppercase">Edrisa</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Studio</h1>
@@ -70,7 +70,7 @@ export default async function StudioSignInPage({
           )
         ) : (
           <p className="mt-6 text-sm leading-relaxed text-[#1c120e]/70">
-            GitHub sign-in is not configured yet. Add AUTH_SECRET, AUTH_GITHUB_ID, and AUTH_GITHUB_SECRET to .env.local.
+            GitHub sign in is not configured yet. Add AUTH_SECRET, AUTH_GITHUB_ID, and AUTH_GITHUB_SECRET to .env.local.
           </p>
         )}
       </section>

@@ -15,7 +15,7 @@ export function PortfolioScreen({
 }) {
   return (
     <InternalPageLayout section="portfolio">
-      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20">
+      <div className="internal-frame px-5 pt-14 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:px-8 sm:pt-20">
         <InternalTitle>
           <span className="block">{portfolioCopy.title}</span>
           <span className="block font-light">{portfolioCopy.titleLine}</span>

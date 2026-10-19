@@ -102,7 +102,7 @@ export default async function AboutRoute({
       bleed={image ? <AboutHeroBleed image={image} /> : null}
     >
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20 split:pt-8">
+      <div className="internal-frame px-5 pt-14 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:px-8 sm:pt-20 split:pt-8">
         <AboutProfile socials={site.socials} callHref={site.callHref} projects={projects} />
         <div className="about-sheet-continue">
           <InternalCTA

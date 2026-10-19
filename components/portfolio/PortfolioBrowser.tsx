@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -45,6 +45,17 @@ function isFilter(value: string | null, categories: string[]): value is string {
   return Boolean(value && categories.includes(value));
 }
 
+function projectsForFilter(projects: PortfolioProject[], filter: string) {
+  if (filter === "All") return projects;
+  const matched = projects.filter(
+    (project) => project.category === filter || project.categories?.includes(filter),
+  );
+  return [
+    ...matched.filter((project) => project.category === filter),
+    ...matched.filter((project) => project.category !== filter),
+  ];
+}
+
 export const portfolioSizeClass: Record<ProjectSize, string> = {
   large: "h-[26rem] sm:h-[30rem] xl:h-auto xl:row-span-2",
   wide: "h-[17rem] sm:col-span-2 xl:col-span-2 xl:h-auto",
@@ -59,7 +70,9 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
   const searchParams = useSearchParams();
   const requested = searchParams.get("category");
   const filter = isFilter(requested, [...publicPortfolioFilters]) ? requested : "All";
-  const visible = filter === "All" ? projects : projects.filter((project) => project.categories?.includes(filter));
+  const visible = projectsForFilter(projects, filter);
+  const skipReveal = useRef(true);
+  const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (pathname !== "/portfolio") return;
@@ -72,6 +85,18 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
       sessionStorage.removeItem(focusKey);
     });
   }, [pathname]);
+
+  useEffect(() => {
+    if (skipReveal.current) {
+      skipReveal.current = false;
+      return;
+    }
+    const work = document.getElementById("portfolio-work");
+    if (!work) return;
+    const offset = barRef.current?.getBoundingClientRect().height ?? 0;
+    const top = window.scrollY + work.getBoundingClientRect().top - offset - 8;
+    window.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
+  }, [filter, reduce]);
 
   function choose(category: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -90,11 +115,14 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
 
   return (
     <div className="mt-6 sm:mt-7">
-      <div className="filter-stick sticky top-[5.5rem] z-30 -mx-5 px-5 py-2 sm:-mx-8 sm:px-8 split:top-[1.125rem] split:mx-0 split:px-0">
+      <div
+        ref={barRef}
+        className="filter-stick sticky top-[5.5rem] z-30 -mx-5 px-5 py-2 sm:-mx-8 sm:px-8 split:top-0 split:-mx-8 split:px-8 split:pt-5 split:pb-4"
+      >
       <div
         role="group"
         aria-label="Filter projects"
-        className="filter-row mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-2 gap-y-1.5"
+        className="filter-row mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-2.5 gap-y-2"
       >
         {publicPortfolioFilters.map((category) => {
           const selected = filter === category;
@@ -120,13 +148,16 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
       {visible.length === 0 ? (
         <UploadingProjects reduce={reduce} />
       ) : (
-        <ul className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 xl:auto-rows-[18rem]">
+        <ul
+          id="portfolio-work"
+          className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 xl:auto-rows-[18rem]"
+        >
           <AnimatePresence mode="popLayout">
             {visible.map((project) => (
               <motion.li
-                key={project.slug}
+                key={`${filter}-${project.slug}`}
                 className={portfolioSizeClass[project.size]}
-                layout={reduce ? false : true}
+                layout={false}
                 initial={reduce ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={reduce ? { opacity: 0 } : { opacity: 0 }}
@@ -162,6 +193,7 @@ function UploadingProjects({ reduce }: { reduce: boolean | null }) {
 
   return (
     <div
+      id="portfolio-work"
       role="status"
       className="mx-auto mt-8 flex w-full max-w-lg flex-col gap-4 rounded-[1.05rem] border border-ink/20 bg-[#fffbf3] px-5 py-6 sm:px-6 sm:py-7"
     >

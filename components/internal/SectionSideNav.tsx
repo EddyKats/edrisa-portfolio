@@ -26,11 +26,11 @@ export function SectionSideNav({ section }: { section: NavId }) {
   return (
     <aside
       aria-label={current.title}
-      className="section-side sticky top-[1.125rem] hidden h-[calc(100dvh-2.25rem)] shrink-0 self-start split:block"
+      className="section-side pointer-events-none hidden shrink-0 split:block"
     >
       <ViewTransition name={current.transitionName}>
         <motion.div
-          className={`relative flex h-full flex-col overflow-hidden rounded-2xl px-6 pt-5 pb-6 text-white ${current.surfaceClass}`}
+          className={`pointer-events-auto fixed top-[1.125rem] right-5 z-30 flex h-[calc(100dvh-2.25rem)] w-[clamp(320px,24vw,768px)] flex-col overflow-hidden rounded-2xl px-6 pt-5 pb-6 text-white ${current.surfaceClass}`}
           initial={reduce ? false : { opacity: 0, x: 18 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: reduce ? 0 : 0.08, ease: internalEase }}

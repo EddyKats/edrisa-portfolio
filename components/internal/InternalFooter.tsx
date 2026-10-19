@@ -16,7 +16,7 @@ export async function InternalFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <>
+    <div className="internal-end mt-auto">
       <footer className="site-footer mt-16 text-ink">
         <div className="footer-top">
           <p className="footer-kicker">Elsewhere on the internet</p>
@@ -44,7 +44,7 @@ export async function InternalFooter() {
           </div>
         </div>
       </footer>
-      <p className="copyright-line mt-10 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] text-[0.875rem] font-medium text-ink sm:mt-14 md:text-[1.15rem]">
+      <p className="copyright-line mt-8 text-[0.875rem] font-medium text-ink sm:mt-10 md:text-[1.15rem]">
         <span className="sr-only">© {year} Edrisa. All rights reserved</span>
         <span aria-hidden="true" className="copyright-visible">
           <span className="font-bold">© {year}</span>
@@ -55,7 +55,7 @@ export async function InternalFooter() {
           <span className="copyright-tail">All rights reserved</span>
         </span>
       </p>
-    </>
+    </div>
   );
 }
 

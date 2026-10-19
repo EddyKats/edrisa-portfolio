@@ -27,7 +27,7 @@ export default async function ContactRoute() {
 
   return (
     <InternalPageLayout section="contact">
-      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20">
+      <div className="internal-frame px-5 pt-14 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:px-8 sm:pt-20">
         <header className="contact-intro">
           <h1 className="about-name font-display tracking-tight">
             <span className="block">{heading.title}</span>

@@ -4,12 +4,12 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { ArrowRight, Briefcase, Check, Link as LinkIcon, Tags, Type } from "lucide-react";
 import type { ProjectActionState } from "@/app/studio/(app)/projects/actions";
+import { controlClass } from "@/components/studio/editor";
 import { slugify } from "@/lib/studio/slug";
 
-const panel = "rounded-2xl bg-white px-5 py-6 sm:px-7 sm:py-7";
-const heading = "text-2xl font-semibold tracking-tight";
-const control =
-  "mt-2 w-full rounded-xl border border-[#1c120e]/12 bg-[#fffdfb] px-3 py-2.5 text-base text-[#1c120e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c]";
+const panel = "studio-card studio-panel";
+const heading = "text-xl font-extrabold tracking-tight";
+const control = `mt-2 ${controlClass}`;
 
 export function ProjectCreateForm({
   action,
@@ -84,9 +84,7 @@ export function ProjectCreateForm({
             return (
               <label
                 key={category.id}
-                className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#2e211c] ${
-                  checked ? "border-[#2e211c] bg-[#2e211c] text-[#f7f1ea]" : "border-[#1c120e]/15 bg-[#fffdfb] text-[#1c120e]"
-                }`}
+                className={`studio-choice${checked ? " is-on" : ""}`}
               >
                 <input
                   type="checkbox"
@@ -150,12 +148,10 @@ function StatusChoice({
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className={`rounded-xl border px-4 py-3 text-left ${
-        selected ? "border-[#2e211c] bg-[#2e211c] text-[#f7f1ea]" : "border-[#1c120e]/12 bg-[#fffdfb]"
-      }`}
+      className={`studio-choice text-left${selected ? " is-on" : ""}`}
     >
       <span className="block text-sm font-semibold">{label}</span>
-      <span className={`mt-1 block text-xs ${selected ? "text-[#f7f1ea]/75" : "text-[#1c120e]/55"}`}>{detail}</span>
+      <span className={`mt-1 block text-xs ${selected ? "text-white/75" : "text-[#8a8aa8]"}`}>{detail}</span>
     </button>
   );
 }
@@ -166,7 +162,7 @@ function CreateButton() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex w-fit items-center gap-2 rounded-full bg-[#2e211c] px-5 py-3 text-sm font-semibold text-[#f7f1ea] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c] disabled:opacity-60"
+      className="studio-btn-primary"
     >
       {pending ? "Saving..." : "Create Project & Add Presentation"}
       {pending ? null : <ArrowRight className="size-4" aria-hidden="true" />}

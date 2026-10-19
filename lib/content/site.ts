@@ -12,7 +12,10 @@ export async function getPublicSite(): Promise<PublicSite> {
   const db = getDb();
   const [settings, home, contact] = await Promise.all([
     db.siteSettings.findUnique({ where: { id: "site" } }),
-    db.homeContent.findUnique({ where: { id: "home" } }),
+    db.homeContent.findUnique({
+      where: { id: "home" },
+      include: { portraits: { where: { published: true }, orderBy: [{ sortOrder: "asc" }, { id: "asc" }] } },
+    }),
     db.contactContent.findUnique({ where: { id: "contact" }, select: { phone: true } }),
   ]);
 
@@ -24,6 +27,8 @@ export async function getPublicSite(): Promise<PublicSite> {
       description: site.description,
       url: site.url,
       portraitSrc: site.portraitSrc,
+      portraits: [site.portraitSrc],
+      portraitMode: "single",
       portraitWidth: site.portraitWidth,
       portraitHeight: site.portraitHeight,
       logoSrc: site.logoSrc,
@@ -36,8 +41,10 @@ export async function getPublicSite(): Promise<PublicSite> {
     };
   }
 
-  const portraitSrc = home?.portraitUrl || settings.homepagePortraitUrl || site.portraitSrc;
+  const sequence = home?.portraitMode === "sequence" ? home.portraits.map((item) => item.imageUrl).filter(Boolean) : [];
+  const portraitSrc = sequence[0] || home?.portraitUrl || settings.homepagePortraitUrl || site.portraitSrc;
   const logoSrc = home?.logoUrl || settings.logoUrl || site.logoSrc;
+  const portraitMode = home?.portraitMode === "sequence" && sequence.length > 0 ? "sequence" : "single";
 
   return {
     name: settings.siteName,
@@ -45,6 +52,8 @@ export async function getPublicSite(): Promise<PublicSite> {
     description: settings.defaultSeoDescription || site.description,
     url: settings.siteUrl,
     portraitSrc,
+    portraits: portraitMode === "sequence" ? sequence : [portraitSrc],
+    portraitMode,
     portraitWidth: site.portraitWidth,
     portraitHeight: site.portraitHeight,
     logoSrc,

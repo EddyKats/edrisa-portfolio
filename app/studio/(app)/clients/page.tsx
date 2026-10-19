@@ -1,4 +1,5 @@
 import { ClientsStudio } from "@/components/studio/ClientsStudio";
+import { StudioPageHead } from "@/components/studio/StudioPageHead";
 import { listStudioCatalog } from "@/lib/content/catalog";
 
 export default async function StudioClientsPage() {
@@ -6,11 +7,8 @@ export default async function StudioClientsPage() {
 
   return (
     <section>
-      <h1 className="text-3xl font-semibold tracking-tight">Clients</h1>
-      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#1c120e]/70">
-        Logos appear on Services after a client is published. Nothing is invented here.
-      </p>
-      <div className="mt-8">
+      <StudioPageHead title="Clients" note="Published client logos appear in the Services marquee, in this order." />
+      <div>
         <ClientsStudio
           clients={clients.map((client) => ({
             id: client.id,

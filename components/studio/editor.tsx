@@ -9,26 +9,26 @@ import type { StudioState } from "@/lib/studio/form";
 import { maxImageLabel, type ContentAssetScope } from "@/lib/storage/validation";
 
 export const controlClass =
-  "w-full min-w-0 rounded-xl border border-[#1c120e]/15 bg-white px-3 py-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c]";
+  "w-full min-w-0 rounded-xl border border-[#ececf6] bg-white px-3 py-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6b4dff]";
 
 export function Status({ state }: { state: StudioState }) {
   if (state.error) {
     return (
-      <p className="rounded-xl bg-[#8a3b2b]/10 px-4 py-3 text-sm text-[#8a3b2b]" role="alert">
+      <p className="studio-note is-error" role="alert">
         {state.error}
       </p>
     );
   }
   if (state.warning) {
     return (
-      <p className="rounded-xl bg-[#8a3b2b]/10 px-4 py-3 text-sm text-[#8a3b2b]" role="status">
+      <p className="studio-note is-error" role="status">
         {state.warning}
       </p>
     );
   }
   if (state.ok) {
     return (
-      <p className="rounded-xl bg-[#2e211c]/10 px-4 py-3 text-sm text-[#2e211c]" role="status">
+      <p className="studio-note is-ok" role="status">
         Saved.
       </p>
     );
@@ -36,14 +36,10 @@ export function Status({ state }: { state: StudioState }) {
   return null;
 }
 
-export function SaveButton({ label = "Save" }: { label?: string }) {
+export function SaveButton({ label = "Save", tone = "primary" }: { label?: string; tone?: "primary" | "danger" }) {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-full bg-[#2e211c] px-4 py-2 text-sm font-semibold text-[#f7f1ea] disabled:opacity-60"
-    >
+    <button type="submit" disabled={pending} className={tone === "danger" ? "studio-btn-danger" : "studio-btn-primary"}>
       {pending ? "Saving..." : label}
     </button>
   );
@@ -65,11 +61,11 @@ export function OrderButtons({
   }
 
   return (
-    <div className="flex gap-2">
-      <button type="button" disabled={pending} className="text-sm underline-offset-2 hover:underline" onClick={() => void move("up")}>
+    <div className="studio-order">
+      <button type="button" disabled={pending} onClick={() => void move("up")}>
         Up
       </button>
-      <button type="button" disabled={pending} className="text-sm underline-offset-2 hover:underline" onClick={() => void move("down")}>
+      <button type="button" disabled={pending} onClick={() => void move("down")}>
         Down
       </button>
     </div>
@@ -77,11 +73,7 @@ export function OrderButtons({
 }
 
 export function PublishBadge({ published }: { published: boolean }) {
-  return (
-    <span className="rounded-full bg-[#1c120e]/8 px-2 py-0.5 text-xs font-semibold tracking-wide uppercase">
-      {published ? "Published" : "Draft"}
-    </span>
-  );
+  return <span className={published ? "studio-pill is-live" : "studio-pill"}>{published ? "Published" : "Draft"}</span>;
 }
 
 export function ImageField({
@@ -140,23 +132,22 @@ export function ImageField({
   }
 
   return (
-    <div className="grid gap-3">
-      <p className="text-sm font-semibold">{label}</p>
+    <div className="studio-card studio-media-field">
+      <p className="studio-media-label">{label}</p>
       <Status state={state} />
       {url ? (
-        <div className="relative h-48 overflow-hidden rounded-xl bg-[#1c120e]/5">
+        <div className="studio-media-preview">
           <Image src={url} alt="" fill className="object-contain" sizes="480px" />
         </div>
       ) : (
-        <p className="text-sm text-[#1c120e]/60">No image yet.</p>
+        <p className="studio-empty">No image yet.</p>
       )}
-      <label className="text-sm">
+      <label className="studio-file">
         <span className="sr-only">{url ? `Replace ${label}` : `Upload ${label}`}</span>
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp,image/avif"
           disabled={busy}
-          className="block w-full text-sm"
           onChange={(event) => {
             const file = event.target.files?.[0];
             event.target.value = "";
@@ -165,17 +156,17 @@ export function ImageField({
         />
       </label>
       {confirmReplace && url ? (
-        <label className="flex items-center gap-2 text-sm">
+        <label className="studio-check">
           <input type="checkbox" checked={allowReplace} onChange={(event) => setAllowReplace(event.target.checked)} />
           Replace the current logo
         </label>
       ) : null}
-      <p className="text-xs text-[#1c120e]/55">JPEG, PNG, WebP, or AVIF. {maxImageLabel} maximum. Video is not supported.</p>
+      <p className="studio-help">JPEG, PNG, WebP, or AVIF. {maxImageLabel} maximum. Video is not supported.</p>
       {remove && url ? (
         confirming ? (
           <button
             type="button"
-            className="justify-self-start text-sm text-[#8a3b2b]"
+            className="studio-btn-danger"
             onClick={() => {
               setConfirming(false);
               void remove().then(finish);
@@ -184,7 +175,7 @@ export function ImageField({
             Confirm remove
           </button>
         ) : (
-          <button type="button" className="justify-self-start text-sm text-[#8a3b2b]" onClick={() => setConfirming(true)}>
+          <button type="button" className="studio-btn-ghost is-danger" onClick={() => setConfirming(true)}>
             Remove
           </button>
         )

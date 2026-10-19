@@ -47,10 +47,10 @@ function PublishButton({ published, tone }: { published: boolean; tone: "text" |
       disabled={pending}
       className={
         header
-          ? `inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c] disabled:opacity-60 ${
-              published ? "border border-[#2e211c]/20 bg-white" : "bg-[#2e211c] text-[#f7f1ea]"
-            }`
-          : "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c] disabled:opacity-60"
+          ? published
+            ? "studio-btn-ghost"
+            : "studio-btn-primary"
+          : "studio-btn-ghost"
       }
     >
       {header ? <Icon className="size-4" aria-hidden="true" /> : null}

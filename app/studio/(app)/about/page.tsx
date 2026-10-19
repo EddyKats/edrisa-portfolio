@@ -1,4 +1,5 @@
 import { AboutStudio } from "@/components/studio/AboutStudio";
+import { StudioPageHead } from "@/components/studio/StudioPageHead";
 import { dateField, getStudioAbout } from "@/lib/content/about";
 import { getPublicCta } from "@/lib/content/cta";
 
@@ -7,11 +8,11 @@ export default async function StudioAboutPage() {
 
   return (
     <section>
-      <h1 className="text-3xl font-semibold tracking-tight">About</h1>
-      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#1c120e]/70">
-        The page layout stays in code. Video is not supported for the feature area.
-      </p>
-      <div className="mt-8">
+      <StudioPageHead
+        title="About"
+        note="Bio, experience, SEO, and the call to action match the public About page. Layout stays in code."
+      />
+      <div>
         <AboutStudio
           content={{
             pageTitle: content.pageTitle,

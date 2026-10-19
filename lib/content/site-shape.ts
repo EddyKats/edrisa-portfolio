@@ -11,6 +11,8 @@ export type PublicSite = {
   description: string;
   url: string;
   portraitSrc: string;
+  portraits: string[];
+  portraitMode: "single" | "sequence";
   portraitWidth: number;
   portraitHeight: number;
   logoSrc: string;

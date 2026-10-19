@@ -36,17 +36,17 @@ export function ServicesStudio({
   cta: { heading: string; body: string; buttonLabel: string; buttonHref: string };
 }) {
   return (
-    <div className="grid max-w-2xl gap-10">
-      <section className="grid gap-4">
-        <h2 className="text-lg font-semibold">Services</h2>
-        {services.length === 0 ? <p className="text-sm text-[#1c120e]/60">No services yet.</p> : null}
+    <div className="studio-stack">
+      <section className="studio-stack">
+        <h2>Services</h2>
+        {services.length === 0 ? <p className="studio-empty">No services yet.</p> : null}
         {services.map((service) => (
           <ServiceForm key={service.id} service={service} />
         ))}
         <ServiceForm />
       </section>
-      <section className="grid gap-4 border-t border-[#1c120e]/10 pt-8">
-        <h2 className="text-lg font-semibold">Capability packages</h2>
+      <section className="studio-stack">
+        <h2>Capability packages</h2>
         {packages.map((entry) => (
           <PackageForm key={entry.id} entry={entry} />
         ))}
@@ -61,9 +61,9 @@ function ServiceForm({ service }: { service?: ServiceRow }) {
   const [state, action] = useActionState(saveServiceRecord, {});
   const [removeState, removeAction] = useActionState(removeService, {});
   return (
-    <div className="grid gap-3 rounded-2xl border border-[#1c120e]/10 p-4">
+    <div className="studio-card studio-form">
       <div className="flex items-center justify-between">
-        {service ? <PublishBadge published={service.published} /> : <p className="text-sm font-semibold">New service</p>}
+        {service ? <PublishBadge published={service.published} /> : <p>New service</p>}
         {service ? <OrderButtons action={(direction) => reorderService(service.id, direction)} /> : null}
       </div>
       <form action={action} className="grid gap-3">
@@ -72,7 +72,7 @@ function ServiceForm({ service }: { service?: ServiceRow }) {
         <Field name="title" label="Title" defaultValue={service?.title ?? ""} />
         <Field name="slug" label="Slug" defaultValue={service?.slug ?? ""} />
         <Area name="description" label="Description" defaultValue={service?.description ?? ""} />
-        <label className="grid gap-1 text-sm font-medium">
+        <label>
           Icon
           <select name="icon" defaultValue={service?.icon ?? "layers"} className={controlClass}>
             <option value="gem">Gem</option>
@@ -93,9 +93,9 @@ function PackageForm({ entry }: { entry?: PackageRow }) {
   const [removeState, removeAction] = useActionState(removePackage, {});
   const [itemState, itemAction] = useActionState(saveItem, {});
   return (
-    <div className="grid gap-3 rounded-2xl border border-[#1c120e]/10 p-4">
+    <div className="studio-card studio-form">
       <div className="flex items-center justify-between">
-        {entry ? <PublishBadge published={entry.published} /> : <p className="text-sm font-semibold">New package</p>}
+        {entry ? <PublishBadge published={entry.published} /> : <p>New package</p>}
         {entry ? <OrderButtons action={(direction) => reorderPackage(entry.id, direction)} /> : null}
       </div>
       <form action={action} className="grid gap-3">
@@ -129,7 +129,7 @@ function ItemForm({ packageId, item }: { packageId: string; item: ItemRow }) {
   const [state, action] = useActionState(saveItem, {});
   const [removeState, removeAction] = useActionState(removeItem, {});
   return (
-    <div className="grid gap-2 rounded-xl bg-[#1c120e]/4 p-3">
+    <div className="studio-nested">
       <div className="flex justify-end">
         <OrderButtons action={(direction) => reorderItem(item.id, direction)} />
       </div>
@@ -148,8 +148,8 @@ function ItemForm({ packageId, item }: { packageId: string; item: ItemRow }) {
 function CtaForm({ cta }: { cta: { heading: string; body: string; buttonLabel: string; buttonHref: string } }) {
   const [state, action] = useActionState(saveServicesCta, {});
   return (
-    <form action={action} className="grid gap-3 border-t border-[#1c120e]/10 pt-8">
-      <h2 className="text-lg font-semibold">Services call to action</h2>
+    <form action={action} className="studio-card studio-form">
+      <h2>Services call to action</h2>
       <Status state={state} />
       <Field name="heading" label="Heading" defaultValue={cta.heading} />
       <Area name="body" label="Body" defaultValue={cta.body} />
@@ -174,14 +174,14 @@ function DeleteForm({
       <input type="hidden" name="id" value={id} />
       <Status state={state} />
       <input name="confirm" placeholder="Type delete" className={controlClass} />
-      <SaveButton label="Delete" />
+      <SaveButton label="Delete" tone="danger" />
     </form>
   );
 }
 
 function Field({ name, label, defaultValue }: { name: string; label: string; defaultValue: string }) {
   return (
-    <label className="grid min-w-0 flex-1 gap-1 text-sm font-medium">
+    <label className="min-w-0 flex-1">
       {label}
       <input name={name} defaultValue={defaultValue} className={controlClass} />
     </label>
@@ -190,7 +190,7 @@ function Field({ name, label, defaultValue }: { name: string; label: string; def
 
 function Area({ name, label, defaultValue }: { name: string; label: string; defaultValue: string }) {
   return (
-    <label className="grid gap-1 text-sm font-medium">
+    <label>
       {label}
       <textarea name={name} defaultValue={defaultValue} rows={3} className={controlClass} />
     </label>
@@ -199,7 +199,7 @@ function Area({ name, label, defaultValue }: { name: string; label: string; defa
 
 function Published({ checked }: { checked: boolean }) {
   return (
-    <label className="flex items-center gap-2 text-sm">
+    <label className="studio-check">
       <input type="checkbox" name="published" defaultChecked={checked} />
       Published
     </label>

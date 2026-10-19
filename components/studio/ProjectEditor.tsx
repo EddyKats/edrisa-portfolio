@@ -17,6 +17,7 @@ import {
   Type,
 } from "lucide-react";
 import type { ProjectActionState } from "@/app/studio/(app)/projects/actions";
+import { controlClass } from "@/components/studio/editor";
 import { ProjectArtwork } from "@/components/studio/ProjectArtwork";
 import { ProjectCredits } from "@/components/studio/ProjectCredits";
 import { DeleteProjectButton } from "@/components/studio/DeleteProjectButton";
@@ -24,10 +25,9 @@ import { PublishProjectButton } from "@/components/studio/PublishProjectButton";
 import { softwareRegistry, type SoftwareId } from "@/data/software";
 import { slugify } from "@/lib/studio/slug";
 
-const section = "scroll-mt-44 rounded-2xl border border-[#1c120e]/10 bg-white px-6 py-7 sm:px-8 sm:py-8";
-const heading = "text-2xl font-semibold tracking-tight";
-const control =
-  "mt-2 w-full rounded-xl border border-[#1c120e]/12 bg-[#fffdfb] px-3 py-3 text-base text-[#1c120e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c]";
+const section = "studio-card studio-panel scroll-mt-44";
+const heading = "text-xl font-extrabold tracking-tight";
+const control = `mt-2 ${controlClass}`;
 const formId = "project-form";
 
 const sizes = [
@@ -137,18 +137,12 @@ export function ProjectEditor({
 
   return (
     <div className="mx-auto grid w-full max-w-[68rem] gap-8">
-      <div className="sticky top-0 z-30 -mx-5 border-b border-[#1c120e]/10 bg-[#fffbf3]/95 px-5 py-4 backdrop-blur-sm sm:-mx-8 sm:px-8">
+      <div className="studio-sticky-bar">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="truncate text-3xl font-semibold tracking-tight sm:text-4xl">{title || "Untitled project"}</h1>
             <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#1c120e]/60">
-              <span
-                className={
-                  project.published
-                    ? "rounded-full bg-[#2e211c] px-2.5 py-1 text-xs font-semibold tracking-wide text-[#f7f1ea] uppercase"
-                    : "rounded-full bg-[#1c120e]/10 px-2.5 py-1 text-xs font-semibold tracking-wide text-[#1c120e] uppercase"
-                }
-              >
+              <span className={project.published ? "studio-pill is-live" : "studio-pill"}>
                 {project.published ? "Published" : "Draft"}
               </span>
               <span>Updated {project.updatedLabel}</span>
@@ -160,7 +154,7 @@ export function ProjectEditor({
                 href={`/portfolio/${project.slug}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c]"
+                className="studio-btn-ghost"
               >
                 <Eye className="size-4" aria-hidden="true" />
                 View project
@@ -180,9 +174,7 @@ export function ProjectEditor({
               type="button"
               onClick={() => jump(id)}
               aria-current={active === id ? "true" : undefined}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c] ${
-                active === id ? "bg-[#2e211c] text-[#f7f1ea]" : "text-[#1c120e]/70 hover:bg-black/5"
-              }`}
+              className={`studio-tab${active === id ? " is-on" : ""}`}
             >
               {label}
             </button>
@@ -274,9 +266,7 @@ export function ProjectEditor({
                 return (
                   <label
                     key={category.id}
-                    className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#2e211c] ${
-                      checked ? "border-[#2e211c] bg-[#2e211c] text-[#f7f1ea]" : "border-[#1c120e]/15 bg-[#fffdfb]"
-                    }`}
+                    className={`studio-choice${checked ? " is-on" : ""}`}
                   >
                     <input
                       form={formId}
@@ -326,15 +316,13 @@ export function ProjectEditor({
             {sizes.map(([value, label, detail, mark]) => (
               <label
                 key={value}
-                className={`flex min-h-28 cursor-pointer flex-col items-start justify-between rounded-xl border px-4 py-3 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#2e211c] ${
-                  size === value ? "border-[#2e211c] bg-[#2e211c] text-[#f7f1ea]" : "border-[#1c120e]/15 bg-[#fffdfb]"
-                }`}
+                className={`studio-choice min-h-28 flex-col items-start justify-between${size === value ? " is-on" : ""}`}
               >
                 <input form={formId} type="radio" name="size" value={value} checked={size === value} onChange={() => setSize(value)} className="sr-only" />
-                <span className={`rounded-md ${mark} ${size === value ? "bg-[#f7f1ea]" : "bg-[#2e211c]/80"}`} aria-hidden="true" />
+                <span className={`rounded-md ${mark} ${size === value ? "bg-white" : "bg-[#6b4dff]/80"}`} aria-hidden="true" />
                 <span>
                   <span className="block text-sm font-semibold">{label}</span>
-                  <span className={`mt-1 block text-xs ${size === value ? "text-[#f7f1ea]/75" : "text-[#1c120e]/55"}`}>{detail}</span>
+                  <span className={`mt-1 block text-xs ${size === value ? "text-white/75" : "text-[#8a8aa8]"}`}>{detail}</span>
                 </span>
               </label>
             ))}
@@ -349,9 +337,9 @@ export function ProjectEditor({
           <span className="mt-2 font-normal text-[#1c120e]/55">Lower numbers appear earlier in Selected Works.</span>
         </label>
         <label
-          className="mt-6 flex max-w-md cursor-pointer items-start gap-3 rounded-xl border border-[#1c120e]/15 bg-[#fffdfb] px-4 py-3 text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#2e211c]"
+          className="studio-choice mt-6 max-w-md items-start"
         >
-          <input form={formId} type="checkbox" name="featured" defaultChecked={project.featured} className="mt-0.5 size-4 accent-[#2e211c]" />
+          <input form={formId} type="checkbox" name="featured" defaultChecked={project.featured} className="mt-0.5 size-4 accent-[#6b4dff]" />
           <span>
             <span className="flex items-center gap-2 font-medium">
               <Star className="size-4 text-[#1c120e]/45" aria-hidden="true" />
@@ -383,14 +371,14 @@ export function ProjectEditor({
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {services.map((service) => (
                 <li key={service.id}>
-                  <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-[#1c120e]/12 bg-[#fffdfb] px-4 py-3 text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#2e211c]">
+                  <label className="studio-choice">
                     <input
                       form={formId}
                       type="checkbox"
                       name="serviceId"
                       value={service.id}
                       defaultChecked={selectedServiceIds.includes(service.id)}
-                      className="size-4 accent-[#2e211c]"
+                      className="size-4 accent-[#6b4dff]"
                     />
                     {service.title}
                     {service.published ? null : " (unpublished)"}
@@ -407,14 +395,14 @@ export function ProjectEditor({
                 const Icon = known?.Icon;
                 return (
                   <li key={tool.id}>
-                    <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-[#1c120e]/12 bg-[#fffdfb] px-4 py-3 text-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#2e211c]">
+                    <label className="studio-choice">
                       <input
                         form={formId}
                         type="checkbox"
                         name="softwareId"
                         value={tool.id}
                         defaultChecked={selectedSoftwareIds.includes(tool.id)}
-                        className="size-4 accent-[#2e211c]"
+                        className="size-4 accent-[#6b4dff]"
                       />
                       {Icon ? <Icon className="size-5 shrink-0" aria-hidden="true" /> : null}
                       {known?.label ?? tool.name}
@@ -471,7 +459,7 @@ export function ProjectEditor({
 
 function SetupItem({ done, label }: { done: boolean; label: string }) {
   return (
-    <li className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 ${done ? "bg-[#2e211c] text-[#f7f1ea]" : "bg-white text-[#1c120e]/55"}`}>
+    <li className={`studio-pill${done ? " is-live" : ""}`}>
       {done ? <Check className="size-3.5" aria-hidden="true" /> : null}
       {label}
     </li>
@@ -530,7 +518,7 @@ function SaveButton({ saved, failed }: { saved: boolean; failed: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center gap-2 rounded-full bg-[#2e211c] px-4 py-2 text-sm font-semibold text-[#f7f1ea] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c] disabled:opacity-60"
+      className="studio-btn-primary"
     >
       {saved && !pending && !failed ? <Check className="size-4" aria-hidden="true" /> : <Save className="size-4" aria-hidden="true" />}
       {label}

@@ -15,7 +15,7 @@ export function SimpleForm({
 }) {
   const [state, formAction] = useActionState(action, {});
   return (
-    <form action={formAction} className="grid max-w-2xl gap-4">
+    <form action={formAction} className="studio-card studio-form">
       {title ? <h2 className="text-lg font-semibold">{title}</h2> : null}
       <Status state={state} />
       {fields.map((field) => (

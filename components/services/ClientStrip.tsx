@@ -1,14 +1,24 @@
 import Image from "next/image";
 import { serviceClientRows } from "@/data/clients";
 
-export function ClientStrip({ heading }: { heading: string }) {
+export function ClientStrip({
+  heading,
+  clients,
+}: {
+  heading: string;
+  clients?: { id: string; name: string; src: string }[];
+}) {
+  const listed = clients && clients.length > 0 ? clients : serviceClientRows.flat().map((client) => ({ id: client.id, name: client.name, src: client.src }));
+  const split = Math.ceil(listed.length / 2) || listed.length;
+  const rows = listed.length > 6 ? [listed.slice(0, split), listed.slice(split)] : [listed];
+
   return (
     <section aria-labelledby="services-places-title" className="services-block">
       <h2 id="services-places-title" className="about-chapter-title">
         {heading}
       </h2>
       <div className="client-marquee-wrap">
-        {serviceClientRows.map((row, index) => (
+        {rows.map((row, index) => (
           <div
             key={row[0]?.id ?? index}
             className={index % 2 === 1 ? "client-marquee client-marquee--reverse" : "client-marquee"}

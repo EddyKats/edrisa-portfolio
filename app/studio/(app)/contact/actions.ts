@@ -11,7 +11,7 @@ export async function saveContact(_state: StudioState, formData: FormData): Prom
     await saveContactContent({
       pageTitle: text(formData, "pageTitle"),
       subtitle: emptyToNull(text(formData, "subtitle")),
-      location: emptyToNull(text(formData, "location")),
+      location: null,
       email: emptyToNull(text(formData, "email")),
       phone: emptyToNull(text(formData, "phone")),
       formHeading: emptyToNull(text(formData, "formHeading")),

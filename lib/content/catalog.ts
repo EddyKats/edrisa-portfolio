@@ -7,7 +7,7 @@ import { slugify } from "@/lib/studio/slug";
 import { httpsUrlSchema } from "@/lib/studio/urls";
 
 const serviceIcons = ["gem", "zap", "layers"] as const;
-const surfaces = ["about", "services", "portfolio"] as const;
+const surfaces = ["about", "services", "portfolio", "contact"] as const;
 
 export async function getPublicServices() {
   const db = getDb();

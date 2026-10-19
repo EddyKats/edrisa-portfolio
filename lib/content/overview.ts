@@ -7,14 +7,17 @@ export async function getStudioOverview() {
   const [publishedProjects, draftProjects, services, clients, recentProjects] = await Promise.all([
     db.project.count({ where: { published: true } }),
     db.project.count({ where: { published: false } }),
-    db.service.count(),
-    db.client.count(),
+    db.service.count({ where: { published: true } }),
+    db.client.count({ where: { published: true } }),
     db.project.findMany({
       orderBy: { updatedAt: "desc" },
       take: 5,
-      select: { id: true, title: true, slug: true, published: true, updatedAt: true },
+      select: { id: true, title: true, slug: true, published: true, updatedAt: true, coverImageUrl: true },
     }),
   ]);
 
-  return { publishedProjects, draftProjects, services, clients, recentProjects };
+  const projectTotal = publishedProjects + draftProjects;
+  const publishedShare = projectTotal === 0 ? 0 : Math.round((publishedProjects / projectTotal) * 100);
+
+  return { publishedProjects, draftProjects, services, clients, recentProjects, publishedShare };
 }

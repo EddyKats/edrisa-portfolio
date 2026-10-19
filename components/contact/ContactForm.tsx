@@ -1,17 +1,16 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { contactCopy, projectTypes } from "@/data/contact";
+import { getNavItem } from "@/data/navigation";
+import { contactCopy, contactDetails, projectTypes } from "@/data/contact";
 
 type Field = "name" | "email" | "projectType" | "message";
 type Errors = Partial<Record<Field, string>>;
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const contactSurface = getNavItem("contact").surfaceClass;
 
-const fieldClass =
-  "mt-2 w-full rounded-xl border border-ink/15 bg-white px-4 py-3 text-base text-ink outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
-
-export function ContactForm({ heading }: { heading: string }) {
+export function ContactForm({ heading, inbox }: { heading: string; inbox?: string }) {
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<string | null>(null);
 
@@ -38,20 +37,17 @@ export function ContactForm({ heading }: { heading: string }) {
       return;
     }
 
-    setStatus(contactCopy.pendingStatus);
+    const subject = `${projectType} · ${name}`;
+    const body = `${message}\n\n${name}\n${email}`;
+    window.location.href = `mailto:${inbox || contactDetails.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setStatus(contactCopy.sendNote);
   }
 
   return (
-    <form className="rounded-2xl bg-white px-6 py-8 shadow-[0_12px_40px_rgb(28_18_14/0.05)] sm:px-8" noValidate onSubmit={onSubmit}>
-      <h2 className="text-xl font-semibold tracking-tight">{heading}</h2>
+    <form className="contact-form" noValidate onSubmit={onSubmit}>
+      <h2 className="about-chapter-title">{heading}</h2>
       <div className="mt-8 space-y-6">
-        <Field
-          id="contact-name"
-          name="name"
-          label="Name"
-          autoComplete="name"
-          error={errors.name}
-        />
+        <Field id="contact-name" name="name" label="Name" autoComplete="name" error={errors.name} />
         <Field
           id="contact-email"
           name="email"
@@ -61,8 +57,8 @@ export function ContactForm({ heading }: { heading: string }) {
           error={errors.email}
         />
         <div>
-          <label className="text-sm font-semibold" htmlFor="contact-project-type">
-            Project Type
+          <label className="contact-label" htmlFor="contact-project-type">
+            Project
           </label>
           <select
             id="contact-project-type"
@@ -71,7 +67,7 @@ export function ContactForm({ heading }: { heading: string }) {
             required
             aria-invalid={Boolean(errors.projectType)}
             aria-describedby={errors.projectType ? "contact-project-type-error" : undefined}
-            className={fieldClass}
+            className="contact-field"
           >
             <option value="" disabled>
               Choose one
@@ -83,13 +79,13 @@ export function ContactForm({ heading }: { heading: string }) {
             ))}
           </select>
           {errors.projectType ? (
-            <p id="contact-project-type-error" className="mt-2 text-sm text-[#8a2e16]">
+            <p id="contact-project-type-error" className="contact-error">
               {errors.projectType}
             </p>
           ) : null}
         </div>
         <div>
-          <label className="text-sm font-semibold" htmlFor="contact-message">
+          <label className="contact-label" htmlFor="contact-message">
             Message
           </label>
           <textarea
@@ -99,20 +95,23 @@ export function ContactForm({ heading }: { heading: string }) {
             rows={6}
             aria-invalid={Boolean(errors.message)}
             aria-describedby={errors.message ? "contact-message-error" : undefined}
-            className={`${fieldClass} min-h-40 resize-y`}
+            className="contact-field contact-field-area"
           />
           {errors.message ? (
-            <p id="contact-message-error" className="mt-2 text-sm text-[#8a2e16]">
+            <p id="contact-message-error" className="contact-error">
               {errors.message}
             </p>
           ) : null}
         </div>
       </div>
-      <button type="submit" className="mt-8 inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,#FFE14A_0%,#FF8E12_55%,#F25C0A_100%)] px-6 py-3 text-sm font-semibold text-[#2a160c] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2a160c]">
-        {contactCopy.sendLabel}
-      </button>
+      <div className="contact-send">
+        <button type="submit" className={`contact-send-btn ${contactSurface}`}>
+          {contactCopy.sendLabel}
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
       <p id="contact-form-note" className="mt-4 max-w-sm text-sm leading-relaxed text-ink/60">
-        {contactCopy.pendingNote}
+        {contactCopy.sendNote}
       </p>
       {status ? (
         <p role="status" className="mt-3 max-w-sm text-sm leading-relaxed text-ink">
@@ -142,7 +141,7 @@ function Field({
 
   return (
     <div>
-      <label className="text-sm font-semibold" htmlFor={id}>
+      <label className="contact-label" htmlFor={id}>
         {label}
       </label>
       <input
@@ -153,10 +152,10 @@ function Field({
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
-        className={fieldClass}
+        className="contact-field"
       />
       {error ? (
-        <p id={errorId} className="mt-2 text-sm text-[#8a2e16]">
+        <p id={errorId} className="contact-error">
           {error}
         </p>
       ) : null}

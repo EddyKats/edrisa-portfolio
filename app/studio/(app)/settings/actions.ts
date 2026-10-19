@@ -20,7 +20,7 @@ export async function saveSettings(_state: StudioState, formData: FormData): Pro
       whatsappUrl: text(formData, "whatsappUrl"),
       contactEmail: emptyToNull(text(formData, "contactEmail")),
       contactPhone: emptyToNull(text(formData, "contactPhone")),
-      location: emptyToNull(text(formData, "location")),
+      location: null,
       footerText: emptyToNull(text(formData, "footerText")),
       footerSecondaryText: emptyToNull(text(formData, "footerSecondaryText")),
       defaultSeoTitle: emptyToNull(text(formData, "defaultSeoTitle")),

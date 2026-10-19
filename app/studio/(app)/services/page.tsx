@@ -1,4 +1,5 @@
 import { ServicesStudio } from "@/components/studio/ServicesStudio";
+import { StudioPageHead } from "@/components/studio/StudioPageHead";
 import { listStudioCatalog } from "@/lib/content/catalog";
 import { getPublicCta } from "@/lib/content/cta";
 
@@ -7,11 +8,11 @@ export default async function StudioServicesPage() {
 
   return (
     <section>
-      <h1 className="text-3xl font-semibold tracking-tight">Services</h1>
-      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#1c120e]/70">
-        Published services, packages, and the services call to action appear on the public page.
-      </p>
-      <div className="mt-8">
+      <StudioPageHead
+        title="Services"
+        note="Published services, capability lists, and the call to action appear on /services."
+      />
+      <div>
         <ServicesStudio
           services={services.map((service) => ({
             id: service.id,

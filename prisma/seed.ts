@@ -42,13 +42,23 @@ async function main() {
       ...socials,
       contactEmail: contactDetails.email,
       contactPhone: contactDetails.phone,
-      location: contactDetails.location,
+      location: null,
       footerText: site.footerNote,
       footerSecondaryText: null,
       defaultSeoTitle: site.title,
       defaultSeoDescription: site.description,
     },
-    update: {},
+    update: {
+      siteName: site.name,
+      siteUrl: site.url,
+      ...socials,
+      contactEmail: contactDetails.email,
+      contactPhone: contactDetails.phone,
+      location: null,
+      footerText: site.footerNote,
+      defaultSeoTitle: site.title,
+      defaultSeoDescription: site.description,
+    },
   });
 
   await db.homeContent.upsert({
@@ -62,7 +72,12 @@ async function main() {
       contactTileLabel: tile("contact"),
       portfolioTileLabel: tile("portfolio"),
     },
-    update: {},
+    update: {
+      aboutTileLabel: tile("about"),
+      servicesTileLabel: tile("services"),
+      contactTileLabel: tile("contact"),
+      portfolioTileLabel: tile("portfolio"),
+    },
   });
 
   await db.aboutContent.upsert({
@@ -83,7 +98,19 @@ async function main() {
       seoTitle: aboutMeta.title,
       seoDescription: aboutMeta.description,
     },
-    update: {},
+    update: {
+      pageTitle: aboutCopy.title,
+      introHeading: aboutCopy.introHeading,
+      introParagraph: aboutCopy.intro,
+      storyHeading: aboutCopy.storyHeading,
+      storyBody: aboutCopy.story,
+      ctaHeading: aboutCopy.ctaHeading,
+      ctaText: aboutCopy.ctaBody,
+      ctaButtonLabel: aboutCopy.ctaLabel,
+      ctaButtonHref: "/contact",
+      seoTitle: aboutMeta.title,
+      seoDescription: aboutMeta.description,
+    },
   });
 
   if ((await db.aboutStat.count()) === 0) {
@@ -124,7 +151,13 @@ async function main() {
         sortOrder: index,
         published: true,
       },
-      update: {},
+      update: {
+        title: offer.title,
+        description: offer.summary,
+        icon: offer.icon,
+        sortOrder: index,
+        published: true,
+      },
     });
   }
 
@@ -224,9 +257,9 @@ async function main() {
     where: { id: "contact" },
     create: {
       id: "contact",
-      pageTitle: contactCopy.title,
-      subtitle: contactCopy.subheading,
-      location: contactDetails.location,
+      pageTitle: `${contactCopy.title} ${contactCopy.titleLine}`,
+      subtitle: contactCopy.arrived,
+      location: null,
       email: contactDetails.email,
       phone: contactDetails.phone,
       formHeading: contactCopy.formHeading,
@@ -234,7 +267,17 @@ async function main() {
       seoTitle: contactMeta.title,
       seoDescription: contactMeta.description,
     },
-    update: {},
+    update: {
+      pageTitle: `${contactCopy.title} ${contactCopy.titleLine}`,
+      subtitle: contactCopy.arrived,
+      location: null,
+      email: contactDetails.email,
+      phone: contactDetails.phone,
+      formHeading: contactCopy.formHeading,
+      socialHeading: contactCopy.socialHeading,
+      seoTitle: contactMeta.title,
+      seoDescription: contactMeta.description,
+    },
   });
 
   const calls = [
@@ -265,7 +308,12 @@ async function main() {
     await db.cTA.upsert({
       where: { key: call.key },
       create: call,
-      update: {},
+      update: {
+        heading: call.heading,
+        body: call.body,
+        buttonLabel: call.buttonLabel,
+        buttonHref: call.buttonHref,
+      },
     });
   }
 

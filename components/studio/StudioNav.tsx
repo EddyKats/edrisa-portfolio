@@ -2,51 +2,59 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  FolderKanban,
-  House,
-  LayoutDashboard,
-  Mail,
-  Settings,
-  Sparkles,
-  User,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { studioContentLinks, studioOverviewLinks, studioSiteLinks, type StudioLink } from "@/components/studio/studio-links";
 
-const links: { href: string; label: string; icon: LucideIcon }[] = [
-  { href: "/studio", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/studio/projects", label: "Projects", icon: FolderKanban },
-  { href: "/studio/about", label: "About", icon: User },
-  { href: "/studio/services", label: "Services", icon: Sparkles },
-  { href: "/studio/clients", label: "Clients", icon: Users },
-  { href: "/studio/contact", label: "Contact", icon: Mail },
-  { href: "/studio/home", label: "Home", icon: House },
-  { href: "/studio/settings", label: "Site Settings", icon: Settings },
-];
+function isActive(pathname: string, href: string) {
+  return href === "/studio" ? pathname === "/studio" : pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function NavGroup({ title, links, pathname }: { title: string; links: StudioLink[]; pathname: string }) {
+  return (
+    <div className="studio-nav-group">
+      <p className="studio-nav-kicker">{title}</p>
+      <ul>
+        {links.map((link) => {
+          const active = isActive(pathname, link.href);
+          const Icon = link.icon;
+          return (
+            <li key={link.href}>
+              <Link href={link.href} aria-current={active ? "page" : undefined} className={`studio-nav-link${active ? " is-active" : ""}`}>
+                <Icon className="size-4 shrink-0" aria-hidden="true" />
+                {link.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 export function StudioNav() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Studio" className="flex gap-1 overflow-x-auto px-3 pb-4 lg:flex-1 lg:flex-col lg:overflow-visible">
-      {links.map((link) => {
-        const active = link.href === "/studio" ? pathname === "/studio" : pathname === link.href || pathname.startsWith(`${link.href}/`);
-        const Icon = link.icon;
-        return (
-          <Link
-            key={link.href}
-            href={link.href}
-            aria-current={active ? "page" : undefined}
-            className={`flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
-              active ? "bg-white/15 font-semibold text-white shadow-[inset_3px_0_0_#f7f1ea]" : "text-white/75 hover:bg-white/10 hover:text-white"
-            }`}
-          >
-            <Icon className="size-4 shrink-0" aria-hidden="true" />
-            {link.label}
-          </Link>
-        );
-      })}
+    <nav aria-label="Studio" className="studio-nav">
+      <NavGroup title="Overview" links={studioOverviewLinks} pathname={pathname} />
+      <NavGroup title="Content" links={studioContentLinks} pathname={pathname} />
+      <div className="studio-nav-group">
+        <p className="studio-nav-kicker">Website</p>
+        <ul>
+          {studioSiteLinks.map((link) => (
+            <li key={link.href}>
+              <Link href={link.href} target="_blank" rel="noreferrer" className="studio-nav-person">
+                <span className="studio-nav-avatar" aria-hidden="true">
+                  {link.label.slice(0, 1)}
+                </span>
+                <span>
+                  <span className="studio-nav-person-name">{link.label}</span>
+                  <span className="studio-nav-person-note">{link.note}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
   );
 }

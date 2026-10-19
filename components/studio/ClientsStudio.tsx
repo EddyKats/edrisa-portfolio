@@ -14,8 +14,8 @@ type ClientRow = { id: string; name: string; website: string; logoUrl: string | 
 
 export function ClientsStudio({ clients }: { clients: ClientRow[] }) {
   return (
-    <div className="grid max-w-2xl gap-6">
-      {clients.length === 0 ? <p className="text-sm text-[#1c120e]/60">No clients yet. Add one when you have a real name and logo.</p> : null}
+    <div className="studio-stack">
+      {clients.length === 0 ? <p className="studio-empty">No clients yet. Add one when you have a real name and logo.</p> : null}
       {clients.map((client) => (
         <ClientForm key={client.id} client={client} />
       ))}
@@ -28,23 +28,23 @@ function ClientForm({ client }: { client?: ClientRow }) {
   const [state, action] = useActionState(saveClientRecord, {});
   const [removeState, removeAction] = useActionState(removeClient, {});
   return (
-    <div className="grid gap-3 rounded-2xl border border-[#1c120e]/10 p-4">
+    <div className="studio-card studio-form">
       <div className="flex items-center justify-between">
-        {client ? <PublishBadge published={client.published} /> : <p className="text-sm font-semibold">New client</p>}
+        {client ? <PublishBadge published={client.published} /> : <p>New client</p>}
         {client ? <OrderButtons action={(direction) => reorderClient(client.id, direction)} /> : null}
       </div>
       <form action={action} className="grid gap-3">
         {client ? <input type="hidden" name="id" value={client.id} /> : null}
         <Status state={state} />
-        <label className="grid gap-1 text-sm font-medium">
+        <label>
           Name
           <input name="name" defaultValue={client?.name ?? ""} className={controlClass} />
         </label>
-        <label className="grid gap-1 text-sm font-medium">
+        <label>
           Website
           <input name="website" defaultValue={client?.website ?? ""} placeholder="https://" className={controlClass} />
         </label>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="studio-check">
           <input type="checkbox" name="published" defaultChecked={client?.published ?? false} />
           Published
         </label>
@@ -64,7 +64,7 @@ function ClientForm({ client }: { client?: ClientRow }) {
             <input type="hidden" name="id" value={client.id} />
             <Status state={removeState} />
             <input name="confirm" placeholder="Type delete" className={controlClass} />
-            <SaveButton label="Delete" />
+            <SaveButton label="Delete" tone="danger" />
           </form>
         </>
       ) : null}

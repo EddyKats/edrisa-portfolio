@@ -43,14 +43,27 @@ model SiteSettings {
 }
 
 model HomeContent {
-  id                 String   @id @default("home")
+  id                 String         @id @default("home")
   portraitUrl        String?
   logoUrl            String?
+  portraitMode       String         @default("single")
   aboutTileLabel     String
   servicesTileLabel  String
   contactTileLabel   String
   portfolioTileLabel String
-  updatedAt          DateTime @updatedAt
+  updatedAt          DateTime       @updatedAt
+  portraits          HomePortrait[]
+}
+
+model HomePortrait {
+  id        String      @id @default(cuid())
+  homeId    String      @default("home")
+  home      HomeContent @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  sortOrder Int         @default(0)
+  published Boolean     @default(true)
+
+  @@index([homeId, sortOrder])
 }
 
 model AboutContent {

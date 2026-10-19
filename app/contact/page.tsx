@@ -1,47 +1,53 @@
 import type { Metadata } from "next";
 import { ContactDetails } from "@/components/contact/ContactDetails";
 import { ContactForm } from "@/components/contact/ContactForm";
-import { LocationCard } from "@/components/contact/LocationCard";
 import { InternalFooter } from "@/components/internal/InternalFooter";
 import { InternalPageLayout } from "@/components/internal/InternalPageLayout";
-import { InternalTitle } from "@/components/internal/InternalTitle";
-import { contactCopy } from "@/data/contact";
+import { contactCopy, contactDetails, contactMeta, splitContactTitle } from "@/data/contact";
 import { getPublicContact } from "@/lib/content/contact";
+import { toTelHref } from "@/lib/content/phone";
 import { getPublicSite } from "@/lib/content/site";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [contact, site] = await Promise.all([getPublicContact(), getPublicSite()]);
+  const contact = await getPublicContact();
   return {
-    title: { absolute: contact?.seoTitle || site.title },
-    description: contact?.seoDescription || site.description,
+    title: { absolute: contact?.seoTitle || contactMeta.title },
+    description: contact?.seoDescription || contactMeta.description,
     alternates: { canonical: "/contact" },
   };
 }
 
 export default async function ContactRoute() {
-  const [contact, site] = await Promise.all([getPublicContact(), getPublicSite()]);
+  const [site, contact] = await Promise.all([getPublicSite(), getPublicContact()]);
+  const heading = splitContactTitle(contact?.pageTitle || `${contactCopy.title} ${contactCopy.titleLine}`);
+  const email = contact?.email || contactDetails.email;
+  const callHref = (contact?.phone ? toTelHref(contact.phone) : null) ?? site.callHref;
 
   return (
     <InternalPageLayout section="contact">
       <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20">
-        <InternalTitle>{contact?.pageTitle ?? contactCopy.title}</InternalTitle>
-        <p className="mx-auto mt-4 max-w-md text-center text-[1.05rem] leading-relaxed text-ink/70">
-          {contact?.subtitle ?? contactCopy.subheading}
-        </p>
-        <div className="mt-16 grid items-start gap-14 split:grid-cols-2 split:gap-16">
+        <header className="contact-intro">
+          <h1 className="about-name font-display tracking-tight">
+            <span className="block">{heading.title}</span>
+            <span className="block">{heading.titleLine}</span>
+          </h1>
+          <p className="about-title max-w-[24rem] text-[clamp(1.05rem,1.4vw,1.28rem)] leading-snug font-medium text-ink/82">
+            {contact?.subtitle || contactCopy.arrived}
+          </p>
+          <p className="about-lead mt-6">{contactCopy.subheading}</p>
+        </header>
+        <div className="contact-layout">
           <ContactDetails
             detailsHeading={contactCopy.detailsHeading}
-            socialHeading={contact?.socialHeading ?? contactCopy.socialHeading}
-            email={contact?.email ?? null}
-            phone={contact?.phone ?? null}
-            location={contact?.location ?? null}
+            socialHeading={contact?.socialHeading || contactCopy.socialHeading}
+            email={email}
+            callHref={callHref}
             socials={site.socials}
           />
-          <ContactForm heading={contact?.formHeading ?? contactCopy.formHeading} />
+          <ContactForm heading={contact?.formHeading || contactCopy.formHeading} inbox={email} />
         </div>
-        <LocationCard location={contact?.location || "Not listed yet"} />
         <InternalFooter />
       </div>
     </InternalPageLayout>

@@ -28,6 +28,14 @@ export function telFromWhatsapp(url: string): string | null {
   return `tel:+${digits}`;
 }
 
+export function displayFromTelHref(href: string): string {
+  const digits = href.replace(/\D/g, "");
+  if (digits.startsWith("256") && digits.length === 12) {
+    return `+256 ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
+  }
+  return href.startsWith("tel:") ? href.slice(4) : href;
+}
+
 export function resolveCallHref(
   phones: Array<string | null | undefined>,
   whatsappUrl: string,

@@ -34,7 +34,7 @@ function CreditRow({ credit, index, total }: { credit: Credit; index: number; to
 
   if (!editing) {
     return (
-      <li className="rounded-2xl border border-[#1c120e]/10 bg-[#fffdfb] p-4">
+      <li className="studio-card p-4">
         <p className="text-sm font-semibold">{credit.label}</p>
         <p className="mt-1 text-sm text-[#1c120e]/70">{credit.value}</p>
         <div className="mt-3 flex flex-wrap gap-3 text-sm">
@@ -56,7 +56,7 @@ function CreditRow({ credit, index, total }: { credit: Credit; index: number; to
 
   return (
     <li>
-      <form action={action} className="grid gap-2 rounded-2xl border border-[#1c120e]/10 bg-[#fffdfb] p-4">
+      <form action={action} className="studio-card studio-form">
         <input type="hidden" name="creditId" value={credit.id} />
         <label className="grid gap-1 text-sm">
           Label
@@ -81,7 +81,7 @@ function CreditRow({ credit, index, total }: { credit: Credit; index: number; to
 function CreditForm({ projectId }: { projectId: string }) {
   const [state, action] = useActionState(saveCredit, {});
   return (
-    <form action={action} className="grid gap-2 rounded-2xl border border-[#1c120e]/10 bg-[#fffdfb] p-4">
+    <form action={action} className="studio-card studio-form">
       <input type="hidden" name="projectId" value={projectId} />
       <h3 className="text-sm font-semibold">Add a credit</h3>
       <label className="grid gap-1 text-sm">
@@ -134,7 +134,7 @@ function ConfirmButton() {
 function SaveButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className="w-fit rounded-full bg-[#2e211c] px-3 py-1.5 text-sm font-semibold text-[#f7f1ea] disabled:opacity-60">
+    <button type="submit" disabled={pending} className="studio-btn-primary">
       {pending ? "Saving..." : label}
     </button>
   );
@@ -146,4 +146,5 @@ function Status({ state }: { state: DetailState }) {
   return null;
 }
 
-const controlClass = "w-full rounded-lg border border-[#1c120e]/15 bg-white px-3 py-2 text-sm";
+const controlClass =
+  "w-full min-w-0 rounded-xl border border-[#ececf6] bg-white px-3 py-2 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6b4dff]";

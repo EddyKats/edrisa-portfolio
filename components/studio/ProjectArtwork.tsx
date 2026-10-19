@@ -42,7 +42,7 @@ type PresentationItem = {
 
 const accept = "image/jpeg,image/png,image/webp,image/avif,image/gif,video/mp4,video/webm";
 const controlClass =
-  "w-full rounded-xl border border-[#1c120e]/12 bg-[#fffdfb] px-3 py-2.5 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c]";
+  "w-full min-w-0 rounded-xl border border-[#ececf6] bg-white px-3 py-2.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6b4dff]";
 
 export function ProjectArtwork({
   projectId,
@@ -131,7 +131,7 @@ function AssetSlot({
   }
 
   return (
-    <section id="cover" className="scroll-mt-44 rounded-2xl border border-[#1c120e]/10 bg-white px-6 py-7 sm:px-8 sm:py-8">
+    <section id="cover" className="studio-card studio-panel scroll-mt-44">
       <h2 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
         <ImageIcon className="size-5 text-[#1c120e]/55" aria-hidden="true" />
         Selected Works cover
@@ -142,12 +142,12 @@ function AssetSlot({
       <Status state={status} />
       {url ? (
         <div className="mt-6">
-          <div className="relative h-72 overflow-hidden rounded-xl bg-[#f7f1ea]">
+          <div className="studio-media-preview h-72">
             <Image src={url} alt="" fill className="object-contain" sizes="(min-width: 1024px) 960px, 100vw" />
           </div>
           {width && height ? <p className="mt-3 text-sm text-[#1c120e]/60">{width} × {height}</p> : null}
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#2e211c] px-4 py-2 text-sm font-semibold text-[#f7f1ea] focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#2e211c]">
+            <label className="studio-btn-primary cursor-pointer">
               <ImageUp className="size-4" aria-hidden="true" />
               {busy ? "Uploading..." : "Replace"}
               <input
@@ -176,7 +176,7 @@ function AssetSlot({
             ) : (
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-[#8a3b2b] hover:bg-[#8a3b2b]/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a3b2b]"
+                className="studio-btn-ghost is-danger"
                 onClick={() => setConfirming(true)}
                 disabled={busy}
                 aria-label="Remove cover"
@@ -192,9 +192,7 @@ function AssetSlot({
         <div className="mt-6">
           <p className="text-sm font-medium">No cover image yet.</p>
           <label
-            className={`mt-3 flex min-h-56 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-10 text-center ${
-              over ? "border-[#2e211c] bg-[#2e211c]/5" : "border-[#2e211c]/25 bg-[#f7f1ea]"
-            }`}
+            className={`studio-upload mt-3 ${over ? "is-on" : ""}`}
             onDragOver={(event) => {
               if (![...event.dataTransfer.types].includes("Files")) return;
               event.preventDefault();
@@ -321,7 +319,7 @@ function PresentationEditor({ projectId, images }: { projectId: string; images: 
   return (
     <section
       id="presentation"
-      className="scroll-mt-44 rounded-2xl border border-[#2e211c]/20 bg-white px-6 py-7 sm:px-8 sm:py-8"
+      className="studio-card studio-panel scroll-mt-44"
       onDragOver={(event) => {
         if (![...event.dataTransfer.types].includes("Files")) return;
         event.preventDefault();
@@ -366,11 +364,7 @@ function PresentationEditor({ projectId, images }: { projectId: string; images: 
       ) : null}
       <Status state={notice ? {} : status} />
       {images.length === 0 ? <p className="mt-6 text-base font-medium">No presentation boards yet.</p> : null}
-      <label
-        className={`mt-6 flex min-h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-12 text-center ${
-          over ? "border-[#2e211c] bg-[#2e211c]/5" : "border-[#2e211c]/30 bg-[#f7f1ea]"
-        }`}
-      >
+      <label className={`studio-upload mt-6 ${over ? "is-on" : ""}`}>
         <UploadCloud className="size-10 text-[#2e211c]/75" aria-hidden="true" />
         <span className="mt-4 text-xl font-semibold tracking-tight">{progress ?? "Drop presentation media here"}</span>
         <span className="mt-2 text-sm font-semibold text-[#2e211c] underline underline-offset-4">or choose files</span>
@@ -624,7 +618,7 @@ function SaveButton({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="w-fit rounded-full bg-[#2e211c] px-3 py-1.5 text-sm font-semibold text-[#f7f1ea] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2e211c] disabled:opacity-60"
+      className="studio-btn-primary"
     >
       {pending ? "Saving..." : label}
     </button>

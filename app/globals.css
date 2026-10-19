@@ -227,6 +227,47 @@ body {
   margin-inline: auto;
 }
 
+.about-hero-bleed {
+  display: none;
+}
+
+@media (min-width: 60rem) {
+  .about-hero-bleed {
+    display: block;
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    z-index: 0;
+    height: min(82vh, 52rem);
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .about-hero-bleed-image {
+    object-fit: cover;
+    object-position: 70% 0%;
+  }
+
+  .about-hero-veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgb(246 243 239 / 0.42) 0%, rgb(246 243 239 / 0.12) 38%, transparent 62%),
+      linear-gradient(
+        180deg,
+        rgb(7 7 9 / 0.18) 0%,
+        rgb(7 7 9 / 0.02) 22%,
+        rgb(246 243 239 / 0.28) 52%,
+        rgb(246 243 239 / 0.88) 78%,
+        #f6f3ef 100%
+      );
+  }
+
+  .about-summary {
+    margin-top: clamp(13rem, 42vh, 24rem);
+  }
+}
+
 @media (min-width: 100rem) {
   .internal-frame {
     max-width: min(76rem, calc(100% - 7rem));

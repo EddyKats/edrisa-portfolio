@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AboutProfile } from "@/components/about/AboutProfile";
+import { AboutHeroBleed, AboutProfile } from "@/components/about/AboutProfile";
 import { InternalCTA } from "@/components/internal/InternalCTA";
 import { InternalFooter } from "@/components/internal/InternalFooter";
 import { InternalPageLayout } from "@/components/internal/InternalPageLayout";
@@ -68,10 +68,18 @@ export default async function AboutRoute() {
   };
 
   return (
-    <InternalPageLayout section="about">
+    <InternalPageLayout
+      section="about"
+      bleed={image ? <AboutHeroBleed image={image} /> : null}
+    >
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20">
-        <AboutProfile image={image} socials={site.socials} projects={projects.slice(0, 4)} />
+      <div className="internal-frame px-5 py-14 sm:px-8 sm:py-20 split:pt-8">
+        <AboutProfile
+          image={image}
+          socials={site.socials}
+          callHref={site.callHref}
+          projects={projects.slice(0, 4)}
+        />
         <InternalCTA
           section="about"
           heading={projectCta.heading}

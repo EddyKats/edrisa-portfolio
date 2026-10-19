@@ -27,10 +27,24 @@ export const aboutProfile = {
   summary:
     "I work at the intersection of visual communication, branding and technology — building identities, campaigns, websites and digital products.",
   facts: "Kampala, Uganda · Graphic Design · Branding · Web & App Development",
+  introLabel: "About",
   bioHeading: "About",
   bio: [
     "Kasibante Edrisa is a Ugandan multidisciplinary designer and software developer working across graphic design, brand identity, web development and digital products.",
-    "He currently leads the Graphics Department at Edutech Media Group and has worked across brand management, creative direction and technology-led projects.",
+    "He works at the intersection of visual communication, branding and technology — building identities, campaigns, websites and digital products.",
+  ],
+  contactHeading: "Direct contact",
+  softwareHeading: "Software",
+  coreSkillsHeading: "Core skills",
+  coreSkills: [
+    "Graphic Design",
+    "Branding",
+    "Creative Direction",
+    "UI / UX",
+    "Web Development",
+    "App Development",
+    "Visual Communication",
+    "Campaign Design",
   ],
   disciplinesHeading: "What I do",
   disciplines: [

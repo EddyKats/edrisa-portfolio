@@ -9,17 +9,20 @@ import type { NavId } from "@/data/navigation";
 
 export function InternalPageLayout({
   section,
+  bleed,
   children,
 }: {
   section: NavId;
+  bleed?: ReactNode;
   children: ReactNode;
 }) {
   const reduce = useReducedMotion();
 
   return (
-    <div id="internal-page" className="min-h-dvh bg-[#f6f3ef] text-ink">
+    <div id="internal-page" className="relative min-h-dvh bg-[#f6f3ef] text-ink">
+      {bleed}
       <SectionMobileHeader section={section} />
-      <div className="split:flex split:items-start split:gap-8 split:px-5 split:py-[1.125rem]">
+      <div className="relative z-10 split:flex split:items-start split:gap-8 split:px-5 split:py-[1.125rem]">
         <motion.main
           className="min-w-0 flex-1"
           initial={reduce ? false : { opacity: 0, y: 16 }}

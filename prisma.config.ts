@@ -3,7 +3,7 @@ import { defineConfig } from "prisma/config";
 
 loadLocalEnv(".env.local");
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = migrateConnectionString(process.env.DATABASE_URL);
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -13,6 +13,24 @@ export default defineConfig({
   },
   ...(databaseUrl ? { datasource: { url: databaseUrl } } : {}),
 });
+
+function migrateConnectionString(url: string | undefined) {
+  const direct =
+    process.env.DATABASE_URL_UNPOOLED?.trim() ||
+    process.env.DIRECT_URL?.trim() ||
+    process.env.POSTGRES_URL_NON_POOLING?.trim();
+  if (direct) return direct;
+  if (!url) return undefined;
+
+  try {
+    const parsed = new URL(url);
+    parsed.hostname = parsed.hostname.replace(/-pooler(?=\.)/, "");
+    parsed.searchParams.delete("pgbouncer");
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
 
 function loadLocalEnv(file: string) {
   if (!existsSync(file)) return;

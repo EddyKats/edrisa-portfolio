@@ -2821,8 +2821,10 @@ body {
 }
 
 .site-route-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   display: grid;
-  min-height: 100dvh;
   place-items: center;
   background: var(--color-mocha);
 }

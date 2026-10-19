@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import { personIdentity, studioBrand } from "@/data/identity";
 import { Analytics } from "@/components/site/Analytics";
 import { JsonLd } from "@/components/site/JsonLd";
+import { SiteLoader } from "@/components/site/SiteLoader";
 import { absoluteAsset, siteGraph } from "@/lib/content/jsonld";
 import { getPublicSite } from "@/lib/content/site";
 import "./globals.css";
@@ -85,6 +86,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full font-sans">
         <JsonLd data={siteGraph(site, portrait)} />
         <Analytics />
+        <SiteLoader />
         {children}
       </body>
     </html>

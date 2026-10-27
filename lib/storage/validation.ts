@@ -25,6 +25,12 @@ export const allowedMediaTypes = {
 export type AllowedImageType = keyof typeof allowedImageTypes;
 export type AllowedMediaType = keyof typeof allowedMediaTypes;
 export type PresentationKind = "IMAGE" | "GIF" | "VIDEO";
+export type PortfolioAssetRole = "cover" | "hero" | "gallery" | "presentation";
+
+/** Stills only, or stills plus GIF and video. Decides which limits and types apply. */
+export type UploadKind = "image" | "media";
+
+const portfolioAssetRoles = ["cover", "hero", "gallery", "presentation"] as const;
 
 const mediaNamespaces = ["development", "preview", "production"] as const;
 
@@ -73,6 +79,28 @@ export function mediaLimit(type: AllowedMediaType) {
   if (type === "image/gif") return { bytes: maxGifBytes, label: maxGifLabel };
   if (type === "video/mp4" || type === "video/webm") return { bytes: maxVideoBytes, label: maxVideoLabel };
   return { bytes: maxImageBytes, label: maxImageLabel };
+}
+
+export function isPortfolioAssetRole(value: string): value is PortfolioAssetRole {
+  return portfolioAssetRoles.includes(value as PortfolioAssetRole);
+}
+
+/** The role segment of a namespaced key, e.g. `.../projects/<id>/cover/<uuid>.jpg` -> "cover". */
+export function roleFromAssetKey(key: string): PortfolioAssetRole | null {
+  const role = key.split("/").at(-2) ?? "";
+  return isPortfolioAssetRole(role) ? role : null;
+}
+
+/**
+ * Gallery and presentation share a key prefix and both accept video, so they map to
+ * the same kind. Cover and hero are stills: the public grid feeds them to next/image.
+ */
+export function uploadKindForRole(role: PortfolioAssetRole): UploadKind {
+  return role === "gallery" || role === "presentation" ? "media" : "image";
+}
+
+export function validateUploadKind(kind: UploadKind, input: { type: string; size: number }) {
+  return kind === "media" ? validateMediaUpload(input) : validateImageUpload(input);
 }
 
 export function validateImageUpload(input: { type: string; size: number }) {
@@ -128,6 +156,15 @@ export function isPortfolioAssetKey(projectId: string, key: string) {
   return Boolean(namespace) && key.startsWith(`${namespace}/projects/${projectId}/`) && keyPattern.test(key);
 }
 
+/**
+ * keyPattern accepts any role segment and any extension, so a key alone cannot say
+ * which slot it belongs to. Without this check a presentation .mp4 could be confirmed
+ * as a cover, and the Selected Works grid would hand that video to next/image.
+ */
+export function isPortfolioAssetKeyForRole(projectId: string, role: PortfolioAssetRole, key: string) {
+  return isPortfolioAssetKey(projectId, key) && roleFromAssetKey(key) === role;
+}
+
 export function isContentAssetScope(value: string): value is ContentAssetScope {
   return contentAssetScopes.includes(value as ContentAssetScope);
 }
@@ -149,7 +186,25 @@ export function matchesImageSignature(type: AllowedImageType, bytes: Uint8Array)
       ascii(bytes, 8, 4) === "WEBP"
     );
   }
-  return ascii(bytes, 4, 4) === "ftyp" && /avif|avis/.test(ascii(bytes, 8, 4));
+  return matchesAvifBrand(bytes);
+}
+
+/**
+ * AVIF carries its brands in the leading `ftyp` box: the major brand at offset 8 and
+ * compatible brands from offset 16. Testing only the major brand rejects the very
+ * common `mif1`-major file that lists `avif` as compatible, so scan the whole box.
+ * Still requires avif/avis, which keeps HEIC (heic/heix) and plain MP4 (isom/mp42) out.
+ */
+function matchesAvifBrand(bytes: Uint8Array) {
+  if (ascii(bytes, 4, 4) !== "ftyp") return false;
+  const declared = readUint32(bytes, 0);
+  const end = Math.min(declared > 0 ? declared : bytes.length, bytes.length);
+  if (ascii(bytes, 8, 4) === "avif" || ascii(bytes, 8, 4) === "avis") return true;
+  for (let offset = 16; offset + 4 <= end; offset += 4) {
+    const brand = ascii(bytes, offset, 4);
+    if (brand === "avif" || brand === "avis") return true;
+  }
+  return false;
 }
 
 export function readImageSize(type: AllowedImageType, bytes: Uint8Array) {

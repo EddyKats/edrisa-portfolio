@@ -26,6 +26,8 @@ import {
   setPresentationOrder,
   type DetailState,
 } from "@/app/studio/(app)/projects/detail-actions";
+import { UploadProgressBar } from "@/components/studio/editor";
+import { runUploads } from "@/lib/studio/upload-client";
 import { boardWidthMismatch, maxGifLabel, maxImageLabel, maxVideoLabel, naturalFileNameCompare } from "@/lib/storage/validation";
 
 type PresentationItem = {
@@ -82,34 +84,34 @@ function AssetSlot({
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
   const [fileLabel, setFileLabel] = useState<string | null>(null);
+  const [percent, setPercent] = useState<number | null>(null);
 
   async function upload(file: File) {
     setBusy(true);
     setFileLabel(file.name);
     setStatus({});
-    const ticket = await prepareProjectUpload(projectId, "cover", { type: file.type, size: file.size });
-    if (!ticket.uploadUrl || !ticket.key || !ticket.contentType) {
-      setStatus({ error: uploadFailure(file, ticket.error ?? "Upload failed.") });
+    setPercent(null);
+    try {
+      const result = await runUploads(
+        [
+          {
+            file,
+            prepare: () => prepareProjectUpload(projectId, "cover", { type: file.type, size: file.size }),
+            confirm: (key) => confirmProjectUpload(projectId, "cover", key, file.name),
+          },
+        ],
+        "image",
+        { onProgress: (progress) => setPercent(progress.percent) },
+      );
+      setStatus(
+        result.errors.length > 0 ? { error: result.errors[0] } : { ok: true, warning: result.warnings[0] },
+      );
+      if (result.errors.length === 0) router.refresh();
+    } finally {
       setBusy(false);
       setFileLabel(null);
-      return;
+      setPercent(null);
     }
-    const response = await fetch(ticket.uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": ticket.contentType },
-      body: file,
-    }).catch(() => null);
-    if (!response?.ok) {
-      setStatus({ error: uploadFailure(file, "The file could not be sent.") });
-      setBusy(false);
-      setFileLabel(null);
-      return;
-    }
-    const saved = await confirmProjectUpload(projectId, "cover", ticket.key, file.name);
-    setStatus(saved.ok ? { ok: true, warning: saved.warning } : { error: uploadFailure(file, saved.error ?? "Upload failed.") });
-    setBusy(false);
-    setFileLabel(null);
-    if (saved.ok) router.refresh();
   }
 
   async function remove() {
@@ -187,6 +189,11 @@ function AssetSlot({
               </button>
             )}
           </div>
+          {busy ? (
+            <div className="mt-4">
+              <UploadProgressBar percent={percent} label={`Uploading ${fileLabel ?? "cover"}`} />
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="mt-6">
@@ -222,6 +229,11 @@ function AssetSlot({
               }}
             />
           </label>
+          {busy ? (
+            <div className="mt-4">
+              <UploadProgressBar percent={percent} label={`Uploading ${fileLabel ?? "cover"}`} />
+            </div>
+          ) : null}
         </div>
       )}
     </section>
@@ -236,6 +248,9 @@ function PresentationEditor({ projectId, images }: { projectId: string; images: 
   const [over, setOver] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
+  const [percent, setPercent] = useState<number | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [abort, setAbort] = useState<(() => void) | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const reference = images.find((item) => item.kind !== "VIDEO" && item.width)?.width ?? null;
   const mismatched = images.filter((item) => item.kind !== "VIDEO" && boardWidthMismatch(reference, item.width)).length;
@@ -258,41 +273,43 @@ function PresentationEditor({ projectId, images }: { projectId: string; images: 
 
   async function upload(files: File[]) {
     const ordered = files.slice().sort((a, b) => naturalFileNameCompare(a.name, b.name));
+    const controller = new AbortController();
+    setAbort(() => () => controller.abort());
     setBusy(true);
     setStatus({});
-    for (const [index, file] of ordered.entries()) {
-      setProgress(ordered.length > 1 ? `Uploading ${index + 1} of ${ordered.length} · ${file.name}` : `Uploading ${file.name}`);
-      const ticket = await prepareProjectUpload(projectId, "presentation", { type: file.type, size: file.size });
-      if (!ticket.uploadUrl || !ticket.key || !ticket.contentType) {
-        setStatus({ error: uploadFailure(file, ticket.error ?? "Upload failed.") });
-        setBusy(false);
-        setProgress(null);
-        return;
-      }
-      const response = await fetch(ticket.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": ticket.contentType },
-        body: file,
-      }).catch(() => null);
-      if (!response?.ok) {
-        setStatus({ error: uploadFailure(file, "The file could not be sent.") });
-        setBusy(false);
-        setProgress(null);
-        return;
-      }
-      const saved = await confirmProjectUpload(projectId, "presentation", ticket.key, file.name);
-      if (!saved.ok) {
-        setStatus({ error: uploadFailure(file, saved.error ?? "Upload failed.") });
-        setBusy(false);
-        setProgress(null);
-        return;
-      }
+    setErrors([]);
+    try {
+      const result = await runUploads(
+        ordered.map((file) => ({
+          file,
+          prepare: () => prepareProjectUpload(projectId, "presentation", { type: file.type, size: file.size }),
+          confirm: (key: string) => confirmProjectUpload(projectId, "presentation", key, file.name),
+        })),
+        "media",
+        {
+          signal: controller.signal,
+          onProgress: ({ index, total, fileName, percent }) => {
+            setProgress(total > 1 ? `Uploading ${index + 1} of ${total} · ${fileName}` : `Uploading ${fileName}`);
+            setPercent(percent);
+          },
+        },
+      );
+      setErrors(result.errors);
+      // The per-file list below carries the detail; the summary only counts a mixed batch.
+      setStatus(
+        result.summary ? { error: result.summary } : result.errors.length > 0 ? {} : { ok: true, warning: result.warnings[0] },
+      );
+      if (result.uploaded > 0 && result.errors.length === 0 && !result.cancelled) setNotice("Saved");
+    } finally {
+      setBusy(false);
+      setProgress(null);
+      setPercent(null);
+      setAbort(null);
+      // Boards saved before a failure are already in the database. Refreshing
+      // unconditionally is what makes them appear; revalidateProjectContent does not
+      // cover /studio/projects/[id].
+      router.refresh();
     }
-    setStatus({ ok: true });
-    setNotice("Saved");
-    setBusy(false);
-    setProgress(null);
-    router.refresh();
   }
 
   async function saveOrder(orderedIds: string[]) {
@@ -301,7 +318,9 @@ function PresentationEditor({ projectId, images }: { projectId: string; images: 
     setStatus(saved.ok ? { ok: true } : { error: saved.error ?? "The presentation could not be reordered." });
     setNotice(saved.ok ? "Order saved" : null);
     setBusy(false);
-    if (saved.ok) router.refresh();
+    // Refresh either way: a rejected reorder means this list is stale, and only a
+    // refresh brings back the order the database actually holds.
+    router.refresh();
   }
 
   function moveItem(imageId: string, direction: "up" | "down") {
@@ -363,6 +382,13 @@ function PresentationEditor({ projectId, images }: { projectId: string; images: 
         </p>
       ) : null}
       <Status state={notice ? {} : status} />
+      {errors.length > 0 ? (
+        <ul className="mt-3 grid gap-1 text-sm text-[#8a3b2b]" role="alert">
+          {errors.map((message) => (
+            <li key={message}>{message}</li>
+          ))}
+        </ul>
+      ) : null}
       {images.length === 0 ? <p className="mt-6 text-base font-medium">No presentation boards yet.</p> : null}
       <label className={`studio-upload mt-6 ${over ? "is-on" : ""}`}>
         <UploadCloud className="size-10 text-[#2e211c]/75" aria-hidden="true" />
@@ -374,8 +400,8 @@ function PresentationEditor({ projectId, images }: { projectId: string; images: 
           Images up to {maxImageLabel}. GIFs up to {maxGifLabel}. Video up to {maxVideoLabel}.
         </span>
         {progress ? (
-          <span className="mt-4 block h-1 w-40 overflow-hidden rounded-full bg-[#1c120e]/10" role="progressbar" aria-label={progress}>
-            <span className="block h-full w-full animate-pulse bg-[#2e211c]/70" />
+          <span className="mt-4 block w-full max-w-sm">
+            <UploadProgressBar percent={percent} label={progress} />
           </span>
         ) : null}
         <input
@@ -392,6 +418,13 @@ function PresentationEditor({ projectId, images }: { projectId: string; images: 
           }}
         />
       </label>
+      {abort ? (
+        <div className="mt-3 flex justify-center">
+          <button type="button" className="studio-btn-ghost is-danger" onClick={() => abort()}>
+            Cancel upload
+          </button>
+        </div>
+      ) : null}
       <ul className="mt-6 grid gap-4">
         {images.map((image, index) => {
           const from = dragId ? images.findIndex((item) => item.id === dragId) : -1;
@@ -636,11 +669,6 @@ function Status({ state }: { state: DetailState }) {
   if (state.warning) return <p className="mt-3 text-sm text-[#8a3b2b]">{state.warning}</p>;
   if (state.ok) return <p className="mt-3 text-sm text-[#2e211c]">Saved.</p>;
   return null;
-}
-
-function uploadFailure(file: File, message: string) {
-  const detail = message.replace(/^upload failed\.?\s*/i, "").trim();
-  return detail ? `${file.name}: Upload failed. ${detail}` : `${file.name}: Upload failed.`;
 }
 
 function fileName(url: string) {

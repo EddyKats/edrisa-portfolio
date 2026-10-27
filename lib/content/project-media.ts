@@ -2,7 +2,8 @@ import "server-only";
 
 import { getDb } from "@/lib/db";
 import { ProjectWriteError } from "@/lib/content/projects";
-import { deletePortfolioAsset, storageKeyFromUrl, type PortfolioAsset } from "@/lib/storage";
+import { removeStoredFileIfUnused, removeStoredFilesIfUnused } from "@/lib/content/media";
+import { type PortfolioAsset } from "@/lib/storage";
 import { presentationKindFor } from "@/lib/storage/validation";
 
 async function projectOrThrow(projectId: string) {
@@ -29,7 +30,7 @@ export async function saveProjectAsset(projectId: string, role: "cover" | "hero"
         ? { coverImageUrl: asset.publicUrl, coverImageWidth: asset.width, coverImageHeight: asset.height }
         : { heroImageUrl: asset.publicUrl, heroImageWidth: asset.width, heroImageHeight: asset.height },
   });
-  const warning = await removeStoredFile(previousUrl);
+  const warning = await removeStoredFileIfUnused(previousUrl);
   return { slug: project.slug, warning };
 }
 
@@ -43,7 +44,7 @@ export async function clearProjectAsset(projectId: string, role: "cover" | "hero
         ? { coverImageUrl: null, coverImageWidth: null, coverImageHeight: null }
         : { heroImageUrl: null, heroImageWidth: null, heroImageHeight: null },
   });
-  const warning = await removeStoredFile(previousUrl);
+  const warning = await removeStoredFileIfUnused(previousUrl);
   return { slug: project.slug, warning };
 }
 
@@ -81,7 +82,7 @@ export async function setProjectPresentationOrder(projectId: string, orderedIds:
   const current = new Set(images.map((item) => item.id));
   const unique = new Set(orderedIds);
   if (orderedIds.length !== images.length || unique.size !== orderedIds.length || orderedIds.some((id) => !current.has(id))) {
-    throw new ProjectWriteError("That presentation order could not be saved.");
+    throw new ProjectWriteError("The presentation changed somewhere else. Refresh the page and try again.");
   }
   await getDb().$transaction(
     orderedIds.map((id, sortOrder) => getDb().projectImage.update({ where: { id }, data: { sortOrder } })),
@@ -129,31 +130,15 @@ export async function deleteProjectGalleryImage(imageId: string) {
   });
   if (!image) throw new ProjectWriteError("That image was not found.");
   await getDb().projectImage.delete({ where: { id: imageId } });
-  const warning = await removeStoredFile(image.url);
+  const warning = await removeStoredFileIfUnused(image.url);
   return { slug: image.project.slug, warning };
 }
 
 export async function removeProjectFiles(urls: Array<string | null>) {
-  const warnings: string[] = [];
-  for (const url of urls) {
-    const warning = await removeStoredFile(url);
-    if (warning) warnings.push(warning);
-  }
-  return warnings[0] ?? null;
+  return removeStoredFilesIfUnused(urls);
 }
 
 function cleanFileName(value: string | undefined) {
   const base = value?.split(/[/\\]/).pop()?.replace(/[\u0000-\u001f]/g, "").trim() ?? "";
   return base ? base.slice(0, 180) : null;
-}
-
-async function removeStoredFile(url: string | null) {
-  const key = storageKeyFromUrl(url);
-  if (!key) return null;
-  try {
-    await deletePortfolioAsset(key);
-    return null;
-  } catch {
-    return "The project was updated, but the previous file could not be removed from storage.";
-  }
 }

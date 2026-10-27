@@ -23,7 +23,7 @@ export const knownProfiles = {
 export function isStalePublicHost(url: string) {
   try {
     const host = new URL(url).hostname.replace(/^www\./, "");
-    return host === "edrisa.studio";
+    return host === "edrisa.studio" || host.endsWith(".vercel.app");
   } catch {
     return true;
   }

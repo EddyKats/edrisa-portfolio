@@ -10,7 +10,7 @@ import {
   type HomeMediaMode,
   type HomeSurface,
 } from "@/lib/content/home-surfaces";
-import { removeStoredFile } from "@/lib/content/media";
+import { removeStoredFileIfUnused } from "@/lib/content/media";
 
 export async function getHomeLabels() {
   const row = await getDb().homeContent.findUnique({ where: { id: "home" } });
@@ -70,7 +70,14 @@ export async function saveHomeSurfaceMode(surface: HomeSurface, mode: HomeMediaM
 
 export async function addHomeMedia(input: { surface: HomeSurface; url: string; mimeType: string | null }) {
   const db = getDb();
-  const count = await db.homePortrait.count({ where: { homeId: "home", surface: input.surface } });
+  // Append after the highest existing order, not after the count: once anything has
+  // been deleted the count collides with a live row, and since a single-display
+  // surface renders only the first frame, that tie decides what the homepage shows.
+  const last = await db.homePortrait.findFirst({
+    where: { homeId: "home", surface: input.surface },
+    orderBy: { sortOrder: "desc" },
+    select: { sortOrder: true },
+  });
   const created = await db.homePortrait.create({
     data: {
       homeId: "home",
@@ -78,7 +85,7 @@ export async function addHomeMedia(input: { surface: HomeSurface; url: string; m
       imageUrl: input.url,
       kind: kindFromMime(input.mimeType),
       mimeType: input.mimeType,
-      sortOrder: count,
+      sortOrder: (last?.sortOrder ?? -1) + 1,
       published: true,
     },
   });
@@ -95,10 +102,9 @@ export async function saveHomeMediaItem(id: string, url: string, mimeType: strin
     data: { imageUrl: url, kind: kindFromMime(mimeType), mimeType },
   });
   if (current.surface === "hero") await syncHeroStill();
-  const warning =
-    current.imageUrl !== url && current.imageUrl.startsWith("http") && !(await stillUsed(current.imageUrl))
-      ? await removeStoredFile(current.imageUrl)
-      : null;
+  // syncHeroStill mirrors the hero URL into HomeContent and SiteSettings, so the
+  // reference check has to run after it, once those columns hold the new value.
+  const warning = current.imageUrl !== url ? await removeStoredFileIfUnused(current.imageUrl) : null;
   return { warning };
 }
 
@@ -108,9 +114,7 @@ export async function deleteHomeMedia(id: string) {
   if (!current) throw new ContentWriteError("That picture could not be found.");
   await db.homePortrait.delete({ where: { id } });
   if (current.surface === "hero") await syncHeroStill();
-  return {
-    warning: current.imageUrl.startsWith("http") && !(await stillUsed(current.imageUrl)) ? await removeStoredFile(current.imageUrl) : null,
-  };
+  return { warning: await removeStoredFileIfUnused(current.imageUrl) };
 }
 
 export async function moveHomeMedia(id: string, direction: "up" | "down") {
@@ -142,15 +146,6 @@ export function framesFor(
     src: item.imageUrl,
     kind: (item.kind === "VIDEO" || item.kind === "GIF" ? item.kind : "IMAGE") as HomeMediaKind,
   }));
-}
-
-async function stillUsed(url: string) {
-  const db = getDb();
-  const [inGallery, home] = await Promise.all([
-    db.homePortrait.count({ where: { imageUrl: url } }),
-    db.homeContent.findUnique({ where: { id: "home" }, select: { portraitUrl: true } }),
-  ]);
-  return inGallery > 0 || home?.portraitUrl === url;
 }
 
 async function syncHeroStill() {

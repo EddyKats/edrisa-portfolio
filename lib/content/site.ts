@@ -5,7 +5,7 @@ import { site, socialLinks, socialProfiles } from "@/data/site";
 import { getDb } from "@/lib/db";
 import { ContentWriteError } from "@/lib/content/errors";
 import { framesFor } from "@/lib/content/home";
-import { removeStoredFile } from "@/lib/content/media";
+import { removeStoredFileIfUnused } from "@/lib/content/media";
 import { resolveCallHref } from "@/lib/content/phone";
 import type { HomeSectionMedia, PublicSite } from "@/lib/content/site-shape";
 import { httpsUrlSchema, optionalText, whatsappUrlSchema } from "@/lib/studio/urls";
@@ -160,7 +160,7 @@ export async function saveSiteLogo(url: string) {
     db.siteSettings.update({ where: { id: "site" }, data: { logoUrl: url } }),
     db.homeContent.update({ where: { id: "home" }, data: { logoUrl: url } }),
   ]);
-  const warning = current?.logoUrl && current.logoUrl !== url ? await removeStoredFile(current.logoUrl) : null;
+  const warning = current?.logoUrl && current.logoUrl !== url ? await removeStoredFileIfUnused(current.logoUrl) : null;
   return { warning };
 }
 

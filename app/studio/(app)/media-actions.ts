@@ -1,9 +1,8 @@
 "use server";
 
 import { requireAdmin } from "@/lib/auth/require-admin";
-import { ContentWriteError } from "@/lib/content/errors";
 import { failure, type StudioState } from "@/lib/studio/form";
-import { createContentUpload, deletePortfolioAsset, inspectContentAsset, type ContentAssetScope } from "@/lib/storage";
+import { createContentUpload } from "@/lib/storage";
 import { isContentAssetScope } from "@/lib/storage/validation";
 
 export type { StudioState };
@@ -30,15 +29,5 @@ export async function prepareContentUpload(
   } catch (error) {
     return failure(error, "Upload failed.");
   }
-}
-
-export async function verifiedContentAsset(scope: ContentAssetScope, ownerId: string, key: string) {
-  await requireAdmin();
-  const asset = await inspectContentAsset(scope, ownerId, key);
-  if ("error" in asset) {
-    await deletePortfolioAsset(key).catch(() => undefined);
-    throw new ContentWriteError(asset.error);
-  }
-  return asset;
 }
 

@@ -2,7 +2,7 @@ import "server-only";
 
 import { getDb } from "@/lib/db";
 import { ContentWriteError } from "@/lib/content/errors";
-import { removeStoredFile } from "@/lib/content/media";
+import { removeStoredFileIfUnused } from "@/lib/content/media";
 import { safeHrefSchema } from "@/lib/studio/urls";
 
 const statIcons = ["layers", "sparkles", "clock"] as const;
@@ -109,7 +109,7 @@ export async function saveAboutFeature(url: string) {
     where: { id: "about" },
     data: { featureMediaUrl: url, featureMediaType: "image" },
   });
-  return { warning: current?.featureMediaUrl && current.featureMediaUrl !== url ? await removeStoredFile(current.featureMediaUrl) : null };
+  return { warning: current?.featureMediaUrl && current.featureMediaUrl !== url ? await removeStoredFileIfUnused(current.featureMediaUrl) : null };
 }
 
 export async function clearAboutFeature() {
@@ -119,7 +119,7 @@ export async function clearAboutFeature() {
     where: { id: "about" },
     data: { featureMediaUrl: null, featureMediaType: null },
   });
-  return { warning: await removeStoredFile(current?.featureMediaUrl) };
+  return { warning: await removeStoredFileIfUnused(current?.featureMediaUrl) };
 }
 
 export async function saveAboutStat(input: {
@@ -183,7 +183,7 @@ export async function saveExperienceImage(id: string, url: string) {
   const current = await db.experience.findUnique({ where: { id }, select: { imageUrl: true } });
   if (!current) throw new ContentWriteError("That experience could not be found.");
   await db.experience.update({ where: { id }, data: { imageUrl: url } });
-  return { warning: current.imageUrl && current.imageUrl !== url ? await removeStoredFile(current.imageUrl) : null };
+  return { warning: current.imageUrl && current.imageUrl !== url ? await removeStoredFileIfUnused(current.imageUrl) : null };
 }
 
 export async function clearExperienceImage(id: string) {
@@ -191,13 +191,13 @@ export async function clearExperienceImage(id: string) {
   const current = await db.experience.findUnique({ where: { id }, select: { imageUrl: true } });
   if (!current) throw new ContentWriteError("That experience could not be found.");
   await db.experience.update({ where: { id }, data: { imageUrl: null } });
-  return { warning: await removeStoredFile(current.imageUrl) };
+  return { warning: await removeStoredFileIfUnused(current.imageUrl) };
 }
 
 export async function deleteExperience(id: string) {
   const current = await getDb().experience.findUnique({ where: { id }, select: { imageUrl: true } });
   await getDb().experience.delete({ where: { id } });
-  return { warning: await removeStoredFile(current?.imageUrl) };
+  return { warning: await removeStoredFileIfUnused(current?.imageUrl) };
 }
 
 export async function moveExperience(id: string, direction: "up" | "down") {

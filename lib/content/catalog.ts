@@ -2,7 +2,7 @@ import "server-only";
 
 import { getDb } from "@/lib/db";
 import { ContentWriteError } from "@/lib/content/errors";
-import { removeStoredFile } from "@/lib/content/media";
+import { removeStoredFileIfUnused } from "@/lib/content/media";
 import { slugify } from "@/lib/studio/slug";
 import { httpsUrlSchema } from "@/lib/studio/urls";
 
@@ -176,7 +176,7 @@ export async function saveClientLogo(id: string, url: string) {
   const current = await db.client.findUnique({ where: { id }, select: { logoUrl: true } });
   if (!current) throw new ContentWriteError("That client could not be found.");
   await db.client.update({ where: { id }, data: { logoUrl: url } });
-  return { warning: current.logoUrl && current.logoUrl !== url ? await removeStoredFile(current.logoUrl) : null };
+  return { warning: current.logoUrl && current.logoUrl !== url ? await removeStoredFileIfUnused(current.logoUrl) : null };
 }
 
 export async function clearClientLogo(id: string) {
@@ -184,13 +184,13 @@ export async function clearClientLogo(id: string) {
   const current = await db.client.findUnique({ where: { id }, select: { logoUrl: true } });
   if (!current) throw new ContentWriteError("That client could not be found.");
   await db.client.update({ where: { id }, data: { logoUrl: null } });
-  return { warning: await removeStoredFile(current.logoUrl) };
+  return { warning: await removeStoredFileIfUnused(current.logoUrl) };
 }
 
 export async function deleteClient(id: string) {
   const current = await getDb().client.findUnique({ where: { id }, select: { logoUrl: true } });
   await getDb().client.delete({ where: { id } });
-  return { warning: await removeStoredFile(current?.logoUrl) };
+  return { warning: await removeStoredFileIfUnused(current?.logoUrl) };
 }
 
 export async function moveClient(id: string, direction: "up" | "down") {

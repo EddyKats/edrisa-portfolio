@@ -3,8 +3,8 @@
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { clearClientLogo, deleteClient, moveClient, saveClient, saveClientLogo } from "@/lib/content/catalog";
 import { revalidatePublicContent } from "@/lib/content/revalidate";
+import { withContentAsset } from "@/lib/content/media";
 import { emptyToNull, failure, isPublished, text, type StudioState } from "@/lib/studio/form";
-import { verifiedContentAsset } from "../media-actions";
 
 function saved(warning?: string | null): StudioState {
   revalidatePublicContent(["/services"]);
@@ -51,9 +51,9 @@ export async function reorderClient(id: string, direction: "up" | "down"): Promi
 export async function confirmClientLogo(id: string, key: string): Promise<StudioState> {
   await requireAdmin();
   try {
-    const asset = await verifiedContentAsset("client", id, key);
-    const result = await saveClientLogo(id, asset.publicUrl);
-    return saved(result.warning);
+    const result = await withContentAsset("client", id, key, (asset) => saveClientLogo(id, asset.publicUrl));
+    if ("error" in result) return { error: result.error };
+    return saved(result.value.warning);
   } catch (error) {
     return failure(error, "Upload failed.");
   }

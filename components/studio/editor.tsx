@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { prepareContentUpload } from "@/app/studio/(app)/media-actions";
 import type { StudioState } from "@/lib/studio/form";
+import { runUploads } from "@/lib/studio/upload-client";
 import { maxImageLabel, type ContentAssetScope } from "@/lib/storage/validation";
 
 export const controlClass =
@@ -34,6 +35,28 @@ export function Status({ state }: { state: StudioState }) {
     );
   }
   return null;
+}
+
+/** Real percentage while the browser reports one, falling back to an indeterminate bar. */
+export function UploadProgressBar({ percent, label }: { percent: number | null; label: string }) {
+  return (
+    <p className="studio-progress" role="status">
+      <span
+        className="studio-progress-track"
+        role="progressbar"
+        aria-label={label}
+        aria-valuemin={percent === null ? undefined : 0}
+        aria-valuemax={percent === null ? undefined : 100}
+        aria-valuenow={percent ?? undefined}
+      >
+        <span
+          className={percent === null ? "studio-progress-bar is-waiting" : "studio-progress-bar"}
+          style={percent === null ? undefined : { width: `${percent}%` }}
+        />
+      </span>
+      <span className="studio-progress-label">{percent === null ? label : `${label} ${percent}%`}</span>
+    </p>
+  );
 }
 
 export function SaveButton({ label = "Save", tone = "primary" }: { label?: string; tone?: "primary" | "danger" }) {
@@ -96,6 +119,7 @@ export function ImageField({
   const router = useRouter();
   const [state, setState] = useState<StudioState>({});
   const [busy, setBusy] = useState(false);
+  const [percent, setPercent] = useState<number | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [allowReplace, setAllowReplace] = useState(false);
 
@@ -111,24 +135,22 @@ export function ImageField({
     }
     setBusy(true);
     setState({});
-    const ticket = await prepareContentUpload(scope, ownerId, { type: file.type, size: file.size });
-    if (!ticket.uploadUrl || !ticket.key || !ticket.contentType) {
-      setState({ error: ticket.error ?? "Upload failed." });
+    setPercent(null);
+    try {
+      const result = await runUploads(
+        [{ file, prepare: () => prepareContentUpload(scope, ownerId, { type: file.type, size: file.size }), confirm }],
+        "image",
+        { onProgress: (progress) => setPercent(progress.percent) },
+      );
+      finish(
+        result.errors.length > 0
+          ? { error: result.errors[0] }
+          : { ok: true, warning: result.warnings[0] },
+      );
+    } finally {
       setBusy(false);
-      return;
+      setPercent(null);
     }
-    const response = await fetch(ticket.uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": ticket.contentType },
-      body: file,
-    }).catch(() => null);
-    if (!response?.ok) {
-      setState({ error: "Upload failed." });
-      setBusy(false);
-      return;
-    }
-    finish(await confirm(ticket.key));
-    setBusy(false);
   }
 
   return (
@@ -155,6 +177,7 @@ export function ImageField({
           }}
         />
       </label>
+      {busy ? <UploadProgressBar percent={percent} label={`Uploading ${label}`} /> : null}
       {confirmReplace && url ? (
         <label className="studio-check">
           <input type="checkbox" checked={allowReplace} onChange={(event) => setAllowReplace(event.target.checked)} />

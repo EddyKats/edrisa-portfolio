@@ -2691,6 +2691,61 @@ body {
   background: var(--studio-accent-soft);
 }
 
+.studio-progress {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.studio-progress-track {
+  display: block;
+  overflow: hidden;
+  height: 0.35rem;
+  background: var(--studio-accent-soft);
+  border-radius: 999px;
+}
+
+.studio-progress-bar {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--studio-accent);
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.studio-progress-bar.is-waiting {
+  width: 100%;
+  animation: studio-progress-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes studio-progress-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-progress-bar,
+  .studio-progress-bar.is-waiting {
+    animation: none;
+    transition: none;
+  }
+}
+
+.studio-progress-label {
+  color: var(--studio-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.studio-errors {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
 .studio-help,
 .studio-empty {
   margin: 0;

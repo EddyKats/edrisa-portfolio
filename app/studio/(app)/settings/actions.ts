@@ -4,8 +4,8 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { saveCta } from "@/lib/content/cta";
 import { saveSiteLogo, saveSiteSettings } from "@/lib/content/site";
 import { revalidatePublicContent } from "@/lib/content/revalidate";
+import { withContentAsset } from "@/lib/content/media";
 import { emptyToNull, failure, text, type StudioState } from "@/lib/studio/form";
-import { verifiedContentAsset } from "../media-actions";
 
 const paths = ["/", "/about", "/services", "/contact", "/portfolio"];
 
@@ -36,10 +36,10 @@ export async function saveSettings(_state: StudioState, formData: FormData): Pro
 export async function confirmSiteLogo(key: string): Promise<StudioState> {
   await requireAdmin();
   try {
-    const asset = await verifiedContentAsset("home-logo", "home", key);
-    const result = await saveSiteLogo(asset.publicUrl);
+    const result = await withContentAsset("home-logo", "home", key, (asset) => saveSiteLogo(asset.publicUrl));
+    if ("error" in result) return { error: result.error };
     revalidatePublicContent(paths);
-    return { ok: true, warning: result.warning ?? undefined };
+    return { ok: true, warning: result.value.warning ?? undefined };
   } catch (error) {
     return failure(error, "Upload failed.");
   }

@@ -13,19 +13,32 @@ import {
   isContentAssetKey,
   isContentAssetScope,
   isPortfolioAssetKey,
+  isPortfolioAssetKeyForRole,
   isDeletableAssetKey,
   matchesMediaSignature,
   mediaBucket,
   namespacedAssetKey,
   readMediaSize,
+  uploadKindForRole,
   validateImageUpload,
   validateMediaUpload,
+  validateUploadKind,
   type AllowedImageType,
   type AllowedMediaType,
   type ContentAssetScope,
+  type PortfolioAssetRole,
+  type UploadKind,
 } from "./validation";
 
-export type PortfolioAssetRole = "cover" | "hero" | "gallery" | "presentation";
+export type { PortfolioAssetRole };
+
+/**
+ * How a stored URL relates to the bucket this deployment can act on. The distinction
+ * matters on delete: "external" is a seeded /images/... path we were never meant to
+ * touch, while "unconfigured"/"foreign" is our own URL that we cannot remove — silent
+ * success there would hide real drift between the database and storage.
+ */
+export type StoredUrlKind = "none" | "external" | "unconfigured" | "foreign" | "deletable";
 
 export type PortfolioAsset = {
   publicUrl: string;
@@ -59,17 +72,42 @@ export function storageKeyFromUrl(url: string | null | undefined) {
   return decodeURIComponent(url.slice(prefix.length));
 }
 
+/**
+ * Classifies a stored URL without short-circuiting on storageConfigured(), so callers
+ * can tell "this was never ours" from "this is ours but we cannot delete it". Deleting
+ * is namespaced, so a URL from another namespace is reported rather than silently kept.
+ */
+export function describeStoredUrl(url: string | null | undefined): { kind: StoredUrlKind; key: string | null } {
+  if (!url) return { kind: "none", key: null };
+
+  // Seeded static paths such as /images/edrisa-portrait.jpg were never in the bucket.
+  if (!/^https?:\/\//.test(url)) return { kind: "external", key: null };
+
+  const endpoint = storageEndpoint();
+  if (!endpoint) return { kind: "unconfigured", key: null };
+
+  const prefix = `${endpoint}/${mediaBucket}/`;
+  if (!url.startsWith(prefix)) return { kind: "external", key: null };
+
+  const key = decodeURIComponent(url.slice(prefix.length));
+  if (!storageConfigured()) return { kind: "unconfigured", key };
+  return { kind: isDeletableAssetKey(key) ? "deletable" : "foreign", key };
+}
+
 export async function createPortfolioUpload(input: {
   projectId: string;
   role: PortfolioAssetRole;
   type: string;
   size: number;
 }) {
-  const error = input.role === "presentation" ? validateMediaUpload(input) : validateImageUpload(input);
+  // Prepare and confirm must agree on what this role accepts, or a file passes the
+  // signed PUT and is then rejected after the bytes have already been uploaded.
+  const kind = uploadKindForRole(input.role);
+  const error = validateUploadKind(kind, input);
   if (error) return { error };
   assertProjectId(input.projectId);
   const type = input.type as AllowedMediaType;
-  const extension = input.role === "presentation" ? extensionForMedia(type) : extensionFor(type as AllowedImageType);
+  const extension = kind === "media" ? extensionForMedia(type) : extensionFor(type as AllowedImageType);
   const key = namespacedAssetKey(
     `projects/${input.projectId}/${input.role}/${crypto.randomUUID()}.${extension}`,
   );
@@ -121,54 +159,40 @@ export async function inspectContentAsset(
   return inspectStoredImage(key);
 }
 
-export async function uploadPortfolioAsset(input: {
-  projectId: string;
-  role: PortfolioAssetRole;
-  type: AllowedMediaType;
-  body: Uint8Array;
-}) {
-  const error =
-    input.role === "presentation"
-      ? validateMediaUpload({ type: input.type, size: input.body.byteLength })
-      : validateImageUpload({ type: input.type, size: input.body.byteLength });
-  if (error) throw new Error(error);
-  if (!matchesMediaSignature(input.type, input.body)) throw new Error("That file does not match an allowed format.");
-  assertProjectId(input.projectId);
-  const extension = input.role === "presentation" ? extensionForMedia(input.type) : extensionFor(input.type as AllowedImageType);
-  const key = namespacedAssetKey(
-    `projects/${input.projectId}/${input.role}/${crypto.randomUUID()}.${extension}`,
-  );
-  await client().send(
-    new PutObjectCommand({
-      Bucket: mediaBucket,
-      Key: key,
-      Body: input.body,
-      ContentType: input.type,
-    }),
-  );
-  const inspected = await inspectPortfolioAsset(input.projectId, key);
-  if ("error" in inspected) {
-    await deletePortfolioAsset(key);
-    throw new Error(inspected.error);
-  }
-  return inspected;
-}
-
-export async function inspectPortfolioAsset(projectId: string, key: string): Promise<PortfolioAsset | { error: string }> {
+export async function inspectPortfolioAsset(
+  projectId: string,
+  key: string,
+  role?: PortfolioAssetRole,
+): Promise<PortfolioAsset | { error: string }> {
   if (!storageConfigured()) return { error: "Image storage is not configured." };
-  if (!isPortfolioAssetKey(projectId, key)) return { error: "That upload could not be verified." };
+  const matches = role ? isPortfolioAssetKeyForRole(projectId, role, key) : isPortfolioAssetKey(projectId, key);
+  if (!matches) return { error: "That upload could not be verified." };
 
-  return inspectStoredImage(key);
+  return inspectStoredImage(key, role ? uploadKindForRole(role) : "media");
 }
 
-async function inspectStoredImage(key: string): Promise<PortfolioAsset | { error: string }> {
-  const stored = await client().send(new HeadObjectCommand({ Bucket: mediaBucket, Key: key }));
+async function inspectStoredImage(key: string, kind: UploadKind = "media"): Promise<PortfolioAsset | { error: string }> {
+  // The upload is already in the bucket by this point, so a failure here must be
+  // reported rather than thrown: the caller needs to clean the object up.
+  let stored;
+  try {
+    stored = await client().send(new HeadObjectCommand({ Bucket: mediaBucket, Key: key }));
+  } catch {
+    return { error: "That upload could not be verified. Try again." };
+  }
+
   const type = stored.ContentType ?? "";
   const size = stored.ContentLength ?? 0;
-  const invalid = validateMediaUpload({ type, size });
+  const invalid = validateUploadKind(kind, { type, size });
   if (invalid) return { error: invalid };
 
-  const sample = await readObjectStart(key);
+  let sample: Uint8Array;
+  try {
+    sample = await readObjectStart(key);
+  } catch {
+    return { error: "That upload could not be verified. Try again." };
+  }
+
   const mediaType = type as AllowedMediaType;
   if (!matchesMediaSignature(mediaType, sample)) return { error: "That file does not match an allowed format." };
   const dimensions = readMediaSize(mediaType, sample);
@@ -190,6 +214,10 @@ export async function deletePortfolioAsset(key: string) {
   await client().send(new DeleteObjectCommand({ Bucket: mediaBucket, Key: key }));
 }
 
+/**
+ * One-time bucket bootstrap. Browser uploads PUT straight to storage, so the bucket
+ * needs this CORS rule before any of that works. Run once per bucket, not per request.
+ */
 export async function allowBrowserUploads() {
   await client().send(
     new PutBucketCorsCommand({

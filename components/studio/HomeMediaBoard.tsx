@@ -3,7 +3,8 @@
 import { useActionState, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { OrderButtons, Status, controlClass } from "@/components/studio/editor";
+import { OrderButtons, Status, UploadProgressBar, controlClass } from "@/components/studio/editor";
+import { runUploads } from "@/lib/studio/upload-client";
 import { prepareContentUpload } from "@/app/studio/(app)/media-actions";
 import {
   confirmAddHomeMedia,
@@ -157,6 +158,7 @@ function MediaSlot({
   const router = useRouter();
   const [state, setState] = useState<StudioState>({});
   const [busy, setBusy] = useState(false);
+  const [percent, setPercent] = useState<number | null>(null);
 
   return (
     <div className="studio-card studio-form">
@@ -178,10 +180,11 @@ function MediaSlot({
             const file = event.target.files?.[0];
             event.target.value = "";
             if (!file) return;
-            void runUpload(file, ownerId, confirm, setBusy, setState, router);
+            void runUpload(file, ownerId, confirm, setBusy, setState, router, setPercent);
           }}
         />
       </label>
+      {busy ? <UploadProgressBar percent={percent} label="Uploading" /> : null}
       {remove ? (
       <button
         type="button"
@@ -208,6 +211,7 @@ function AddMedia({ surface, title }: { surface: HomeSurface; title: string }) {
   const router = useRouter();
   const [state, setState] = useState<StudioState>({});
   const [busy, setBusy] = useState(false);
+  const [percent, setPercent] = useState<number | null>(null);
 
   return (
     <div className="studio-card studio-form">
@@ -226,11 +230,20 @@ function AddMedia({ surface, title }: { surface: HomeSurface; title: string }) {
             if (!file) return;
             void (async () => {
               const ownerId = crypto.randomUUID();
-              await runUpload(file, ownerId, (key) => confirmAddHomeMedia(surface, ownerId, key), setBusy, setState, router);
+              await runUpload(
+                file,
+                ownerId,
+                (key) => confirmAddHomeMedia(surface, ownerId, key),
+                setBusy,
+                setState,
+                router,
+                setPercent,
+              );
             })();
           }}
         />
       </label>
+      {busy ? <UploadProgressBar percent={percent} label="Uploading" /> : null}
     </div>
   );
 }
@@ -242,29 +255,31 @@ async function runUpload(
   setBusy: (value: boolean) => void,
   setState: (value: StudioState) => void,
   router: ReturnType<typeof useRouter>,
+  setPercent: (value: number | null) => void,
 ) {
   setBusy(true);
   setState({});
-  const ticket = await prepareContentUpload("home-media", ownerId, { type: file.type, size: file.size });
-  if (!ticket.uploadUrl || !ticket.key || !ticket.contentType) {
-    setState({ error: ticket.error ?? "Upload failed." });
+  setPercent(null);
+  try {
+    const result = await runUploads(
+      [
+        {
+          file,
+          prepare: () => prepareContentUpload("home-media", ownerId, { type: file.type, size: file.size }),
+          confirm: (key) => confirm(key),
+        },
+      ],
+      "media",
+      { onProgress: (progress) => setPercent(progress.percent) },
+    );
+    setState(result.errors.length > 0 ? { error: result.errors[0] } : { ok: true, warning: result.warnings[0] });
+    // revalidateProjectContent does not cover the studio pages, so this refresh is
+    // what actually shows the new file.
+    if (result.errors.length === 0) router.refresh();
+  } finally {
     setBusy(false);
-    return;
+    setPercent(null);
   }
-  const response = await fetch(ticket.uploadUrl, {
-    method: "PUT",
-    headers: { "Content-Type": ticket.contentType },
-    body: file,
-  }).catch(() => null);
-  if (!response?.ok) {
-    setState({ error: "Upload failed." });
-    setBusy(false);
-    return;
-  }
-  const next = await confirm(ticket.key);
-  setState(next);
-  if (next.ok) router.refresh();
-  setBusy(false);
 }
 
 function kindLabel(kind: string) {

@@ -16,9 +16,11 @@ import {
   moveProjectCredit,
   updateProjectCredit,
 } from "@/lib/content/project-relations";
+import { withPortfolioAsset } from "@/lib/content/media";
 import { ProjectWriteError } from "@/lib/content/projects";
 import { requireAdmin } from "@/lib/auth/require-admin";
-import { createPortfolioUpload, inspectPortfolioAsset, deletePortfolioAsset, type PortfolioAssetRole } from "@/lib/storage";
+import { createPortfolioUpload, type PortfolioAssetRole } from "@/lib/storage";
+import { isPortfolioAssetRole } from "@/lib/storage/validation";
 
 export type DetailState = {
   error?: string;
@@ -44,7 +46,7 @@ export async function prepareProjectUpload(
   file: { type: string; size: number },
 ): Promise<UploadTicket> {
   await requireAdmin();
-  if (!["cover", "hero", "gallery", "presentation"].includes(role)) return { error: "That upload could not be started." };
+  if (!isPortfolioAssetRole(role)) return { error: "That upload could not be started." };
   try {
     const ticket = await createPortfolioUpload({ projectId, role, type: file.type, size: file.size });
     if ("error" in ticket) return { error: ticket.error };
@@ -61,18 +63,22 @@ export async function confirmProjectUpload(
   originalName?: string,
 ): Promise<DetailState> {
   await requireAdmin();
+  if (!isPortfolioAssetRole(role)) return { error: "That upload could not be verified." };
   try {
-    const asset = await inspectPortfolioAsset(projectId, key);
-    if ("error" in asset) {
-      await deletePortfolioAsset(key).catch(() => undefined);
-      return { error: asset.error };
-    }
-    const saved =
-      role === "gallery" || role === "presentation"
-        ? await addProjectGalleryImage(projectId, asset, originalName)
-        : await saveProjectAsset(projectId, role, asset);
-    revalidateProjectContent([saved.slug]);
-    return { ok: true, warning: "warning" in saved ? saved.warning ?? undefined : undefined };
+    // withPortfolioAsset checks the key against this role, so a presentation video
+    // cannot be recorded as a cover, and drops the object if the write fails.
+    const result = await withPortfolioAsset<{ slug: string; warning?: string | null }>(
+      projectId,
+      role,
+      key,
+      (asset) =>
+        role === "gallery" || role === "presentation"
+          ? addProjectGalleryImage(projectId, asset, originalName)
+          : saveProjectAsset(projectId, role, asset),
+    );
+    if ("error" in result) return { error: result.error };
+    revalidateProjectContent([result.value.slug]);
+    return { ok: true, warning: result.value.warning ?? undefined };
   } catch (error) {
     return failure(error, "Upload failed.");
   }

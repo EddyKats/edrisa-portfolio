@@ -11,8 +11,8 @@ import {
 } from "@/lib/content/home";
 import { isHomeSurface, isHomeMediaMode } from "@/lib/content/home-surfaces";
 import { revalidatePublicContent } from "@/lib/content/revalidate";
+import { withContentAsset } from "@/lib/content/media";
 import { failure, text, type StudioState } from "@/lib/studio/form";
-import { verifiedContentAsset } from "../media-actions";
 
 const paths = ["/", "/about"];
 
@@ -49,9 +49,12 @@ export async function saveHomeMode(_state: StudioState, formData: FormData): Pro
 export async function confirmAddHomeMedia(surface: string, ownerId: string, key: string): Promise<StudioState> {
   await requireAdmin();
   try {
+    // Checked before the upload is claimed, so a bad surface never strands an object.
     if (!isHomeSurface(surface)) return { error: "Choose a homepage section." };
-    const asset = await verifiedContentAsset("home-media", ownerId, key);
-    await addHomeMedia({ surface, url: asset.publicUrl, mimeType: asset.mimeType });
+    const result = await withContentAsset("home-media", ownerId, key, (asset) =>
+      addHomeMedia({ surface, url: asset.publicUrl, mimeType: asset.mimeType }),
+    );
+    if ("error" in result) return { error: result.error };
     revalidatePublicContent(paths);
     return { ok: true };
   } catch (error) {
@@ -62,10 +65,12 @@ export async function confirmAddHomeMedia(surface: string, ownerId: string, key:
 export async function confirmHomeMediaItem(id: string, key: string): Promise<StudioState> {
   await requireAdmin();
   try {
-    const asset = await verifiedContentAsset("home-media", id, key);
-    const result = await saveHomeMediaItem(id, asset.publicUrl, asset.mimeType);
+    const result = await withContentAsset("home-media", id, key, (asset) =>
+      saveHomeMediaItem(id, asset.publicUrl, asset.mimeType),
+    );
+    if ("error" in result) return { error: result.error };
     revalidatePublicContent(paths);
-    return { ok: true, warning: result.warning ?? undefined };
+    return { ok: true, warning: result.value.warning ?? undefined };
   } catch (error) {
     return failure(error, "Upload failed.");
   }

@@ -4,8 +4,12 @@ import { ExternalLink, ImageIcon, Pencil, Plus } from "lucide-react";
 import { StudioPageHead } from "@/components/studio/StudioPageHead";
 import { listStudioProjects } from "@/lib/content/projects";
 
-export default async function StudioProjectsPage() {
-  const projects = await listStudioProjects();
+export default async function StudioProjectsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ media?: string }>;
+}) {
+  const [projects, { media }] = await Promise.all([listStudioProjects(), searchParams]);
 
   return (
     <section>
@@ -22,6 +26,12 @@ export default async function StudioProjectsPage() {
         </Link>
         }
       />
+
+      {media === "warn" ? (
+        <p className="studio-note is-error mt-6" role="status">
+          The project was deleted, but some of its files could not be removed from storage. Run the media sweep to clear them.
+        </p>
+      ) : null}
 
       {projects.length === 0 ? (
         <p className="mt-8 text-sm text-[#1c120e]/70">No projects yet.</p>

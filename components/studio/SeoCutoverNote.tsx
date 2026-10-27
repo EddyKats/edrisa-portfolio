@@ -7,7 +7,11 @@ export function SeoCutoverNote() {
         apex.
       </p>
       <ol className="mt-3 list-decimal space-y-2 pl-5">
-        <li>Buy the domain, attach it on Vercel (apex + www), then set Site URL here to https://edrisastudio.com.</li>
+        <li>
+          Buy the domain, attach it on Vercel (apex + www), then set Site URL here to https://edrisastudio.com. GitHub
+          OAuth must include https://edrisastudio.com/api/auth/callback/github. Vercel AUTH_URL should be
+          https://edrisastudio.com.
+        </li>
         <li>
           Search Console: URL-prefix property https://edrisastudio.com/, verify, submit /sitemap.xml. Optional env{" "}
           <code>GOOGLE_SITE_VERIFICATION</code>. Request indexing for /, /about, /services, /portfolio.

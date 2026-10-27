@@ -78,22 +78,20 @@ export async function deleteProject(_state: ProjectActionState, formData: FormDa
   }
 
   const id = String(formData.get("id") ?? "");
-  let slug = "";
+  let urls: Array<string | null> = [];
   try {
     const project = await deleteProjectRecord(id);
-    slug = project.slug;
-    revalidateProjectContent([slug]);
-    const warning = await removeProjectFiles([
-      project.coverImageUrl,
-      project.heroImageUrl,
-      ...project.images.map((image) => image.url),
-    ]);
-    if (warning) return { error: warning };
+    urls = [project.coverImageUrl, project.heroImageUrl, ...project.images.map((image) => image.url)];
+    revalidateProjectContent([project.slug]);
   } catch (error) {
     return failure(error, "The project could not be deleted.");
   }
 
-  redirect("/studio/projects");
+  // The project is already gone, so storage trouble is a warning, never a failure:
+  // reporting an error here would skip the redirect and leave the studio claiming a
+  // deletion failed that actually succeeded, with no way to retry the file cleanup.
+  const warning = await removeProjectFiles(urls).catch(() => "storage");
+  redirect(warning ? "/studio/projects?media=warn" : "/studio/projects");
 }
 
 function selectedIds(formData: FormData, name: string) {

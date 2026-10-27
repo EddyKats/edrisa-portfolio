@@ -12,6 +12,9 @@
     "db:seed": "node --env-file=.env.local --import tsx prisma/seed.ts",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --import tsx --test lib/storage/media.test.ts",
+    "media:sweep": "node --env-file=.env.local --import tsx scripts/sweep-media.mts",
+    "media:sweep:delete": "node --env-file=.env.local --import tsx scripts/sweep-media.mts --delete",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -16,8 +16,8 @@ import {
   saveExperienceImage,
 } from "@/lib/content/about";
 import { revalidatePublicContent } from "@/lib/content/revalidate";
+import { withContentAsset } from "@/lib/content/media";
 import { emptyToNull, failure, isPublished, text, type StudioState } from "@/lib/studio/form";
-import { verifiedContentAsset } from "../media-actions";
 
 function saved(warning?: string | null): StudioState {
   revalidatePublicContent(["/about"]);
@@ -49,9 +49,9 @@ export async function saveAbout(_state: StudioState, formData: FormData): Promis
 export async function confirmAboutFeature(key: string): Promise<StudioState> {
   await requireAdmin();
   try {
-    const asset = await verifiedContentAsset("about-feature", "about", key);
-    const result = await saveAboutFeature(asset.publicUrl);
-    return saved(result.warning);
+    const result = await withContentAsset("about-feature", "about", key, (asset) => saveAboutFeature(asset.publicUrl));
+    if ("error" in result) return { error: result.error };
+    return saved(result.value.warning);
   } catch (error) {
     return failure(error, "Upload failed.");
   }
@@ -127,9 +127,9 @@ export async function saveExperienceRecord(_state: StudioState, formData: FormDa
 export async function confirmExperienceImage(id: string, key: string): Promise<StudioState> {
   await requireAdmin();
   try {
-    const asset = await verifiedContentAsset("experience", id, key);
-    const result = await saveExperienceImage(id, asset.publicUrl);
-    return saved(result.warning);
+    const result = await withContentAsset("experience", id, key, (asset) => saveExperienceImage(id, asset.publicUrl));
+    if ("error" in result) return { error: result.error };
+    return saved(result.value.warning);
   } catch (error) {
     return failure(error, "Upload failed.");
   }

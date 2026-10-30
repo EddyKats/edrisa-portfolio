@@ -18,7 +18,7 @@ export function AboutFeatureMedia({ src }: { src: string | null }) {
             src={src}
             alt=""
             fill
-            priority
+            loading="lazy"
             sizes="(min-width: 960px) 720px, 100vw"
             className="object-cover"
           />

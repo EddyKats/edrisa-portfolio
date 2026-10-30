@@ -50,6 +50,7 @@ export type PortfolioAsset = {
 };
 
 const headerBytes = 256 * 1024;
+const immutableCache = "public, max-age=31536000, immutable";
 
 export function storageConfigured() {
   return Boolean(
@@ -116,11 +117,16 @@ export async function createPortfolioUpload(input: {
     Key: key,
     ContentType: type,
     ContentLength: input.size,
+    CacheControl: immutableCache,
   });
-  const uploadUrl = await getSignedUrl(client(), command, { expiresIn: 300 });
+  const uploadUrl = await getSignedUrl(client(), command, {
+    expiresIn: 300,
+    signableHeaders: new Set(["cache-control"]),
+  });
   return {
     uploadUrl,
     key,
+    cacheControl: immutableCache,
     headers: { "Content-Type": type },
   };
 }
@@ -144,9 +150,13 @@ export async function createContentUpload(input: {
     Key: key,
     ContentType: type,
     ContentLength: input.size,
+    CacheControl: immutableCache,
   });
-  const uploadUrl = await getSignedUrl(client(), command, { expiresIn: 300 });
-  return { uploadUrl, key, headers: { "Content-Type": type } };
+  const uploadUrl = await getSignedUrl(client(), command, {
+    expiresIn: 300,
+    signableHeaders: new Set(["cache-control"]),
+  });
+  return { uploadUrl, key, cacheControl: immutableCache, headers: { "Content-Type": type } };
 }
 
 export async function inspectContentAsset(

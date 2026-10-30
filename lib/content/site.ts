@@ -1,6 +1,6 @@
 import "server-only";
 
-import { isStalePublicHost } from "@/data/identity";
+import { canonicalSiteUrl, isStalePublicHost } from "@/data/identity";
 import { site, socialLinks, socialProfiles } from "@/data/site";
 import { getDb } from "@/lib/db";
 import { ContentWriteError } from "@/lib/content/errors";
@@ -27,7 +27,7 @@ export async function getPublicSite(): Promise<PublicSite> {
       name: site.name,
       title: site.title,
       description: site.description,
-      url: site.url,
+      url: canonicalSiteUrl,
       portraitSrc: site.portraitSrc,
       portraits: [site.portraitSrc],
       portraitMode: "single",
@@ -76,7 +76,7 @@ export async function getPublicSite(): Promise<PublicSite> {
   const portraitMode = hero.mode === "sequence" && hero.frames.length > 1 ? "sequence" : "single";
 
   const staleHost = isStalePublicHost(settings.siteUrl);
-  const publicUrl = (staleHost ? site.url : settings.siteUrl).replace(/\/$/, "");
+  const publicUrl = canonicalSiteUrl;
   return {
     name: staleHost ? site.name : settings.siteName,
     title: staleHost ? site.title : settings.defaultSeoTitle || site.title,

@@ -32,6 +32,7 @@ export function ClientStrip({
                     width={200}
                     height={80}
                     loading="lazy"
+                    sizes="200px"
                     className="client-marquee-img"
                   />
                 </div>

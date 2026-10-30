@@ -135,7 +135,7 @@ async function listStoredObjects() {
 /** Every URL column in schema.prisma. Keep in step with storageUrlColumns in lib/content/media.ts. */
 async function listReferences() {
   const db = getDb();
-  const [settings, home, portraits, about, experience, clients, projects, images] = await Promise.all([
+  const [settings, home, portraits, about, experience, clients, projects, images, gallery] = await Promise.all([
     db.siteSettings.findMany({ select: { id: true, homepagePortraitUrl: true, logoUrl: true } }),
     db.homeContent.findMany({ select: { id: true, portraitUrl: true, logoUrl: true } }),
     db.homePortrait.findMany({ select: { id: true, imageUrl: true } }),
@@ -144,6 +144,7 @@ async function listReferences() {
     db.client.findMany({ select: { id: true, logoUrl: true } }),
     db.project.findMany({ select: { id: true, coverImageUrl: true, heroImageUrl: true } }),
     db.projectImage.findMany({ select: { id: true, url: true } }),
+    db.galleryPhoto.findMany({ select: { id: true, imageUrl: true } }),
   ]);
 
   const found: Reference[] = [];
@@ -170,5 +171,6 @@ async function listReferences() {
     add("Project", "heroImageUrl", row.id, row.heroImageUrl);
   }
   for (const row of images) add("ProjectImage", "url", row.id, row.url);
+  for (const row of gallery) add("GalleryPhoto", "imageUrl", row.id, row.imageUrl);
   return found;
 }

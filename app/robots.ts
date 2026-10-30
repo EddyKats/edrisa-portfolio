@@ -1,16 +1,13 @@
 import type { MetadataRoute } from "next";
-import { getPublicSite } from "@/lib/content/site";
+import { canonicalSiteUrl } from "@/data/identity";
 
-export const dynamic = "force-dynamic";
-
-export default async function robots(): Promise<MetadataRoute.Robots> {
-  const site = await getPublicSite();
+export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: "/studio",
+      disallow: ["/studio", "/api/"],
     },
-    sitemap: `${site.url}/sitemap.xml`,
+    sitemap: `${canonicalSiteUrl}/sitemap.xml`,
   };
 }

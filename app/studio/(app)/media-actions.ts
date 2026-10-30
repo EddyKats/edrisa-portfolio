@@ -12,6 +12,7 @@ export type UploadTicket = {
   uploadUrl?: string;
   key?: string;
   contentType?: string;
+  cacheControl?: string;
 };
 
 export async function prepareContentUpload(
@@ -25,7 +26,7 @@ export async function prepareContentUpload(
     const ticket = await createContentUpload({ scope, ownerId, type: file.type, size: file.size });
     if ("error" in ticket && ticket.error) return { error: ticket.error };
     if (!ticket.uploadUrl || !ticket.key) return { error: "Upload failed." };
-    return { uploadUrl: ticket.uploadUrl, key: ticket.key, contentType: file.type };
+    return { uploadUrl: ticket.uploadUrl, key: ticket.key, contentType: file.type, cacheControl: ticket.cacheControl };
   } catch (error) {
     return failure(error, "Upload failed.");
   }

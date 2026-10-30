@@ -35,6 +35,7 @@ export const storageUrlColumns = [
   "Project.coverImageUrl",
   "Project.heroImageUrl",
   "ProjectImage.url",
+  "GalleryPhoto.imageUrl",
 ] as const;
 
 /**
@@ -47,7 +48,7 @@ export async function usedStorageUrls(urls: Array<string | null | undefined>): P
   if (wanted.length === 0) return new Set();
 
   const db = getDb();
-  const [settings, home, portraits, about, experience, clients, projects, images] = await Promise.all([
+  const [settings, home, portraits, about, experience, clients, projects, images, gallery] = await Promise.all([
     db.siteSettings.findMany({
       where: { OR: [{ homepagePortraitUrl: { in: wanted } }, { logoUrl: { in: wanted } }] },
       select: { homepagePortraitUrl: true, logoUrl: true },
@@ -65,6 +66,7 @@ export async function usedStorageUrls(urls: Array<string | null | undefined>): P
       select: { coverImageUrl: true, heroImageUrl: true },
     }),
     db.projectImage.findMany({ where: { url: { in: wanted } }, select: { url: true } }),
+    db.galleryPhoto.findMany({ where: { imageUrl: { in: wanted } }, select: { imageUrl: true } }),
   ]);
 
   const used = new Set<string>();
@@ -88,6 +90,7 @@ export async function usedStorageUrls(urls: Array<string | null | undefined>): P
     keep(row.heroImageUrl);
   }
   for (const row of images) keep(row.url);
+  for (const row of gallery) keep(row.imageUrl);
   return used;
 }
 

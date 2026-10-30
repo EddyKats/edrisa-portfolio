@@ -9,6 +9,7 @@ export type UploadTicket = {
   uploadUrl?: string;
   key?: string;
   contentType?: string;
+  cacheControl?: string;
 };
 
 export type UploadOutcome = {
@@ -67,7 +68,7 @@ export function sendToStorage(
   uploadUrl: string,
   contentType: string,
   file: File,
-  options: { onProgress?: (percent: number | null) => void; signal?: AbortSignal } = {},
+  options: { cacheControl?: string; onProgress?: (percent: number | null) => void; signal?: AbortSignal } = {},
 ): Promise<{ ok: boolean; message?: string }> {
   return new Promise((resolve) => {
     if (options.signal?.aborted) {
@@ -84,6 +85,7 @@ export function sendToStorage(
 
     request.open("PUT", uploadUrl, true);
     request.setRequestHeader("Content-Type", contentType);
+    if (options.cacheControl) request.setRequestHeader("Cache-Control", options.cacheControl);
 
     request.upload.onprogress = (event) => {
       options.onProgress?.(event.lengthComputable ? Math.round((event.loaded / event.total) * 100) : null);
@@ -144,6 +146,7 @@ export async function runUploads(
     }
 
     const sent = await sendToStorage(ticket.uploadUrl, ticket.contentType, job.file, {
+      cacheControl: ticket.cacheControl,
       onProgress: report,
       signal: options.signal,
     });

@@ -43,6 +43,17 @@ export const navigation = [
     surfaceClass:
       "bg-[linear-gradient(112deg,#5446DF_0%,#6A3AE6_28%,#8A3AE9_54%,#A23DEB_78%,#B52EE5_100%)]",
   },
+  {
+    id: "gallery",
+    title: "Gallery",
+    homeLabel: "Gallery",
+    href: "/gallery",
+    icon: "camera",
+    transitionName: "section-gallery",
+    summary: "Photographs by Kasibante Edrisa of Edrisa Studio.",
+    surfaceClass:
+      "bg-[linear-gradient(112deg,#5446DF_0%,#6A3AE6_28%,#8A3AE9_54%,#A23DEB_78%,#B52EE5_100%)]",
+  },
 ] as const;
 
 export type NavItem = (typeof navigation)[number];
@@ -62,11 +73,19 @@ export function getNavItem(id: NavId): NavItem {
 }
 
 export function getSectionNeighbors(id: NavId) {
-  const index = navigation.findIndex((item) => item.id === id);
-  const count = navigation.length;
-  const current = navigation[index];
-  const previous = navigation[(index - 1 + count) % count];
-  const next = navigation[(index + 1) % count];
+  if (id === "gallery") {
+    const current = getNavItem("gallery");
+    const previous = getNavItem("portfolio");
+    const next = getNavItem("about");
+    return { current, previous, next };
+  }
+
+  const cycle = navigation.filter((item) => item.id !== "gallery");
+  const index = cycle.findIndex((item) => item.id === id);
+  const count = cycle.length;
+  const current = cycle[index];
+  const previous = cycle[(index - 1 + count) % count];
+  const next = cycle[(index + 1) % count];
 
   if (!current || !previous || !next) {
     throw new Error(`Unknown navigation item: ${id}`);

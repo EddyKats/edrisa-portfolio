@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
-import Image from "next/image";
+import { RevealImage } from "@/components/media/RevealImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight, Phone, X } from "lucide-react";
@@ -338,30 +338,19 @@ function Board({ image, title, priority }: { image: PortfolioGalleryImage; title
     );
   }
 
-  if (image.width && image.height) {
-    return (
-      <Image
-        src={image.src}
-        alt={image.alt}
-        width={image.width}
-        height={image.height}
-        priority={priority}
-        loading={priority ? undefined : "lazy"}
-        sizes="(min-width: 960px) 1400px, 100vw"
-        className="presentation-media"
-      />
-    );
-  }
-
+  const frame = image.width && image.height ? `${image.width} / ${image.height}` : "3 / 2";
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={image.src}
-      alt={image.alt}
-      loading={priority ? "eager" : "lazy"}
-      fetchPriority={priority ? "high" : "auto"}
-      className="presentation-media"
-    />
+    <div className="relative bg-white/8" style={{ aspectRatio: frame }}>
+      <RevealImage
+        src={image.src}
+        alt={image.alt || `${title} presentation`}
+        fill
+        priority={priority}
+        sizes="(min-width: 960px) 1400px, 100vw"
+        quality={90}
+        className="object-contain"
+      />
+    </div>
   );
 }
 

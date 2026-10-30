@@ -1,4 +1,4 @@
-import { Gem, MapPin, Trophy, Zap, type LucideIcon } from "lucide-react";
+import { Camera, Gem, MapPin, Trophy, Zap, type LucideIcon } from "lucide-react";
 import type { NavIconName } from "@/data/navigation";
 
 const icons: Record<NavIconName, LucideIcon> = {
@@ -6,6 +6,7 @@ const icons: Record<NavIconName, LucideIcon> = {
   zap: Zap,
   pin: MapPin,
   trophy: Trophy,
+  camera: Camera,
 };
 
 type NavIconProps = {

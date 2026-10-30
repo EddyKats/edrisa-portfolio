@@ -15,10 +15,13 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const contact = await getPublicContact();
+  const title = publicStoredTitle(contact?.seoTitle, contactMeta.title);
+  const description = contact?.seoDescription || contactMeta.description;
   return {
-    title: { absolute: publicStoredTitle(contact?.seoTitle, contactMeta.title) },
-    description: contact?.seoDescription || contactMeta.description,
+    title: { absolute: title },
+    description,
     alternates: { canonical: "/contact" },
+    openGraph: { title, description, url: "/contact" },
   };
 }
 

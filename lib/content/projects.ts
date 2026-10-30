@@ -68,19 +68,22 @@ export async function getStudioProject(id: string) {
 export async function createProjectRecord(input: CreateProjectInput) {
   const categoryIds = await canonicalCategoryIds(input.categoryIds);
   try {
-    return await getDb().project.create({
-      data: {
-        title: input.title,
-        slug: input.slug,
-        role: input.role,
-        published: input.published,
-        client: "",
-        categoryId: categoryIds[0] ?? null,
-        categories: {
-          create: categoryIds.map((categoryId, sortOrder) => ({ categoryId, sortOrder })),
+    return await getDb().$transaction(async (tx) => {
+      await tx.projectRedirect.deleteMany({ where: { slug: input.slug } });
+      return tx.project.create({
+        data: {
+          title: input.title,
+          slug: input.slug,
+          role: input.role,
+          published: input.published,
+          client: "",
+          categoryId: categoryIds[0] ?? null,
+          categories: {
+            create: categoryIds.map((categoryId, sortOrder) => ({ categoryId, sortOrder })),
+          },
         },
-      },
-      select: { id: true, slug: true },
+        select: { id: true, slug: true },
+      });
     });
   } catch (error) {
     if (isUniqueConflict(error)) throw new ProjectWriteError("That slug is already used.");
@@ -108,6 +111,14 @@ export async function updateProjectRecord(id: string, input: UpdateProjectInput)
       if (categoryIds.length > 0) {
         await tx.projectCategory.createMany({
           data: categoryIds.map((categoryId, sortOrder) => ({ projectId: id, categoryId, sortOrder })),
+        });
+      }
+      if (existing.slug !== input.slug) {
+        await tx.projectRedirect.deleteMany({ where: { slug: input.slug } });
+        await tx.projectRedirect.upsert({
+          where: { slug: existing.slug },
+          create: { slug: existing.slug, projectId: id },
+          update: { projectId: id },
         });
       }
       return tx.project.update({
@@ -157,6 +168,13 @@ export async function deleteProjectRecord(id: string) {
     },
   });
   if (!existing) throw new ProjectWriteError("That project was not found.");
-  await getDb().project.delete({ where: { id } });
+  await getDb().$transaction(async (tx) => {
+    await tx.projectRedirect.upsert({
+      where: { slug: existing.slug },
+      create: { slug: existing.slug, projectId: id },
+      update: { projectId: id },
+    });
+    await tx.project.delete({ where: { id } });
+  });
   return existing;
 }

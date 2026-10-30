@@ -4,6 +4,7 @@ const isDev = process.env.NODE_ENV !== "production";
 
 const nextConfig: NextConfig = {
   images: {
+    formats: ["image/avif", "image/webp"],
     qualities: [75, 90],
     minimumCacheTTL: isDev ? 0 : 14400,
     remotePatterns: storageRemotePatterns(),

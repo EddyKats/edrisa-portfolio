@@ -33,6 +33,7 @@ export type UploadTicket = {
   uploadUrl?: string;
   key?: string;
   contentType?: string;
+  cacheControl?: string;
 };
 
 function failure(error: unknown, fallback: string): DetailState {
@@ -50,7 +51,7 @@ export async function prepareProjectUpload(
   try {
     const ticket = await createPortfolioUpload({ projectId, role, type: file.type, size: file.size });
     if ("error" in ticket) return { error: ticket.error };
-    return { uploadUrl: ticket.uploadUrl, key: ticket.key, contentType: file.type };
+    return { uploadUrl: ticket.uploadUrl, key: ticket.key, contentType: file.type, cacheControl: ticket.cacheControl };
   } catch (error) {
     return failure(error, "Upload failed.");
   }

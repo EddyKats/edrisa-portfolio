@@ -50,6 +50,20 @@ export async function getPublishedProjectBySlug(slug: string) {
   return toPublicProject(project);
 }
 
+export async function resolvePublicProjectSlug(slug: string) {
+  const project = await getPublishedProjectBySlug(slug);
+  if (project) return { status: "found" as const, project };
+
+  const redirect = await getDb().projectRedirect.findUnique({
+    where: { slug },
+    select: { project: { select: { slug: true, published: true } } },
+  });
+  if (redirect?.project?.published && redirect.project.slug !== slug) {
+    return { status: "redirect" as const, slug: redirect.project.slug };
+  }
+  return { status: "missing" as const };
+}
+
 export async function getPublishedCategories() {
   const categories = await getDb().portfolioCategory.findMany({
     where: { published: true },

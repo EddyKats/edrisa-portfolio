@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -15,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { RevealImage } from "@/components/media/RevealImage";
 import { projectTones } from "@/components/portfolio/projectTones";
 import {
   portfolioCopy,
@@ -153,7 +153,7 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
           className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 xl:auto-rows-[18rem]"
         >
           <AnimatePresence mode="popLayout">
-            {visible.map((project) => (
+            {visible.map((project, index) => (
               <motion.li
                 key={`${filter}-${project.slug}`}
                 className={portfolioSizeClass[project.size]}
@@ -163,7 +163,12 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
                 exit={reduce ? { opacity: 0 } : { opacity: 0 }}
                 transition={{ duration: reduce ? 0 : 0.35 }}
               >
-                <ProjectCard project={project} filter={filter} onOpen={() => remember(project.slug)} />
+                <ProjectCard
+                  project={project}
+                  filter={filter}
+                  priority={index < 3}
+                  onOpen={() => remember(project.slug)}
+                />
               </motion.li>
             ))}
           </AnimatePresence>
@@ -225,11 +230,13 @@ export function ProjectCard({
   project,
   filter = "All",
   href,
+  priority = false,
   onOpen,
 }: {
   project: PortfolioProject;
   filter?: string;
   href?: string;
+  priority?: boolean;
   onOpen: () => void;
 }) {
   const image = project.coverImage;
@@ -249,14 +256,21 @@ export function ProjectCard({
         className="group relative block h-full min-h-full overflow-hidden rounded-[1.05rem] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
       >
         {image ? (
-          <Image
+          <>
+          <span aria-hidden="true" className="absolute inset-0 bg-[#1c120e]/10" />
+          <RevealImage
             src={image}
-            alt=""
+            alt={project.category ? `${project.title}, ${project.category}` : project.title}
             fill
-            loading="lazy"
-            sizes="(min-width: 1280px) 34vw, (min-width: 640px) 46vw, 100vw"
+            priority={priority}
+            sizes={
+              project.size === "wide"
+                ? "(min-width: 1280px) 760px, 100vw"
+                : "(min-width: 1280px) 380px, (min-width: 640px) 50vw, 100vw"
+            }
             className="object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover:scale-[1.03]"
           />
+          </>
         ) : (
           <div className={`absolute inset-0 ${toneFor(project.category)}`} aria-hidden="true" />
         )}

@@ -39,6 +39,11 @@ export function personNode(site: PublicSite, image?: string | null) {
     image: image || undefined,
     jobTitle: personIdentity.jobTitle,
     description: personIdentity.description,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Kampala",
+      addressCountry: "Uganda",
+    },
     sameAs: sameAsFrom(site),
     alumniOf: {
       "@type": "CollegeOrUniversity",
@@ -81,9 +86,13 @@ export function studioNode(site: PublicSite) {
     name: studioBrand.name,
     url,
     image: absoluteAsset(url, site.logoSrc),
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Kampala",
+      addressCountry: "Uganda",
+    },
     founder: { "@id": personId(url) },
     employee: { "@id": personId(url) },
-    sameAs: sameAsFrom(site),
     knowsAbout: [...aboutProfile.coreSkills],
   };
 }
@@ -138,11 +147,12 @@ export function projectWorkNode(
     fullDescription?: string | null;
     coverImage?: string | null;
     heroImage?: string | null;
+    images?: Array<string | null | undefined>;
   },
 ) {
   const url = siteOrigin(site.url);
   const page = `${url}/portfolio/${project.slug}`;
-  const imageSrc = project.coverImage || project.heroImage;
+  const images = [...new Set((project.images ?? [project.coverImage, project.heroImage]).filter((src): src is string => Boolean(src)))];
   return {
     "@type": "CreativeWork",
     "@id": `${page}#work`,
@@ -156,7 +166,7 @@ export function projectWorkNode(
     author: { "@id": personId(url) },
     publisher: { "@id": studioId(url) },
     ...(project.category ? { about: project.category } : {}),
-    ...(imageSrc ? { image: absoluteAsset(url, imageSrc) } : {}),
+    ...(images.length > 0 ? { image: images.map((src) => absoluteAsset(url, src)) } : {}),
   };
 }
 

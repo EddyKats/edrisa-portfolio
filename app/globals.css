@@ -205,7 +205,8 @@ body {
   --mark: 255 244 214;
 }
 
-.nav-mark[data-tile="portfolio"] {
+.nav-mark[data-tile="portfolio"],
+.nav-mark[data-tile="gallery"] {
   --mark: 236 214 255;
 }
 
@@ -2873,4 +2874,98 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem 0.85rem;
+  margin-top: 2.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.photo-frame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  border-radius: 1.05rem;
+  background: rgb(28 18 14 / 0.06);
+}
+
+.photo-lightbox {
+  width: min(72rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+}
+
+.photo-lightbox::backdrop {
+  background: rgb(7 7 9 / 0.88);
+}
+
+.photo-lightbox-panel {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.photo-lightbox-frame {
+  position: relative;
+  height: min(68dvh, 46rem);
+  overflow: hidden;
+  border-radius: 1.05rem;
+  background: rgb(255 255 255 / 0.04);
+}
+
+.photo-in {
+  animation: photo-in 0.3s ease-out both;
+}
+
+@keyframes photo-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-in {
+    animation: none;
+  }
+}
+
+.photo-lightbox-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.photo-lightbox-btn {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: rgb(255 255 255 / 0.12);
+}
+
+@media (min-width: 40rem) {
+  .photo-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 80rem) {
+  .photo-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
 }

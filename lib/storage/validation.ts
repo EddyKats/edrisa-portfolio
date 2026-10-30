@@ -43,13 +43,13 @@ const keyPattern = new RegExp(
   String.raw`^(?:${namespaceName})\/projects\/[A-Za-z0-9]+\/(?:cover|hero|gallery|presentation)\/${mediaName}$`,
 );
 const contentKeyPattern = new RegExp(
-  String.raw`^(?:${namespaceName})\/content\/(?:about-feature|experience|client|home-portrait|home-logo)\/[A-Za-z0-9-]+\/${stillName}$`,
+  String.raw`^(?:${namespaceName})\/content\/(?:about-feature|experience|client|home-portrait|home-logo|gallery)\/[A-Za-z0-9-]+\/${stillName}$`,
 );
 const homeMediaKeyPattern = new RegExp(
   String.raw`^(?:${namespaceName})\/content\/home-media\/[A-Za-z0-9-]+\/${mediaName}$`,
 );
 
-export const contentAssetScopes = ["about-feature", "experience", "client", "home-portrait", "home-logo", "home-media"] as const;
+export const contentAssetScopes = ["about-feature", "experience", "client", "home-portrait", "home-logo", "home-media", "gallery"] as const;
 
 export type ContentAssetScope = (typeof contentAssetScopes)[number];
 

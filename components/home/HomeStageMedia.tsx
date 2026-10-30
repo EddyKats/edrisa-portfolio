@@ -40,9 +40,14 @@ export function HomeStageMedia({
 
   if (frames.length === 0) return null;
 
+  const next = (index + 1) % frames.length;
+  const previous = (index - 1 + frames.length) % frames.length;
+  const mounted = new Set(rotating ? [previous, index, next] : [index]);
+
   return (
     <>
       {frames.map((frame, position) => {
+        if (!mounted.has(position)) return null;
         const visible = position === index;
         return (
           <motion.div

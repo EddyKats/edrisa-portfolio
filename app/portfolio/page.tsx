@@ -5,7 +5,7 @@ import { getPublicCta } from "@/lib/content/cta";
 import { getPublishedProjects } from "@/lib/content/portfolio";
 import { getPublicSite } from "@/lib/content/site";
 import { portfolioMeta } from "@/data/portfolio";
-import { personIdentity, studioBrand } from "@/data/identity";
+import { personId, studioId } from "@/lib/content/jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,11 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { absolute: portfolioMeta.title },
     description: portfolioMeta.description || site.description,
     alternates: { canonical: "/portfolio" },
+    openGraph: {
+      title: portfolioMeta.title,
+      description: portfolioMeta.description || site.description,
+      url: "/portfolio",
+    },
   };
 }
 
@@ -35,8 +40,8 @@ export default async function PortfolioRoute() {
           name: portfolioMeta.title,
           description: portfolioMeta.description,
           url: `${origin}/portfolio`,
-          about: { "@type": "Person", name: personIdentity.name },
-          publisher: { "@type": "Organization", name: studioBrand.name, url: origin },
+          about: { "@id": personId(origin) },
+          publisher: { "@id": studioId(origin) },
         }}
       />
       <PortfolioScreen projects={projects} ctaHref={cta?.buttonHref ?? "/contact"} />

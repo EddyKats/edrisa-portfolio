@@ -10,6 +10,7 @@ export function revalidateProjectContent(slugs: Array<string | null | undefined>
   revalidatePath("/portfolio");
   revalidatePath("/portfolio/[slug]", "page");
   revalidatePath("/studio/projects");
+  revalidatePath("/sitemap.xml");
   for (const slug of slugs) {
     if (slug) revalidatePath(`/portfolio/${slug}`);
   }
@@ -18,4 +19,5 @@ export function revalidateProjectContent(slugs: Array<string | null | undefined>
 export function revalidatePublicContent(paths: string[]) {
   for (const path of paths) revalidatePath(path);
   revalidatePath("/portfolio/[slug]", "page");
+  revalidatePath("/sitemap.xml");
 }

@@ -10,7 +10,7 @@ import { EdrisaLogo } from "@/components/site/EdrisaLogo";
 import { Watermark } from "@/components/site/Watermark";
 import { getSectionNeighbors, type NavId } from "@/data/navigation";
 
-const sidebarTitleArt: Record<NavId, { src: string; ratio: string }> = {
+const sidebarTitleArt: Partial<Record<NavId, { src: string; ratio: string }>> = {
   portfolio: { src: "/images/homepage-titles/selected-works.svg", ratio: "685.95 / 220" },
   about: { src: "/images/homepage-titles/about-edrisa.svg", ratio: "491.46 / 220" },
   services: { src: "/images/homepage-titles/what-i-do.svg", ratio: "390.9 / 220" },
@@ -56,14 +56,20 @@ export function SectionSideNav({ section }: { section: NavId }) {
             <div className="sidebar-edge-inset relative z-10 mb-8 w-full">
               <div className="relative z-10 flex flex-col items-start gap-3">
                 <NavIcon name={current.icon} className="size-12 text-white/80" />
-                <span
-                  aria-hidden="true"
-                  className="sidebar-title-art block w-[62%] bg-contain bg-left bg-no-repeat"
-                  style={{
-                    aspectRatio: sidebarTitleArt[section].ratio,
-                    backgroundImage: `url(${sidebarTitleArt[section].src})`,
-                  }}
-                />
+                {sidebarTitleArt[section] ? (
+                  <span
+                    aria-hidden="true"
+                    className="sidebar-title-art block w-[62%] bg-contain bg-left bg-no-repeat"
+                    style={{
+                      aspectRatio: sidebarTitleArt[section].ratio,
+                      backgroundImage: `url(${sidebarTitleArt[section].src})`,
+                    }}
+                  />
+                ) : (
+                  <p className="font-display text-[clamp(2.6rem,4vw,3.6rem)] leading-none font-semibold tracking-tight">
+                    {current.title}
+                  </p>
+                )}
               </div>
             </div>
             <nav

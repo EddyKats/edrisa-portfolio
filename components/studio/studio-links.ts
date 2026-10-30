@@ -1,4 +1,5 @@
 import {
+  Camera,
   FolderKanban,
   House,
   LayoutDashboard,
@@ -26,6 +27,7 @@ export const studioContentLinks: StudioLink[] = [
   { href: "/studio/about", label: "About", icon: User },
   { href: "/studio/services", label: "Services", icon: Sparkles },
   { href: "/studio/clients", label: "Clients", icon: Users },
+  { href: "/studio/gallery", label: "Gallery", icon: Camera },
   { href: "/studio/contact", label: "Contact", icon: Mail },
 ];
 
@@ -43,5 +45,6 @@ export const studioSiteLinks = [
   { href: "/about", label: "About", note: "Public page" },
   { href: "/services", label: "Services", note: "Public page" },
   { href: "/portfolio", label: "Portfolio", note: "Public page" },
+  { href: "/gallery", label: "Gallery", note: "Public page" },
   { href: "/contact", label: "Contact", note: "Public page" },
 ] as const;

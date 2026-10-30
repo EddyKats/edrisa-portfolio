@@ -1,5 +1,5 @@
 type WatermarkProps = {
-  tile?: "about" | "services" | "contact" | "portfolio";
+  tile?: "about" | "services" | "contact" | "portfolio" | "gallery";
   className?: string;
 };
 

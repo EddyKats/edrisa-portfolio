@@ -11,14 +11,14 @@ const homeEyebrow: Partial<Record<NavId, string>> = {
   about: "ABOUT ME",
 };
 
-const titleFiles: Record<NavId, string> = {
+const titleFiles: Record<(typeof homeOrder)[number], string> = {
   portfolio: "selected-works.svg",
   about: "about-edrisa.svg",
   services: "what-i-do.svg",
   contact: "talk-to-me.svg",
 };
 
-function titleArtwork(id: NavId) {
+function titleArtwork(id: (typeof homeOrder)[number]) {
   const file = path.join(process.cwd(), "public/images/homepage-titles", titleFiles[id]);
   return readFileSync(file, "utf8")
     .replace(/<\?xml[\s\S]*?\?>/, "")
@@ -26,7 +26,7 @@ function titleArtwork(id: NavId) {
     .replace("<svg ", '<svg class="nav-tile-title" focusable="false" ');
 }
 
-function homeSurface(id: NavId) {
+function homeSurface(id: (typeof homeOrder)[number]) {
   if (id === "about") {
     return "bg-[linear-gradient(148deg,#1A4FE0_0%,#2A74F4_36%,#2C95F3_64%,#24C0E4_84%,#1AD3C4_100%)]";
   }

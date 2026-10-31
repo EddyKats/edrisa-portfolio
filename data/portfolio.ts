@@ -163,6 +163,24 @@ export const portfolioProjects: PortfolioProject[] = [
   },
 ];
 
+const titleSeparator = /\s+[-–—]\s+/;
+
+/** Card label only. The stored title, slug, and project page stay unchanged. */
+export function projectCardCopy(project: Pick<PortfolioProject, "title" | "client" | "category">) {
+  const title = project.title.trim();
+  const pieces = title.split(titleSeparator).map((part) => part.trim()).filter(Boolean);
+  if (pieces.length >= 2) {
+    return { primary: pieces[0] ?? title, secondary: pieces.slice(1).join(" · ") };
+  }
+
+  const client = project.client.trim();
+  if (client && client.localeCompare(title, undefined, { sensitivity: "accent" }) !== 0) {
+    return { primary: client, secondary: project.category };
+  }
+
+  return { primary: title, secondary: project.category };
+}
+
 export function getPortfolioProject(slug: string) {
   return portfolioProjects.find((project) => project.slug === slug);
 }

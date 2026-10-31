@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { ProjectCard, portfolioSizeClass } from "@/components/portfolio/PortfolioBrowser";
 import { FaBehance, FaLinkedinIn, FaPhone, FaWhatsapp } from "react-icons/fa";
@@ -292,7 +293,7 @@ export function AboutProfile({
           </h2>
           <p className="mt-3 max-w-[32rem] text-sm leading-relaxed text-ink/65">{aboutProfile.selectedNote}</p>
           <ul className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 xl:auto-rows-[18rem]">
-            {projects.map((project) => (
+            {projects.slice(0, 3).map((project) => (
               <li key={project.slug} className={portfolioSizeClass[project.size]}>
                 <ProjectCard
                   project={project}
@@ -306,6 +307,12 @@ export function AboutProfile({
               </li>
             ))}
           </ul>
+          <Link
+            href="/portfolio"
+            className="mt-8 inline-flex min-h-11 items-center rounded-full bg-ink px-5 text-sm font-semibold tracking-tight text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+          >
+            View all projects
+          </Link>
         </section>
       ) : null}
       </div>

@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import { PortfolioScreen } from "@/components/portfolio/PortfolioScreen";
 import { JsonLd } from "@/components/site/JsonLd";
-import { getPublicCta } from "@/lib/content/cta";
-import { getPublishedProjects } from "@/lib/content/portfolio";
 import { getPublicSite } from "@/lib/content/site";
 import { portfolioMeta } from "@/data/portfolio";
 import { personId, studioId } from "@/lib/content/jsonld";
@@ -24,11 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PortfolioRoute() {
-  const [projects, cta, site] = await Promise.all([
-    getPublishedProjects(),
-    getPublicCta("portfolio"),
-    getPublicSite(),
-  ]);
+  const site = await getPublicSite();
   const origin = site.url.replace(/\/$/, "");
 
   return (
@@ -44,7 +37,6 @@ export default async function PortfolioRoute() {
           publisher: { "@id": studioId(origin) },
         }}
       />
-      <PortfolioScreen projects={projects} ctaHref={cta?.buttonHref ?? "/contact"} />
     </>
   );
 }

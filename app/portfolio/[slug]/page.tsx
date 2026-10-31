@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { PortfolioScreen } from "@/components/portfolio/PortfolioScreen";
 import { JsonLd } from "@/components/site/JsonLd";
 import { publicPortfolioFilters } from "@/data/portfolio";
 import { ProjectDetail } from "@/components/portfolio/ProjectDetail";
@@ -73,7 +72,6 @@ export default async function ProjectRoute({ params }: ProjectRouteProps) {
           ],
         })}
       />
-      <PortfolioScreen projects={projects} ctaHref={cta?.buttonHref ?? "/contact"} />
       <ProjectDetail
         project={project}
         previous={{ slug: previous.slug, title: previous.title }}

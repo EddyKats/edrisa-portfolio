@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { getDb } from "@/lib/db";
 import { canonicalPortfolioCategories, type PortfolioProject, type ProjectSize } from "@/data/portfolio";
 import type { SoftwareId } from "@/data/software";
@@ -32,14 +33,14 @@ function projectQuery() {
   };
 }
 
-export async function getPublishedProjects() {
+export const getPublishedProjects = cache(async function getPublishedProjects() {
   const projects = await getDb().project.findMany({
     where: { published: true },
     orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
     include: projectQuery(),
   });
   return projects.map(toPublicProject);
-}
+});
 
 export async function getPublishedProjectBySlug(slug: string) {
   const project = await getDb().project.findUnique({

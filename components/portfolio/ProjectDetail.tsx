@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { RevealImage } from "@/components/media/RevealImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,12 +8,12 @@ import { ArrowRight, ChevronLeft, ChevronRight, Phone, X } from "lucide-react";
 import { FaBehance, FaLinkedinIn, FaWhatsapp } from "react-icons/fa";
 import { projectCta } from "@/data/project-cta";
 import { EdrisaLogo } from "@/components/site/EdrisaLogo";
-import { type PortfolioGalleryImage, type PortfolioProject } from "@/data/portfolio";
+import { holdPageScroll } from "@/components/portfolio/overlay-lock";
+import { portfolioOriginKey } from "@/components/portfolio/portfolio-session";
+import { presentationImageQuality, presentationImageSizes, warmPresentationImages } from "@/components/portfolio/warm-presentation";
+import { projectCardCopy, type PortfolioGalleryImage, type PortfolioProject } from "@/data/portfolio";
 import type { PublicSocial } from "@/lib/content/site-shape";
 import { softwareRegistry, type SoftwareId } from "@/data/software";
-
-const returnKey = "edrisa-portfolio-return";
-const focusKey = "edrisa-portfolio-focus";
 const contactOrder = ["whatsapp", "behance", "linkedin"] as const;
 
 const contactIcons = {
@@ -67,8 +67,11 @@ export function ProjectDetail({
     releaseRef.current();
     setClosing(true);
     const href = source === "about" ? "/about" : portfolioReturnHref(categories);
+    const origin = sessionStorage.getItem(portfolioOriginKey);
+    const canBack = source === "portfolio" && origin === project.slug;
     requestAnimationFrame(() => {
-      routerRef.current.push(href, { scroll: false });
+      if (canBack) routerRef.current.back();
+      else routerRef.current.push(href, { scroll: false });
     });
   }
 
@@ -102,35 +105,48 @@ export function ProjectDetail({
     router.push(source === "about" ? aboutWorkPath(slug) : projectPath(slug, categories), { scroll: false });
   }
 
+  useLayoutEffect(() => {
+    const release = holdPageScroll();
+    releaseRef.current = release;
+    return () => {
+      releaseRef.current = () => {};
+      release();
+    };
+  }, [project.slug]);
+
   useEffect(() => {
-    const page = document.getElementById("internal-page");
-    const scrollY = window.scrollY;
-    let released = false;
-
-    if (page) page.setAttribute("inert", "");
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
-
-    function releasePortfolio() {
-      if (released) return;
-      released = true;
-      page?.removeAttribute("inert");
-      document.querySelector(".project-overlay")?.setAttribute("data-closing", "true");
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      window.scrollTo(0, scrollY);
-      const slug = sessionStorage.getItem(focusKey);
-      const card = slug ? document.getElementById(`project-card-${slug}`) : null;
-      if (card instanceof HTMLElement) card.focus({ preventScroll: true });
-      else if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    const sources = project.galleryImages.flatMap((image, index) =>
+      index > 0 && mediaKind(image) === "IMAGE" ? [image.src] : [],
+    );
+    if (sources.length === 0) return;
+    let cancelled = false;
+    let stop = () => {};
+    let started = false;
+    const begin = () => {
+      if (started || cancelled) return;
+      started = true;
+      const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+      const queue = connection?.saveData ? sources.slice(0, 2) : sources;
+      stop = warmPresentationImages(queue, () => cancelled);
+    };
+    const hero = shellRef.current?.querySelector(".presentation-stream img");
+    if (hero instanceof HTMLImageElement && !hero.complete) {
+      hero.addEventListener("load", begin, { once: true });
+      hero.addEventListener("error", begin, { once: true });
+    } else {
+      begin();
     }
+    const cap = window.setTimeout(begin, 1600);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(cap);
+      hero?.removeEventListener("load", begin);
+      hero?.removeEventListener("error", begin);
+      stop();
+    };
+  }, [project.galleryImages, project.slug]);
 
-    releaseRef.current = releasePortfolio;
-
+  useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (closingRef.current) return;
       if (event.key === "Escape") {
@@ -165,31 +181,21 @@ export function ProjectDetail({
 
     function onTraverse(event: Event) {
       if ("navigationType" in event && event.navigationType !== "traverse") return;
-      releasePortfolio();
+      releaseRef.current();
     }
 
+    const release = () => releaseRef.current();
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("popstate", releasePortfolio, true);
+    window.addEventListener("popstate", release, true);
     const navigation = (window as Window & { navigation?: EventTarget }).navigation;
     navigation?.addEventListener("navigate", onTraverse);
 
     return () => {
       window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("popstate", releasePortfolio, true);
+      window.removeEventListener("popstate", release, true);
       navigation?.removeEventListener("navigate", onTraverse);
-      releaseRef.current = () => {};
-      if (released) {
-        page?.removeAttribute("inert");
-        return;
-      }
-      page?.removeAttribute("inert");
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      window.scrollTo(0, scrollY);
     };
-  }, [categories]);
+  }, [project.slug]);
 
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 60rem)").matches;
@@ -346,8 +352,8 @@ function Board({ image, title, priority }: { image: PortfolioGalleryImage; title
         alt={image.alt || `${title} presentation`}
         fill
         priority={priority}
-        sizes="(min-width: 960px) 1400px, 100vw"
-        quality={90}
+        sizes={presentationImageSizes}
+        quality={presentationImageQuality}
         className="object-contain"
       />
     </div>
@@ -359,6 +365,49 @@ function mediaKind(image: PortfolioGalleryImage) {
   if (image.kind === "GIF" || image.mimeType === "image/gif" || path.endsWith(".gif")) return "GIF";
   if (image.kind === "VIDEO" || image.mimeType?.startsWith("video/") || path.endsWith(".mp4") || path.endsWith(".webm")) return "VIDEO";
   return "IMAGE";
+}
+
+function ProjectStep({
+  direction,
+  href,
+  title,
+  slug,
+  onOpen,
+}: {
+  direction: "previous" | "next";
+  href: string;
+  title: string;
+  slug: string;
+  onOpen: (event: MouseEvent<HTMLAnchorElement>, slug: string) => void;
+}) {
+  const name = projectCardCopy({ title, client: "", category: "" }).primary;
+  const next = direction === "next";
+
+  return (
+    <Link
+      href={href}
+      scroll={false}
+      onClick={(event) => onOpen(event, slug)}
+      aria-label={`${next ? "Next" : "Previous"} project: ${title}`}
+      className={`project-step ${next ? "project-step-next" : "project-step-prev"}`}
+    >
+      {next ? null : <StepArrow direction="previous" />}
+      <span className={next ? "min-w-0 text-right" : "min-w-0"}>
+        <span className="project-step-kicker">{next ? "Next" : "Previous"}</span>
+        <span className="project-step-name">{name}</span>
+      </span>
+      {next ? <StepArrow direction="next" /> : null}
+    </Link>
+  );
+}
+
+function StepArrow({ direction }: { direction: "previous" | "next" }) {
+  const Icon = direction === "next" ? ChevronRight : ChevronLeft;
+  return (
+    <span className="project-step-mark" style={{ ["--step-shift" as string]: direction === "next" ? "0.28rem" : "-0.28rem" }}>
+      <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
+    </span>
+  );
 }
 
 function ProjectClose({
@@ -414,37 +463,21 @@ function ProjectClose({
       ) : null}
       <ProjectCta href={ctaHref} />
       <nav aria-label="Adjacent projects" className="project-footer-navigation">
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-          <Link
+        <div className="project-steps">
+          <ProjectStep
+            direction="previous"
             href={source === "about" ? aboutWorkPath(previous.slug) : `/portfolio/${previous.slug}`}
-            scroll={false}
-            onClick={(event) => onOpen(event, previous.slug)}
-            aria-label={`Previous project: ${previous.title}`}
-            className="project-neighbor group flex min-h-32 items-center gap-4 rounded-2xl border border-white/12 bg-white/[0.04] px-5 py-5 text-white hover:border-white/28 hover:bg-white/[0.08] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-36 sm:px-6"
-          >
-            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#5446DF,#B52EE5)] text-white">
-              <ChevronLeft className="project-neighbor-icon size-7 [--neighbor-shift:-0.3rem]" strokeWidth={2.25} aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[0.72rem] font-semibold tracking-[0.16em] text-white/55 uppercase">Previous project</span>
-              <span className="mt-1.5 block text-[1.35rem] leading-tight font-semibold tracking-tight sm:text-[1.6rem]">{previous.title}</span>
-            </span>
-          </Link>
-          <Link
+            title={previous.title}
+            onOpen={onOpen}
+            slug={previous.slug}
+          />
+          <ProjectStep
+            direction="next"
             href={source === "about" ? aboutWorkPath(next.slug) : `/portfolio/${next.slug}`}
-            scroll={false}
-            onClick={(event) => onOpen(event, next.slug)}
-            aria-label={`Next project: ${next.title}`}
-            className="project-neighbor group flex min-h-32 items-center justify-between gap-4 rounded-2xl border border-white/12 bg-white/[0.04] px-5 py-5 text-right text-white hover:border-white/28 hover:bg-white/[0.08] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:min-h-36 sm:px-6"
-          >
-            <span className="min-w-0 flex-1 text-right">
-              <span className="block text-[0.72rem] font-semibold tracking-[0.16em] text-white/55 uppercase">Next project</span>
-              <span className="mt-1.5 block text-[1.35rem] leading-tight font-semibold tracking-tight sm:text-[1.6rem]">{next.title}</span>
-            </span>
-            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#5446DF,#B52EE5)] text-white">
-              <ChevronRight className="project-neighbor-icon size-7 [--neighbor-shift:0.3rem]" strokeWidth={2.25} aria-hidden="true" />
-            </span>
-          </Link>
+            title={next.title}
+            onOpen={onOpen}
+            slug={next.slug}
+          />
         </div>
       </nav>
       <div className="project-end-mark" aria-hidden="true">
@@ -600,8 +633,6 @@ function aboutWorkPath(slug: string) {
 function portfolioReturnHref(categories: string[]) {
   const category = new URLSearchParams(window.location.search).get("category");
   if (category && categories.includes(category)) return `/portfolio?category=${encodeURIComponent(category)}`;
-  const stored = sessionStorage.getItem(returnKey);
-  if (stored === "/portfolio" || stored?.startsWith("/portfolio?")) return stored;
   return "/portfolio";
 }
 

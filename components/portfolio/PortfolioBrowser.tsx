@@ -18,11 +18,18 @@ import { RevealImage } from "@/components/media/RevealImage";
 import { projectTones } from "@/components/portfolio/projectTones";
 import {
   portfolioCopy,
+  projectCardCopy,
   publicPortfolioFilters,
   type PortfolioCategory,
   type PortfolioProject,
   type ProjectSize,
 } from "@/data/portfolio";
+import {
+  portfolioFocusKey,
+  portfolioOriginKey,
+  portfolioReturnKey,
+  portfolioScrollKey,
+} from "@/components/portfolio/portfolio-session";
 
 const filterIcons: Record<(typeof publicPortfolioFilters)[number], LucideIcon> = {
   All: LayoutGrid,
@@ -31,10 +38,6 @@ const filterIcons: Record<(typeof publicPortfolioFilters)[number], LucideIcon> =
   "Web Development": Monitor,
   "App Development": Smartphone,
 };
-
-const scrollKey = "edrisa-portfolio-scroll";
-const returnKey = "edrisa-portfolio-return";
-const focusKey = "edrisa-portfolio-focus";
 
 function toneFor(category: string) {
   if (category in projectTones) return projectTones[category as PortfolioCategory];
@@ -75,14 +78,23 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
   const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    return () => {
+      const path = window.location.pathname;
+      if (path === "/portfolio" || path.startsWith("/portfolio/")) return;
+      sessionStorage.removeItem(portfolioOriginKey);
+    };
+  }, []);
+
+  useEffect(() => {
     if (pathname !== "/portfolio") return;
-    const y = Number(sessionStorage.getItem(scrollKey));
-    const slug = sessionStorage.getItem(focusKey);
+    sessionStorage.removeItem(portfolioOriginKey);
+    const y = Number(sessionStorage.getItem(portfolioScrollKey));
+    const slug = sessionStorage.getItem(portfolioFocusKey);
     requestAnimationFrame(() => {
       if (y > 0 && window.scrollY === 0) window.scrollTo(0, y);
       if (!slug) return;
       document.getElementById(`project-card-${slug}`)?.focus({ preventScroll: true });
-      sessionStorage.removeItem(focusKey);
+      sessionStorage.removeItem(portfolioFocusKey);
     });
   }, [pathname]);
 
@@ -108,9 +120,10 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
 
   function remember(slug: string) {
     if (document.body.style.position === "fixed") return;
-    sessionStorage.setItem(scrollKey, String(window.scrollY));
-    sessionStorage.setItem(returnKey, `${window.location.pathname}${window.location.search}`);
-    sessionStorage.setItem(focusKey, slug);
+    sessionStorage.setItem(portfolioScrollKey, String(window.scrollY));
+    sessionStorage.setItem(portfolioReturnKey, `${window.location.pathname}${window.location.search}`);
+    sessionStorage.setItem(portfolioFocusKey, slug);
+    sessionStorage.setItem(portfolioOriginKey, slug);
   }
 
   return (
@@ -240,6 +253,7 @@ export function ProjectCard({
   onOpen: () => void;
 }) {
   const image = project.coverImage;
+  const label = projectCardCopy(project);
 
   return (
     <article className="h-full">
@@ -253,11 +267,10 @@ export function ProjectCard({
         }
         scroll={false}
         onClick={onOpen}
+        aria-label={project.title}
         className="group relative block h-full min-h-full overflow-hidden rounded-[1.05rem] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
       >
         {image ? (
-          <>
-          <span aria-hidden="true" className="absolute inset-0 bg-[#1c120e]/10" />
           <RevealImage
             src={image}
             alt={project.category ? `${project.title}, ${project.category}` : project.title}
@@ -270,19 +283,20 @@ export function ProjectCard({
             }
             className="object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover:scale-[1.03]"
           />
-          </>
         ) : (
           <div className={`absolute inset-0 ${toneFor(project.category)}`} aria-hidden="true" />
         )}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[46%] bg-gradient-to-t from-[#1c120e]/62 via-[#1c120e]/18 to-transparent motion-safe:transition-all motion-safe:duration-500 motion-safe:group-hover:from-[#1c120e]/72" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4 sm:p-5">
-          <div className="motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:-translate-y-1.5">
-            <h2 className="text-xl leading-tight font-semibold tracking-tight text-white/85 motion-safe:transition-colors motion-safe:duration-500 motion-safe:group-hover:text-white">
-              {project.title}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#1c120e]/82 via-[#1c120e]/34 to-transparent sm:h-28" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 px-4 pt-10 pb-3.5 sm:px-5 sm:pb-4">
+          <div className="min-w-0 motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:-translate-y-1">
+            <h2 className="line-clamp-2 text-[1.02rem] leading-[1.15] font-semibold tracking-tight text-white [text-shadow:0_1px_8px_rgb(28_18_14/0.45)] sm:text-[1.15rem]">
+              {label.primary}
             </h2>
-            <p className="mt-0.5 text-base leading-tight text-white/55 motion-safe:transition-colors motion-safe:duration-500 motion-safe:group-hover:text-white/90">
-              {project.category}
-            </p>
+            {label.secondary ? (
+              <p className="mt-1 line-clamp-1 text-[0.68rem] leading-none font-medium tracking-[0.01em] text-white/78 sm:text-xs">
+                {label.secondary}
+              </p>
+            ) : null}
           </div>
           <span
             aria-hidden="true"

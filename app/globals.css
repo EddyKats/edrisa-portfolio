@@ -1732,6 +1732,98 @@ body {
   padding: 0;
 }
 
+.project-steps {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 1.15rem;
+  background: rgb(255 255 255 / 0.03);
+}
+
+.project-step {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 4.75rem;
+  padding: 0.9rem 1rem;
+  color: #fff;
+  text-decoration: none;
+}
+
+.project-step:hover,
+.project-step:focus-visible {
+  background: rgb(255 255 255 / 0.07);
+}
+
+.project-step:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
+.project-step-next {
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.project-step-kicker {
+  display: block;
+  color: rgb(255 255 255 / 0.55);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.project-step-name {
+  display: -webkit-box;
+  margin-top: 0.4rem;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.project-step-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  background: #f4efe8;
+  color: #070709;
+  transition: transform 180ms ease;
+}
+
+.project-step:hover .project-step-mark,
+.project-step:focus-visible .project-step-mark {
+  transform: translateX(var(--step-shift, 0));
+}
+
+@media (min-width: 40rem) {
+  .project-steps {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .project-step {
+    min-height: 5.25rem;
+    padding: 1rem 1.25rem;
+  }
+
+  .project-step-next {
+    justify-content: flex-end;
+    border-top: 0;
+    border-left: 1px solid rgb(255 255 255 / 0.1);
+  }
+
+  .project-step-name {
+    font-size: 1.05rem;
+  }
+}
+
 .project-cta-button:focus-visible {
   outline: 2px solid #fffdfb;
   outline-offset: 4px;
@@ -1793,15 +1885,6 @@ body {
   }
 }
 
-.project-neighbor-icon {
-  transition: transform 180ms ease;
-}
-
-.project-neighbor:hover .project-neighbor-icon,
-.project-neighbor:focus-visible .project-neighbor-icon {
-  transform: translateX(var(--neighbor-shift, 0));
-}
-
 @media (prefers-reduced-motion: reduce) {
   .project-overlay,
   .project-overlay[data-closing="true"],
@@ -1814,8 +1897,9 @@ body {
   .project-overlay[data-closing="true"],
   .project-overlay[data-closing="true"] .project-stage,
   .project-cta-arrow,
-  .project-neighbor:hover .project-neighbor-icon,
-  .project-neighbor:focus-visible .project-neighbor-icon {
+  .project-step-mark,
+  .project-step:hover .project-step-mark,
+  .project-step:focus-visible .project-step-mark {
     transform: none;
   }
 }

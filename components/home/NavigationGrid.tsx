@@ -27,10 +27,10 @@ function titleArtwork(id: (typeof homeOrder)[number]) {
 }
 
 function homeSurface(id: (typeof homeOrder)[number]) {
-  if (id === "about") {
+  if (id === "portfolio") {
     return "bg-[linear-gradient(148deg,#1A4FE0_0%,#2A74F4_36%,#2C95F3_64%,#24C0E4_84%,#1AD3C4_100%)]";
   }
-  if (id === "portfolio") return getNavItem("portfolio").surfaceClass;
+  if (id === "about") return getNavItem("portfolio").surfaceClass;
   return getNavItem(id).surfaceClass;
 }
 

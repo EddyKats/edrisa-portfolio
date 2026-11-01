@@ -3,9 +3,15 @@
 import { ProtectedImage } from "@/components/media/protect-visual";
 import type { ImageProps } from "next/image";
 
-export function RevealImage({ className = "", priority, alt, ...props }: ImageProps) {
+export function RevealImage({ className = "", priority, loading, alt, ...props }: ImageProps) {
   const image = (
-    <ProtectedImage {...props} alt={alt} priority={priority} loading={priority ? undefined : "lazy"} className={className} />
+    <ProtectedImage
+      {...props}
+      alt={alt}
+      priority={priority}
+      loading={priority ? undefined : loading ?? "lazy"}
+      className={className}
+    />
   );
   if (priority || !props.fill) return image;
 

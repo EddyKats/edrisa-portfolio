@@ -11,7 +11,12 @@ import { projectCta } from "@/data/project-cta";
 import { EdrisaLogo } from "@/components/site/EdrisaLogo";
 import { holdPageScroll } from "@/components/portfolio/overlay-lock";
 import { portfolioOriginKey } from "@/components/portfolio/portfolio-session";
-import { presentationImageQuality, presentationImageSizes, warmPresentationImages } from "@/components/portfolio/warm-presentation";
+import {
+  presentationImageQuality,
+  presentationImageSizes,
+  presentationLookahead,
+  watchPresentationLookahead,
+} from "@/components/portfolio/warm-presentation";
 import { trackEvent } from "@/lib/analytics";
 import { projectCardCopy, type PortfolioGalleryImage, type PortfolioProject } from "@/data/portfolio";
 import type { PublicSocial } from "@/lib/content/site-shape";
@@ -51,6 +56,8 @@ export function ProjectDetail({
   const closeRef = useRef<HTMLButtonElement>(null);
   const closingRef = useRef(false);
   const [closing, setClosing] = useState(false);
+  const [warm, setWarm] = useState({ slug: project.slug, through: presentationLookahead });
+  const readyThrough = warm.slug === project.slug ? warm.through : presentationLookahead;
   const titleId = `project-${project.slug}-title`;
   const tools = project.software;
   const categoryNames = project.categories?.length ? project.categories : project.category ? [project.category] : [];
@@ -167,35 +174,16 @@ export function ProjectDetail({
   }, [project.slug]);
 
   useEffect(() => {
-    const sources = project.galleryImages.flatMap((image, index) =>
-      index > 0 && mediaKind(image) === "IMAGE" ? [image.src] : [],
-    );
-    if (sources.length === 0) return;
-    let cancelled = false;
-    let stop = () => {};
-    let started = false;
-    const begin = () => {
-      if (started || cancelled) return;
-      started = true;
-      const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-      const queue = connection?.saveData ? sources.slice(0, 2) : sources;
-      stop = warmPresentationImages(queue, () => cancelled);
-    };
-    const hero = shellRef.current?.querySelector(".presentation-stream img");
-    if (hero instanceof HTMLImageElement && !hero.complete) {
-      hero.addEventListener("load", begin, { once: true });
-      hero.addEventListener("error", begin, { once: true });
-    } else {
-      begin();
-    }
-    const cap = window.setTimeout(begin, 1600);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(cap);
-      hero?.removeEventListener("load", begin);
-      hero?.removeEventListener("error", begin);
-      stop();
-    };
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    return watchPresentationLookahead(scroller, (through) => {
+      setWarm((current) => {
+        const base = current.slug === project.slug ? current.through : presentationLookahead;
+        const next = Math.max(base, through);
+        if (current.slug === project.slug && next === current.through) return current;
+        return { slug: project.slug, through: next };
+      });
+    });
   }, [project.galleryImages, project.slug]);
 
   useEffect(() => {
@@ -332,7 +320,7 @@ export function ProjectDetail({
             <ul className="presentation-stream">
               {boards.map((image, index) => (
                 <li key={`${image.src}-${index}`}>
-                  <Board image={image} title={project.title} priority={index === 0} />
+                  <Board image={image} title={project.title} priority={index === 0} eager={index > 0 && index <= readyThrough} />
                 </li>
               ))}
             </ul>
@@ -357,7 +345,17 @@ export function ProjectDetail({
   );
 }
 
-function Board({ image, title, priority }: { image: PortfolioGalleryImage; title: string; priority: boolean }) {
+function Board({
+  image,
+  title,
+  priority,
+  eager = false,
+}: {
+  image: PortfolioGalleryImage;
+  title: string;
+  priority: boolean;
+  eager?: boolean;
+}) {
   const kind = mediaKind(image);
   const ratio = image.width && image.height ? { aspectRatio: `${image.width} / ${image.height}` } : undefined;
 
@@ -408,6 +406,7 @@ function Board({ image, title, priority }: { image: PortfolioGalleryImage; title
         alt={image.alt || `${title} presentation`}
         fill
         priority={priority}
+        loading={eager ? "eager" : "lazy"}
         sizes={presentationImageSizes}
         quality={presentationImageQuality}
         className="object-contain"

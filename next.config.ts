@@ -5,10 +5,16 @@ const isDev = process.env.NODE_ENV !== "production";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
+  experimental: {
+    // Large presentation masters can miss the default 7s encode limit and fall back to the original file.
+    imgOptTimeoutInSeconds: 20,
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [75, 90],
-    minimumCacheTTL: isDev ? 0 : 14400,
+    // 2880 covers a 1400px presentation slot at 2x. 3840 stays for full-viewport images.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2880, 3840],
+    minimumCacheTTL: isDev ? 0 : 31 * 24 * 60 * 60,
     remotePatterns: storageRemotePatterns(),
   },
   async headers() {

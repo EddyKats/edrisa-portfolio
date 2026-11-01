@@ -5,10 +5,6 @@ const isDev = process.env.NODE_ENV !== "production";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
-  experimental: {
-    // Large presentation masters can miss the default 7s encode limit and fall back to the original file.
-    imgOptTimeoutInSeconds: 20,
-  },
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [75, 90],

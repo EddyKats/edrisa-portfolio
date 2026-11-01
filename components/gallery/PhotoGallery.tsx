@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { RevealImage } from "@/components/media/RevealImage";
+import { trackEvent } from "@/lib/analytics";
 
 export type GalleryPhoto = {
   id: string;
@@ -28,8 +29,16 @@ export function PhotoGallery({ photos }: { photos: GalleryPhoto[] }) {
       if (node.open) node.close();
       return;
     }
+    const photo = photos[open];
+    if (photo) {
+      trackEvent("portfolio_image_open", {
+        project_slug: photo.slug,
+        project_title: photo.title,
+        image_index: open,
+      });
+    }
     if (!node.open) node.showModal();
-  }, [open]);
+  }, [open, photos]);
 
   function step(direction: -1 | 1) {
     setOpen((index) => {

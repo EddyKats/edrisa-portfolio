@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { getNavItem } from "@/data/navigation";
+import { trackEvent } from "@/lib/analytics";
 import { contactCopy, contactDetails, projectTypes } from "@/data/contact";
 
 type Field = "name" | "email" | "projectType" | "message";
@@ -37,6 +38,10 @@ export function ContactForm({ heading, inbox }: { heading: string; inbox?: strin
       return;
     }
 
+    trackEvent("email_click", {
+      source_page: window.location.pathname,
+      button_location: "contact_form",
+    });
     const subject = `${projectType} · ${name}`;
     const body = `${message}\n\n${name}\n${email}`;
     window.location.href = `mailto:${inbox || contactDetails.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;

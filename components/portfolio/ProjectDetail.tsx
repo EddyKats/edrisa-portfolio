@@ -12,6 +12,7 @@ import { EdrisaLogo } from "@/components/site/EdrisaLogo";
 import { holdPageScroll } from "@/components/portfolio/overlay-lock";
 import { portfolioOriginKey } from "@/components/portfolio/portfolio-session";
 import { presentationImageQuality, presentationImageSizes, warmPresentationImages } from "@/components/portfolio/warm-presentation";
+import { trackEvent } from "@/lib/analytics";
 import { projectCardCopy, type PortfolioGalleryImage, type PortfolioProject } from "@/data/portfolio";
 import type { PublicSocial } from "@/lib/content/site-shape";
 import { softwareRegistry, type SoftwareId } from "@/data/software";
@@ -106,6 +107,54 @@ export function ProjectDetail({
     event.preventDefault();
     router.push(source === "about" ? aboutWorkPath(slug) : projectPath(slug, categories), { scroll: false });
   }
+
+  useEffect(() => {
+    let cancelled = false;
+    let tries = 0;
+    const sendView = () => {
+      if (cancelled) return;
+      const sent = trackEvent("portfolio_project_view", {
+        project_slug: project.slug,
+        project_title: project.title,
+        category: project.category,
+        page_path: `${window.location.pathname}${window.location.search}`,
+      });
+      if (!sent && tries < 20) {
+        tries += 1;
+        window.setTimeout(sendView, 250);
+      }
+    };
+    sendView();
+
+    const marks = [10, 30, 60, 120];
+    const fired = new Set<number>();
+    let elapsed = 0;
+    let last = document.visibilityState === "visible" ? performance.now() : null;
+    const tick = () => {
+      const now = performance.now();
+      if (last !== null && document.visibilityState === "visible") elapsed += now - last;
+      last = document.visibilityState === "visible" ? now : null;
+      for (const seconds of marks) {
+        if (fired.has(seconds) || elapsed < seconds * 1000) continue;
+        const sent = trackEvent("project_engagement", {
+          project_slug: project.slug,
+          project_title: project.title,
+          seconds,
+        });
+        if (sent) fired.add(seconds);
+      }
+    };
+    const onVisibility = () => {
+      last = document.visibilityState === "visible" ? performance.now() : null;
+    };
+    const timer = window.setInterval(tick, 1000);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [project.category, project.slug, project.title]);
 
   useLayoutEffect(() => {
     if (scrollerRef.current) scrollerRef.current.scrollTop = 0;

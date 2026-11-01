@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { RevealImage } from "@/components/media/RevealImage";
+import { trackEvent } from "@/lib/analytics";
 import { projectTones } from "@/components/portfolio/projectTones";
 import {
   portfolioCopy,
@@ -272,7 +273,15 @@ export function ProjectCard({
             : `/portfolio/${project.slug}?category=${encodeURIComponent(filter)}`)
         }
         scroll={false}
-        onClick={onOpen}
+        onClick={() => {
+          trackEvent("portfolio_project_click", {
+            project_slug: project.slug,
+            project_title: project.title,
+            category: project.category,
+            source_page: window.location.pathname,
+          });
+          onOpen();
+        }}
         aria-label={project.title}
         className="group relative block h-full min-h-full overflow-hidden rounded-[1.05rem] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
       >

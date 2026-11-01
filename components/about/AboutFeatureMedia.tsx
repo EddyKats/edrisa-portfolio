@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ProtectedImage } from "@/components/media/protect-visual";
 import { Play } from "lucide-react";
 import { Watermark } from "@/components/site/Watermark";
 import { getNavItem } from "@/data/navigation";
@@ -14,7 +14,7 @@ export function AboutFeatureMedia({ src }: { src: string | null }) {
     <figure className="mt-6 sm:mt-7">
       <div className="relative aspect-video overflow-hidden rounded-[12px]">
         {src ? (
-          <Image
+          <ProtectedImage
             src={src}
             alt=""
             fill

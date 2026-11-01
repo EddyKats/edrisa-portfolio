@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Manrope } from "next/font/google";
 import localFont from "next/font/local";
-import { personIdentity, studioBrand } from "@/data/identity";
+import { canonicalSiteUrl, personIdentity, studioBrand } from "@/data/identity";
+import { shareImage } from "@/lib/content/share-image";
 import { Analytics } from "@/components/site/Analytics";
+import { ScrollToTop } from "@/components/site/ScrollToTop";
 import { JsonLd } from "@/components/site/JsonLd";
 import { absoluteAsset, siteGraph } from "@/lib/content/jsonld";
 import { getPublicSite } from "@/lib/content/site";
@@ -53,15 +56,17 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       locale: "en_US",
-      url: site.url,
+      url: canonicalSiteUrl,
       siteName: studioBrand.name,
       title: site.title,
       description: site.description,
+      images: [shareImage],
     },
     twitter: {
       card: "summary_large_image",
       title: site.title,
       description: site.description,
+      images: [shareImage.url],
     },
     robots: {
       index: true,
@@ -83,8 +88,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${manrope.variable} ${lufga.variable} h-full antialiased`}>
       <body className="min-h-full font-sans">
+        <Script id="scroll-restoration" strategy="beforeInteractive">
+          {`if ("scrollRestoration" in history) history.scrollRestoration = "manual";`}
+        </Script>
         <JsonLd data={siteGraph(site, portrait)} />
         <Analytics />
+        <ScrollToTop />
         {children}
       </body>
     </html>

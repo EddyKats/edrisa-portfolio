@@ -27,7 +27,9 @@ export function holdPageScroll() {
       document.body.style.top = "";
       document.body.style.left = "";
       document.body.style.right = "";
-      window.scrollTo(0, scrollY);
+      const path = window.location.pathname;
+      const samePage = path === "/portfolio" || path.startsWith("/portfolio/") || path === "/about";
+      window.scrollTo(0, samePage ? scrollY : 0);
       const slug = sessionStorage.getItem(portfolioFocusKey);
       const card = slug ? document.getElementById(`project-card-${slug}`) : null;
       if (card instanceof HTMLElement) card.focus({ preventScroll: true });

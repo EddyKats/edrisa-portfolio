@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ProtectedImage } from "@/components/media/protect-visual";
 
 type JourneyEntry = {
   id: string;
@@ -33,7 +33,7 @@ export function AboutJourney({ title, entries }: { title: string; entries: Journ
               className={`mx-auto grid place-items-center overflow-hidden rounded-full font-semibold ${markTones[index % markTones.length]} ${index === 0 ? "size-28 text-2xl sm:size-32" : "size-24 text-xl sm:size-28"}`}
             >
               {entry.imageUrl ? (
-                <Image
+                <ProtectedImage
                   src={entry.imageUrl}
                   alt=""
                   width={160}

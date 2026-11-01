@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { visualProtection } from "@/components/media/protect-visual";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import type { HomeFrame, HomeMediaMode } from "@/lib/content/home-surfaces";
@@ -69,7 +70,8 @@ export function HomeStageMedia({
                 quality={90}
                 sizes={sizes}
                 unoptimized={frame.kind === "GIF"}
-                className={objectClass}
+                className={`select-none ${objectClass}`}
+                {...visualProtection}
               />
             )}
           </motion.div>
@@ -112,7 +114,9 @@ function HomeVideo({
       playsInline
       autoPlay={play}
       preload={play ? "auto" : "none"}
-      className={`h-full w-full ${className}`}
+      controlsList="nodownload"
+      onContextMenu={(event) => event.preventDefault()}
+      className={`h-full w-full select-none ${className}`}
     />
   );
 }

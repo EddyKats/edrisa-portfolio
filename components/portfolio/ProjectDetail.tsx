@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { RevealImage } from "@/components/media/RevealImage";
+import { visualProtection } from "@/components/media/protect-visual";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight, Phone, X } from "lucide-react";
@@ -45,6 +46,7 @@ export function ProjectDetail({
   const router = useRouter();
   const routerRef = useRef(router);
   const shellRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const closingRef = useRef(false);
   const [closing, setClosing] = useState(false);
@@ -106,6 +108,7 @@ export function ProjectDetail({
   }
 
   useLayoutEffect(() => {
+    if (scrollerRef.current) scrollerRef.current.scrollTop = 0;
     const release = holdPageScroll();
     releaseRef.current = release;
     return () => {
@@ -215,6 +218,7 @@ export function ProjectDetail({
         onClick={close}
       />
       <div
+        ref={scrollerRef}
         className="project-scroller absolute inset-0 z-10 overflow-y-scroll"
         onMouseDown={onScrollerPointerDown}
         onClick={onScrollerClick}
@@ -315,12 +319,14 @@ function Board({ image, title, priority }: { image: PortfolioGalleryImage; title
         controls
         playsInline
         preload={priority ? "metadata" : "none"}
+        controlsList="nodownload"
         aria-label={label}
         title={label}
         width={image.width ?? undefined}
         height={image.height ?? undefined}
         style={ratio}
-        className="presentation-media"
+        onContextMenu={(event) => event.preventDefault()}
+        className="presentation-media select-none"
       >
         <source src={image.src} type={image.mimeType ?? undefined} />
       </video>
@@ -339,7 +345,8 @@ function Board({ image, title, priority }: { image: PortfolioGalleryImage; title
         style={ratio}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "auto"}
-        className="presentation-media"
+        className="presentation-media select-none"
+        {...visualProtection}
       />
     );
   }

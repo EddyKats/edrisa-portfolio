@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { ProtectedImage } from "@/components/media/protect-visual";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { ProjectCard, portfolioSizeClass } from "@/components/portfolio/PortfolioBrowser";
@@ -58,7 +58,7 @@ export function AboutHeroBleed({ image }: { image: ProfileImage }) {
   return (
     <>
       <div ref={rootRef} className="about-hero-bleed" aria-hidden="true">
-        <Image
+        <ProtectedImage
           src={image.src}
           alt=""
           fill
@@ -87,16 +87,6 @@ export function AboutProfile({
       item.id === "behance" || item.id === "linkedin" || item.id === "whatsapp",
   );
   const [lead, support] = aboutProfile.bio;
-
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("work")) return;
-    const y = Number(sessionStorage.getItem("edrisa-portfolio-scroll"));
-    if (y > 0) {
-      requestAnimationFrame(() => {
-        if (window.scrollY === 0) window.scrollTo(0, y);
-      });
-    }
-  }, []);
 
   return (
     <>

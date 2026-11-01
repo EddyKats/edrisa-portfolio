@@ -87,7 +87,13 @@ export function PortfolioBrowser({ projects }: { projects: PortfolioProject[] })
 
   useEffect(() => {
     if (pathname !== "/portfolio") return;
+    const returning = sessionStorage.getItem(portfolioOriginKey);
     sessionStorage.removeItem(portfolioOriginKey);
+    if (!returning) {
+      sessionStorage.removeItem(portfolioScrollKey);
+      sessionStorage.removeItem(portfolioFocusKey);
+      return;
+    }
     const y = Number(sessionStorage.getItem(portfolioScrollKey));
     const slug = sessionStorage.getItem(portfolioFocusKey);
     requestAnimationFrame(() => {
@@ -289,11 +295,11 @@ export function ProjectCard({
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#1c120e]/82 via-[#1c120e]/34 to-transparent sm:h-28" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 px-4 pt-10 pb-3.5 sm:px-5 sm:pb-4">
           <div className="min-w-0 motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:-translate-y-1">
-            <h2 className="line-clamp-2 text-[1.02rem] leading-[1.15] font-semibold tracking-tight text-white [text-shadow:0_1px_8px_rgb(28_18_14/0.45)] sm:text-[1.15rem]">
+            <h2 className="line-clamp-2 pb-[0.12em] text-[1.02rem] leading-[1.3] font-semibold tracking-tight text-white [text-shadow:0_1px_8px_rgb(28_18_14/0.45)] sm:text-[1.15rem]">
               {label.primary}
             </h2>
             {label.secondary ? (
-              <p className="mt-1 line-clamp-1 text-[0.68rem] leading-none font-medium tracking-[0.01em] text-white/78 sm:text-xs">
+              <p className="mt-1 line-clamp-1 pb-[0.16em] text-[0.68rem] leading-[1.45] font-medium tracking-[0.01em] text-white/78 sm:text-xs">
                 {label.secondary}
               </p>
             ) : null}

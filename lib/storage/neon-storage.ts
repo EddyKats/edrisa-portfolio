@@ -81,7 +81,7 @@ export function storageKeyFromUrl(url: string | null | undefined) {
 export function describeStoredUrl(url: string | null | undefined): { kind: StoredUrlKind; key: string | null } {
   if (!url) return { kind: "none", key: null };
 
-  // Seeded static paths such as /images/edrisa-portrait.jpg were never in the bucket.
+  // Seeded static paths were never in the bucket.
   if (!/^https?:\/\//.test(url)) return { kind: "external", key: null };
 
   const endpoint = storageEndpoint();

@@ -102,7 +102,7 @@ export async function urlInUse(url: string | null | undefined) {
 /**
  * Deletes the object behind a URL. Reports drift instead of silently doing nothing when
  * the URL belongs to our bucket but this deployment cannot act on it; stays quiet for
- * seeded static paths such as /images/edrisa-portrait.jpg, which were never stored.
+ * seeded static paths, which were never stored.
  */
 export async function removeStoredFile(url: string | null | undefined) {
   const { kind, key } = describeStoredUrl(url);

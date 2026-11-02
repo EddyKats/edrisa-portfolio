@@ -19,7 +19,7 @@ export function HeroPanel({ site }: { site: PublicSite }) {
         <HomeStageMedia
           frames={site.hero.frames}
           mode={site.hero.mode}
-          alt="Portrait of Edrisa"
+          alt="Kasibante Edrisa — multidisciplinary designer and software developer in Kampala, Uganda"
           sizes="(min-width: 960px) 50vw, 100vw"
           objectClass="object-cover object-[center_top]"
           priority

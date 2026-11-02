@@ -4,7 +4,7 @@ export const site = {
   description:
     "Kasibante Edrisa is a multidisciplinary designer and software developer. Graphic design, branding, web development and digital products from Edrisa Studio.",
   url: "https://edrisastudio.com",
-  portraitSrc: "/images/edrisa-portrait.jpg",
+  portraitSrc: "/images/social/kasibante-edrisa-portrait.jpg",
   portraitWidth: 3333,
   portraitHeight: 4167,
   logoSrc: "/images/edrisa-logo.png",

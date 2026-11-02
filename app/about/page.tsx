@@ -144,7 +144,7 @@ function profileImage(
     src,
     width,
     height,
-    alt: "Portrait of Kasibante Edrisa",
+    alt: "Kasibante Edrisa — multidisciplinary designer and software developer in Kampala, Uganda",
   };
 }
 

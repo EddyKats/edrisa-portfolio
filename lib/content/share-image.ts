@@ -1,4 +1,4 @@
-export const shareImagePath = "/share/edrisa-studio-2026";
+export const shareImagePath = "/share/kasibante-edrisa-2026";
 
 export const shareImage = {
   url: shareImagePath,

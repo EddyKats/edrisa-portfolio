@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import { serviceClientRows } from "@/data/clients";
 
@@ -8,6 +8,25 @@ const VISIBLE_SLOTS = 8;
 const FADE_MS = 560;
 
 type ClientLogo = { id: string; name: string; src: string };
+
+// Presentation-only. Keeps wide wordmarks from filling the stage and lets compact marks use its height.
+const logoScaleByName: Record<string, number> = {
+  "hima cement": 0.92,
+  prudential: 0.9,
+  sumz: 1,
+  hero: 0.78,
+  totalenergies: 1,
+  "kyogaro products": 0.84,
+  kiboko: 0.72,
+  welthungerhilfe: 0.96,
+  lycamobile: 0.84,
+  "idental care": 1,
+  "cbs fm": 0.9,
+};
+
+function logoScale(name: string) {
+  return logoScaleByName[name.trim().toLowerCase()] ?? 0.92;
+}
 
 function rotationPool(clients?: ClientLogo[]) {
   const listed =
@@ -168,9 +187,10 @@ export function ClientStrip({
                   key={client.id}
                   src={client.src}
                   alt={client.name}
-                  width={200}
-                  height={80}
-                  sizes="160px"
+                  width={240}
+                  height={96}
+                  sizes="(min-width: 64rem) 200px, 160px"
+                  style={{ "--logo-scale": logoScale(client.name) } as CSSProperties}
                   className={leaving.includes(index) ? "client-wall-img is-leaving" : "client-wall-img"}
                 />
               </span>

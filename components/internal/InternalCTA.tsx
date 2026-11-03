@@ -12,12 +12,14 @@ export function InternalCTA({
   body,
   label,
   href,
+  frameClassName,
 }: {
   section: NavId;
   heading: string;
   body: string;
   label: string;
   href: string;
+  frameClassName?: string;
 }) {
   const surface = getNavItem(section).surfaceClass;
   const tone = sectionTone(section);
@@ -27,7 +29,7 @@ export function InternalCTA({
     : "text-white focus-visible:outline-white";
 
   return (
-    <section aria-labelledby={titleId} className="relative mt-28 sm:mt-32">
+    <section aria-labelledby={titleId} className={frameClassName ?? "relative mt-28 sm:mt-32"}>
       <div className={`absolute inset-x-0 top-16 bottom-0 overflow-hidden rounded-2xl ${surface}`}>
         <Watermark tile={section} className="nav-mark internal-cta-mark" />
         <Watermark tile={section} className="nav-mark internal-cta-mark-end" />

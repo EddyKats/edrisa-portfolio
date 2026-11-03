@@ -50,8 +50,8 @@ export function NavigationTile({
           href={item.href}
           aria-label={label}
           whileTap={reduce ? undefined : { scale: 0.985 }}
-          transition={{ duration: 0.28, ease }}
-          className="group relative flex h-full min-h-0 w-full overflow-hidden text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none focus-visible:ring-inset"
+          transition={{ duration: 0.22, ease }}
+          className="group relative flex h-full min-h-0 w-full cursor-pointer overflow-hidden text-white focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white active:brightness-[1.04] motion-reduce:active:brightness-100"
         >
           <span
             aria-hidden="true"

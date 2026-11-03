@@ -1,9 +1,8 @@
 "use client";
 
 import { ProtectedImage } from "@/components/media/protect-visual";
-import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { ProjectCard, portfolioSizeClass } from "@/components/portfolio/PortfolioBrowser";
+import { SelectedWork } from "@/components/portfolio/SelectedWork";
 import { FaBehance, FaLinkedinIn, FaPhone, FaWhatsapp } from "react-icons/fa";
 import { TbBrandAdobeIllustrator } from "react-icons/tb";
 import { SiGoogleanalytics, SiGoogle, SiHubspot, SiMeta } from "react-icons/si";
@@ -276,35 +275,13 @@ export function AboutProfile({
         </ol>
       </section>
 
-      {projects.length > 0 ? (
-        <section aria-labelledby="about-work-title" className="mt-16 sm:mt-20">
-          <h2 id="about-work-title" className="about-chapter-title">
-            {aboutProfile.selectedHeading}
-          </h2>
-          <p className="mt-3 max-w-[32rem] text-sm leading-relaxed text-ink/65">{aboutProfile.selectedNote}</p>
-          <ul className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 xl:auto-rows-[18rem]">
-            {projects.slice(0, 3).map((project) => (
-              <li key={project.slug} className={portfolioSizeClass[project.size]}>
-                <ProjectCard
-                  project={project}
-                  href={`/about?work=${encodeURIComponent(project.slug)}`}
-                  onOpen={() => {
-                    sessionStorage.setItem("edrisa-portfolio-return", "/about");
-                    sessionStorage.setItem("edrisa-portfolio-scroll", String(window.scrollY));
-                    sessionStorage.setItem("edrisa-portfolio-focus", project.slug);
-                  }}
-                />
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/portfolio"
-            className="mt-8 inline-flex min-h-11 items-center rounded-full bg-ink px-5 text-sm font-semibold tracking-tight text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
-          >
-            View all projects
-          </Link>
-        </section>
-      ) : null}
+      <SelectedWork
+        projects={projects}
+        returnTo="/about"
+        heading={aboutProfile.selectedHeading}
+        note={aboutProfile.selectedNote}
+        headingId="about-work-title"
+      />
       </div>
     </>
   );

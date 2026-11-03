@@ -47,7 +47,7 @@ export function ProjectDetail({
     callHref: string | null;
   };
   ctaHref: string;
-  source?: "portfolio" | "about";
+  source?: "portfolio" | "about" | "services";
 }) {
   const router = useRouter();
   const routerRef = useRef(router);
@@ -76,7 +76,7 @@ export function ProjectDetail({
     closingRef.current = true;
     releaseRef.current();
     setClosing(true);
-    const href = source === "about" ? "/about" : portfolioReturnHref(categories);
+    const href = source === "about" ? "/about" : source === "services" ? "/services" : portfolioReturnHref(categories);
     const origin = sessionStorage.getItem(portfolioOriginKey);
     const canBack = source === "portfolio" && origin === project.slug;
     requestAnimationFrame(() => {
@@ -112,7 +112,7 @@ export function ProjectDetail({
   function openProject(event: MouseEvent<HTMLAnchorElement>, slug: string) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault();
-    router.push(source === "about" ? aboutWorkPath(slug) : projectPath(slug, categories), { scroll: false });
+    router.push(viewerPath(source, slug) ?? projectPath(slug, categories), { scroll: false });
   }
 
   useEffect(() => {
@@ -481,7 +481,7 @@ function ProjectClose({
   ctaHref: string;
   previous: { slug: string; title: string };
   next: { slug: string; title: string };
-  source: "portfolio" | "about";
+  source: "portfolio" | "about" | "services";
   onOpen: (event: MouseEvent<HTMLAnchorElement>, slug: string) => void;
 }) {
   const contacts = orderedContacts(profiles);
@@ -521,14 +521,14 @@ function ProjectClose({
         <div className="project-steps">
           <ProjectStep
             direction="previous"
-            href={source === "about" ? aboutWorkPath(previous.slug) : `/portfolio/${previous.slug}`}
+            href={viewerPath(source, previous.slug) ?? `/portfolio/${previous.slug}`}
             title={previous.title}
             onOpen={onOpen}
             slug={previous.slug}
           />
           <ProjectStep
             direction="next"
-            href={source === "about" ? aboutWorkPath(next.slug) : `/portfolio/${next.slug}`}
+            href={viewerPath(source, next.slug) ?? `/portfolio/${next.slug}`}
             title={next.title}
             onOpen={onOpen}
             slug={next.slug}
@@ -681,8 +681,10 @@ function contactLabel(item: PublicSocial) {
   return "iconLabel" in item ? item.iconLabel : item.label;
 }
 
-function aboutWorkPath(slug: string) {
-  return `/about?work=${encodeURIComponent(slug)}`;
+function viewerPath(source: "portfolio" | "about" | "services", slug: string) {
+  if (source === "about") return `/about?work=${encodeURIComponent(slug)}`;
+  if (source === "services") return `/services?work=${encodeURIComponent(slug)}`;
+  return null;
 }
 
 function portfolioReturnHref(categories: string[]) {

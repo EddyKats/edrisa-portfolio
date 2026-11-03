@@ -6,18 +6,21 @@ export function ContactFaq({
   items: readonly { question: string; answer: string }[];
 }) {
   return (
-    <section className="contact-faq mt-16" aria-labelledby="contact-faq-title">
+    <section className="contact-faq" aria-labelledby="contact-faq-title">
       <h2 id="contact-faq-title" className="about-chapter-title">
         {heading}
       </h2>
-      <dl className="mt-8 grid gap-8">
-        {items.map((item) => (
-          <div key={item.question}>
-            <dt className="text-lg font-semibold tracking-tight">{item.question}</dt>
-            <dd className="about-support mt-2 max-w-[36rem]">{item.answer}</dd>
-          </div>
+      <ol className="contact-notes">
+        {items.map((item, index) => (
+          <li key={item.question} className="contact-note">
+            <p className="contact-note-index" aria-hidden="true">
+              {String(index + 1).padStart(2, "0")}
+            </p>
+            <h3>{item.question}</h3>
+            <p>{item.answer}</p>
+          </li>
         ))}
-      </dl>
+      </ol>
     </section>
   );
 }

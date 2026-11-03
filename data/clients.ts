@@ -13,6 +13,5 @@ export const serviceClientRows = [
     { id: "client-9", name: "Lycamobile", src: "/images/clients/client-9.webp" },
     { id: "client-10", name: "iDental Care", src: "/images/clients/client-10.webp" },
     { id: "client-11", name: "CBS FM", src: "/images/clients/client-11.webp" },
-    { id: "client-12", name: "Jotform", src: "/images/clients/client-12.webp" },
   ],
 ] as const;

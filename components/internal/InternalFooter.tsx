@@ -21,26 +21,28 @@ export async function InternalFooter() {
     <div className="internal-end mt-auto">
       <footer className="site-footer mt-16 text-ink">
         <div className="footer-top">
-          <p className="footer-kicker">Elsewhere on the internet</p>
-          <div className="footer-rule" aria-hidden="true" />
-          <ul className="footer-socials">
-            {site.socials.map((item) => (
-              <li key={item.id}>
-                <SocialAction item={item} />
-              </li>
-            ))}
-            {site.callHref ? (
-              <li>
-                <a href={site.callHref} className="footer-social" aria-label="Call Edrisa">
-                  <FaPhone className="footer-social-icon" aria-hidden="true" />
-                  <span>Call</span>
-                </a>
-              </li>
-            ) : null}
-          </ul>
-          <nav aria-label="Site" className="mt-10 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-semibold tracking-tight">
+          <div className="footer-band">
+            <p className="footer-kicker">Elsewhere on the internet</p>
+            <div className="footer-rule" aria-hidden="true" />
+            <ul className="footer-socials">
+              {site.socials.map((item) => (
+                <li key={item.id}>
+                  <SocialAction item={item} />
+                </li>
+              ))}
+              {site.callHref ? (
+                <li>
+                  <a href={site.callHref} className="footer-social" aria-label="Call Edrisa">
+                    <FaPhone className="footer-social-icon" aria-hidden="true" />
+                    <span>Call</span>
+                  </a>
+                </li>
+              ) : null}
+            </ul>
+          </div>
+          <nav aria-label="Site" className="footer-pages">
             {navigation.map((item) => (
-              <Link key={item.id} href={item.href} className="text-ink/80 hover:text-ink">
+              <Link key={item.id} href={item.href}>
                 {item.title}
               </Link>
             ))}

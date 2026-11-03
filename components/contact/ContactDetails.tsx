@@ -1,62 +1,68 @@
-import { SocialLinks } from "@/components/home/SocialLinks";
-import { displayFromTelHref } from "@/lib/content/phone";
+import { Mail, Phone } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+import { displayFromTelHref, telFromWhatsapp } from "@/lib/content/phone";
 import type { PublicSocial } from "@/lib/content/site-shape";
 
 export function ContactDetails({
   detailsHeading,
-  socialHeading,
   email,
   callHref,
   socials,
 }: {
   detailsHeading: string;
-  socialHeading: string;
   email: string;
   callHref: string | null;
   socials: PublicSocial[];
 }) {
   const whatsapp = socials.find((item) => item.id === "whatsapp");
+  const whatsappTel = whatsapp ? telFromWhatsapp(whatsapp.href) : null;
+  const whatsappValue = whatsappTel
+    ? displayFromTelHref(whatsappTel)
+    : whatsapp && whatsapp.label !== "WhatsApp"
+      ? whatsapp.label
+      : "Message";
 
   return (
     <div className="contact-details">
       <h2 className="about-chapter-title">{detailsHeading}</h2>
-      <dl className="contact-channels">
-        <div>
-          <dt>Email</dt>
-          <dd>
-            <a href={`mailto:${email}`}>{email}</a>
-          </dd>
-        </div>
+      <ul className="contact-methods">
+        <li>
+          <a className="contact-method" href={`mailto:${email}`}>
+            <Mail className="contact-method-icon" strokeWidth={1.6} aria-hidden="true" />
+            <span className="contact-method-kicker">Email</span>
+            <span className="contact-method-value">
+              {email.includes("@") ? (
+                <>
+                  {email.slice(0, email.indexOf("@") + 1)}
+                  <wbr />
+                  {email.slice(email.indexOf("@") + 1)}
+                </>
+              ) : (
+                email
+              )}
+            </span>
+          </a>
+        </li>
         {callHref ? (
-          <div>
-            <dt>Call</dt>
-            <dd>
-              <a href={callHref}>{displayFromTelHref(callHref)}</a>
-            </dd>
-          </div>
+          <li>
+            <a className="contact-method" href={callHref}>
+              <Phone className="contact-method-icon" strokeWidth={1.6} aria-hidden="true" />
+              <span className="contact-method-kicker">Call</span>
+              <span className="contact-method-value">{displayFromTelHref(callHref)}</span>
+            </a>
+          </li>
         ) : null}
         {whatsapp ? (
-          <div>
-            <dt>WhatsApp</dt>
-            <dd>
-              <a href={whatsapp.href} target="_blank" rel="noopener noreferrer">
-                {whatsapp.label}
-              </a>
-            </dd>
-          </div>
+          <li>
+            <a className="contact-method is-whatsapp" href={whatsapp.href} target="_blank" rel="noopener noreferrer">
+              <FaWhatsapp className="contact-method-icon" aria-hidden="true" />
+              <span className="contact-method-kicker">WhatsApp</span>
+              <span className="contact-method-value">{whatsappValue}</span>
+            </a>
+          </li>
         ) : null}
-      </dl>
-      <p className="about-support mt-6 max-w-[28rem]">
-        Start a project on this page. LinkedIn and Behance are for the work of Kasibante Edrisa; WhatsApp is for a
-        short brief.
-      </p>
-      <h2 className="about-chapter-title contact-elsewhere">{socialHeading}</h2>
-      <SocialLinks
-        profiles={socials}
-        className="contact-social mt-5"
-        label={socialHeading}
-        callHref={callHref}
-      />
+      </ul>
+      <p className="about-support mt-6 max-w-[28rem]">For project enquiries, email or WhatsApp works best.</p>
     </div>
   );
 }

@@ -1,46 +1,183 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { serviceClientRows } from "@/data/clients";
+
+const VISIBLE_SLOTS = 8;
+const FADE_MS = 560;
+
+type ClientLogo = { id: string; name: string; src: string };
+
+function rotationPool(clients?: ClientLogo[]) {
+  const listed =
+    clients && clients.length > 0
+      ? clients
+      : serviceClientRows.flat().map((client) => ({ id: client.id, name: client.name, src: client.src }));
+  const seen = new Set<string>();
+  return listed.filter((client) => {
+    const key = client.name.trim().toLowerCase();
+    if (!key || key === "jotform" || seen.has(key)) return false;
+    seen.add(key);
+    return Boolean(client.src);
+  });
+}
+
+function shuffle<T>(items: T[]) {
+  const copy = items.slice();
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    const current = copy[index];
+    copy[index] = copy[swap] as T;
+    copy[swap] = current as T;
+  }
+  return copy;
+}
 
 export function ClientStrip({
   heading,
   clients,
 }: {
   heading: string;
-  clients?: { id: string; name: string; src: string }[];
+  clients?: ClientLogo[];
 }) {
-  const listed = clients && clients.length > 0 ? clients : serviceClientRows.flat().map((client) => ({ id: client.id, name: client.name, src: client.src }));
-  const split = Math.ceil(listed.length / 2) || listed.length;
-  const rows = listed.length > 6 ? [listed.slice(0, split), listed.slice(split)] : [listed];
+  const pool = useMemo(() => rotationPool(clients), [clients]);
+  const slotCount = Math.min(VISIBLE_SLOTS, pool.length);
+  const [slots, setSlots] = useState<string[]>(() => pool.slice(0, slotCount).map((client) => client.id));
+  const [leaving, setLeaving] = useState<number[]>([]);
+  const sectionRef = useRef<HTMLElement>(null);
+  const slotsRef = useRef(slots);
+  const byId = useMemo(() => new Map(pool.map((client) => [client.id, client])), [pool]);
+
+  useEffect(() => {
+    slotsRef.current = slots;
+  }, [slots]);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (!node || motion.matches || pool.length <= slotCount) return;
+
+    let cancelled = false;
+    let running = false;
+    let inView = false;
+    let started = false;
+    const timers = new Set<number>();
+
+    const later = (fn: () => void, ms: number) => {
+      const id = window.setTimeout(() => {
+        timers.delete(id);
+        if (!cancelled) fn();
+      }, ms);
+      timers.add(id);
+    };
+
+    const clearTimers = () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      timers.clear();
+    };
+
+    const stop = () => {
+      running = false;
+      clearTimers();
+      setLeaving([]);
+    };
+
+    const cycle = (first: boolean) => {
+      if (cancelled || !running) return;
+      const wait = first ? 1500 + Math.random() * 1000 : 2500 + Math.random() * 2000;
+      later(() => {
+        if (cancelled || !running) return;
+        const current = slotsRef.current;
+        const hidden = shuffle(pool.filter((client) => !current.includes(client.id)));
+        const count = Math.min(hidden.length, current.length, 2 + Math.floor(Math.random() * 2));
+        if (count === 0) {
+          cycle(false);
+          return;
+        }
+        const indexes = shuffle(current.map((_, index) => index)).slice(0, count);
+        indexes.forEach((index, order) => {
+          const next = hidden[order];
+          if (!next) return;
+          const delay = order * (100 + Math.random() * 100);
+          later(() => {
+            if (!running) return;
+            setLeaving((previous) => (previous.includes(index) ? previous : [...previous, index]));
+            later(() => {
+              if (!running) return;
+              setSlots((latest) => {
+                if (latest.includes(next.id) || latest[index] === next.id) return latest;
+                const copy = latest.slice();
+                copy[index] = next.id;
+                return copy;
+              });
+              setLeaving((previous) => previous.filter((item) => item !== index));
+            }, FADE_MS);
+          }, delay);
+        });
+        later(() => cycle(false), (count - 1) * 180 + FADE_MS);
+      }, wait);
+    };
+
+    const sync = () => {
+      const active = inView && document.visibilityState === "visible" && !motion.matches;
+      if (active && !running) {
+        running = true;
+        const first = !started;
+        started = true;
+        cycle(first);
+        return;
+      }
+      if (!active && running) stop();
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        inView = entries.some((entry) => entry.isIntersecting);
+        sync();
+      },
+      { rootMargin: "160px 0px" },
+    );
+    observer.observe(node);
+    document.addEventListener("visibilitychange", sync);
+    motion.addEventListener("change", sync);
+
+    return () => {
+      cancelled = true;
+      running = false;
+      clearTimers();
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", sync);
+      motion.removeEventListener("change", sync);
+    };
+  }, [pool, slotCount]);
 
   return (
-    <section aria-labelledby="services-places-title" className="services-block">
+    <section ref={sectionRef} aria-labelledby="services-places-title" className="services-block">
       <h2 id="services-places-title" className="about-chapter-title">
         {heading}
       </h2>
-      <div className="client-marquee-wrap">
-        {rows.map((row, index) => (
-          <div
-            key={row[0]?.id ?? index}
-            className={index % 2 === 1 ? "client-marquee client-marquee--reverse" : "client-marquee"}
-          >
-            <div className="client-marquee-track">
-              {[...row, ...row].map((client, copy) => (
-                <div key={`${client.id}-${copy}`} className="client-marquee-item">
-                  <Image
-                    src={client.src}
-                    alt={client.name}
-                    width={200}
-                    height={80}
-                    loading="lazy"
-                    sizes="200px"
-                    className="client-marquee-img"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      <ul className="client-wall">
+        {slots.map((id, index) => {
+          const client = byId.get(id);
+          if (!client) return null;
+          return (
+            <li key={index}>
+              <span className="client-wall-frame">
+                <Image
+                  key={client.id}
+                  src={client.src}
+                  alt={client.name}
+                  width={200}
+                  height={80}
+                  sizes="160px"
+                  className={leaving.includes(index) ? "client-wall-img is-leaving" : "client-wall-img"}
+                />
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }

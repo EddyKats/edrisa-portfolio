@@ -51,7 +51,7 @@ function securityHeaders(dev: boolean) {
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
       "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.clarity.ms https://scripts.clarity.ms https://va.vercel-scripts.com",
-      "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.clarity.ms https://c.clarity.ms https://scripts.clarity.ms https://*.clarity.ms https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+      `connect-src 'self'${storageConnectSource()} https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.clarity.ms https://c.clarity.ms https://scripts.clarity.ms https://*.clarity.ms https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
       "frame-src 'self'",
       "upgrade-insecure-requests",
     ].join("; "),
@@ -60,6 +60,16 @@ function securityHeaders(dev: boolean) {
 }
 
 export default nextConfig;
+
+function storageConnectSource() {
+  const endpoint = process.env.AWS_ENDPOINT_URL_S3;
+  if (!endpoint) return "";
+  try {
+    return ` ${new URL(endpoint).origin}`;
+  } catch {
+    return "";
+  }
+}
 
 function storageRemotePatterns() {
   const endpoint = process.env.AWS_ENDPOINT_URL_S3;
